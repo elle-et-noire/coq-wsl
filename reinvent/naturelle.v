@@ -253,9 +253,6 @@ Proof.
   apply IHn. apply H.
 Qed.
 
-Print addNS.
-
-
 Fixpoint egnaturelle (n m : naturelle) :=
   match n, m with
   | nulle, nulle => vraie
@@ -301,8 +298,6 @@ Qed.
 Definition neufNdix (H : egale _ neuf dix) :=
   Eval compute in (egale_ind _ (eg_op naturelle_egTaper neuf dix) (fun b => estvraie (nepasb b))
    identite vraie (estvraie_egvraie _ (introVraie _ _ (egP naturelle_egTaper neuf dix) H))) .
-
-Check neufNdix.
 
 
 (* ===== Ensemble ===== *)
@@ -366,8 +361,6 @@ Proof.
   apply Hxy.
 Qed.
 
-Print eg_loitransitive.
-
 Lemma id_gauche: forall (G: groupe) (x: porteur G),
   appartenir _ x (support G) -> egale _ x (operatrice G (elemid G) x).
 Proof.
@@ -378,5 +371,3 @@ Proof.
   case (id_droite G x H).
   apply egreflexion.
 Qed.
-
-Print id_gauche.
