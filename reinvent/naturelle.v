@@ -314,8 +314,8 @@ Qed.
 
 Definition appartenir (M: Type) (x: M) (ens: ensemble M) := estvraie (ens x).
 
-Definition videenseble (M: Type): ensemble M := fun _ => faux.
-Definition memeenseble (M: Type): ensemble M := fun _ => vraie.
+Definition videensemble (M: Type): ensemble M := fun _ => faux.
+Definition memeensemble (M: Type): ensemble M := fun _ => vraie.
 
 Definition sousensemble (M: Type) (A B: ensemble M)
   := forall (x: M), appartenir _ x A -> appartenir _ x B.
@@ -371,3 +371,18 @@ Proof.
   case (id_droite G x H).
   apply egreflexion.
 Qed.
+
+Check (egale _ naturelle naturelle).
+
+Definition homomorphisme (G H: groupe) (f: porteur H -> porteur G) :=
+  (* egale _ (porteur H) (porteur G) -> *)
+  (forall x: porteur H, appartenir _ x (support H) -> appartenir _ (f x) (support G)) ->
+  egale _ (f (elemid H)) (elemid G) ->
+  (forall x y: porteur H, egale _ (f (operatrice H x y)) (operatrice G (f x) (f y))) ->
+  (forall x: porteur H, egale _ (f (inverse H x)) (inverse G (f x))).
+
+Definition injection (A B: Type) (f: A -> B) :=
+  forall x y: A, egale _ (f x) (f y) -> egale _ x y.
+
+Definition noyau (G H: groupe) (f: porteur H -> porteur G) : ensemble (porteur H) :=
+  fun (x: porteur H) => egale 
