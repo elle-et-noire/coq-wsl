@@ -26,6 +26,14 @@ Definition egsym (A : Type) (x y : A) (H : egale _ x y) :=
     | egreflexion _ _ => egreflexion _ x
     end.
 
+Lemma eg_loitransitive: forall (A: Type) (x y z: A),
+egale _ x y -> egale _ y z -> egale _ x z.
+Proof.
+intros A x y z Hxy Hyz.
+case Hyz.
+apply Hxy.
+Qed.
+
 Definition nepas := fun A : Prop => A -> Faux.
 
 
@@ -59,14 +67,27 @@ Definition impliquerb b1 b2 :=
   | faux => vraie
   end.
 
+Definition xor b1 b2 :=
+  match b1 with
+  | vraie => nepasb b2
+  | faux => b2
+  end.
+  
 
 (*===== Reflexion =====*)
 
-Definition estvraie (b : booleenne) := 
+Definition egbooleenne b1 b2 := nepasb (xor b1 b2).
+
+Definition estvraie b :=
   match b with
   | vraie => Vraie
   | faux => Faux
   end.
+
+Lemma vraieredondant: forall (b: booleenne), egale _ b (egbooleenne b vraie).
+Proof.
+  induction b; apply egreflexion.
+Qed.
 
 Inductive refleter (P : Prop) : booleenne -> Set :=
   | refletervraie : P -> refleter P vraie
@@ -78,7 +99,7 @@ Proof.
   intros P Q b HPb HPQ HQP.
   case HPb; intros HP.
   - apply refletervraie. apply HPQ; apply HP.
-  - apply refleterfaux. unfold nepas. intros HQ. unfold nepas in HP. apply HQP in HQ. apply HP in HQ. case HQ.
+  - apply refleterfaux. intros HQ. apply HQP in HQ. apply HP in HQ. case HQ.
 Qed.
 
 Lemma idP : forall (b : booleenne), refleter (estvraie b) b.
@@ -86,79 +107,56 @@ Proof.
   intros b.
   case b.
   - apply refletervraie. apply identite.
-  - apply refleterfaux. unfold nepas. simpl. apply Faux_ind.
+  - apply refleterfaux. intros F. case F.
 Qed.
 
-Record melange (T : Type) :=
-  EgMelange {
-    op : T -> T -> booleenne;
-    a : forall x y : T, refleter (egale _ x y) (op x y)
-  }.
-
-Record egtaper :=
-  EgTaper {
-    sorte : Type;
-    mel : melange sorte
-  }.
-
-Check op : forall (T : Type), melange T -> T -> T -> booleenne.
-
-Definition eg_op (T : egtaper) := op (sorte T) (mel T).
-Check eg_op : forall (T : egtaper), (sorte _) -> (sorte _) -> booleenne.
-
-Lemma egP : forall (T : egtaper) (x y : sorte T), refleter (egale _ x y) (eg_op _ x y).
-Proof.
-  intro T.
-  case T.
-  intros t m x y.
-  case m.
-  intros op a.
-  apply a.
-Qed.
 
 Lemma introVraieFaux : forall (P : Prop) (b c : booleenne), refleter P b ->
   (match c with
   | vraie => P
   | faux => nepas P
-  end) -> egale _ b c.
+  end) -> estvraie (egbooleenne b c).
 Proof.
   intros P b c Hb.
   case c; case Hb; intros H1 H2.
-  - apply (egreflexion _ vraie).
+  - apply identite.
   - apply H1 in H2. case H2.
   - apply H2 in H1. case H1.
-  - apply egreflexion.
+  - apply identite.
 Qed.
 
-Lemma elimVraieFaux : forall (P : Prop) (b c : booleenne), refleter P b -> egale _ b c ->
+Lemma elimVraieFaux : forall (P : Prop) (b c : booleenne), refleter P b -> estvraie (egbooleenne b c) ->
   (match c with
   | vraie => P
   | faux => nepas P
   end).
 Proof.
-  intros P b c Hb Hbc.
-  case Hbc.
-  case Hb; intro H; apply H.
+  intros P b c HPb.
+  induction HPb; case c; intros Hbc.
+  - apply p.
+  - case Hbc.
+  - case Hbc.
+  - apply n.
 Qed.
 
 Lemma elimVraie : forall (P : Prop) (b : booleenne), refleter P b -> estvraie b -> P.
 Proof.
-  intros P b Hb.
-  (* apply (elimVraieFaux P b vraie Hb). *)
-  case Hb.
-  - intros HP _. apply HP.
-  - simpl. intros _ F. case F.
+  intros P b HPb Hb.
+  apply (elimVraieFaux P b vraie HPb).
+  case (vraieredondant b).
+  apply Hb.
 Qed.
 
 Lemma introVraie : forall (P : Prop) (b : booleenne), refleter P b -> P -> estvraie b.
 Proof.
-  intros P b Hb.
-  (* Check (introVraieFaux P b vraie Hb). *)
-  case Hb.
-  - intros _ _. apply identite.
-  - intros NHP HP. apply NHP in HP. case HP.
-Qed. 
-
+  intros P b Hb HP.
+  assert (estvraie (egbooleenne b vraie) -> estvraie b).
+  {
+    case (vraieredondant b).
+    intro Hbv; apply Hbv.
+  }
+  apply (H (introVraieFaux P b vraie Hb HP)).
+Qed.
 
 
 (*===== Direct product =====*)
@@ -253,6 +251,20 @@ Proof.
   apply IHn. apply H.
 Qed.
 
+
+Record egtaper :=
+  EgTaper {
+    sorte: Type;
+    egop: sorte -> sorte -> booleenne;
+    reflegop: forall x y: sorte, refleter (egale _ x y) (egop x y)
+  }.
+
+Lemma egP : forall (T : egtaper) (x y : sorte T), refleter (egale _ x y) (egop _ x y).
+Proof.
+  intro T.
+  apply reflegop.
+Qed.
+
 Fixpoint egnaturelle (n m : naturelle) :=
   match n, m with
   | nulle, nulle => vraie
@@ -281,9 +293,7 @@ Definition trois := successeur (successeur (successeur nulle)).
 Definition neuf := Eval compute in multiplier trois trois.
 Definition dix := Eval compute in successeur neuf.
 
-Definition naturelle_egMelange := EgMelange naturelle egnaturelle naturelle_egP.
-Definition naturelle_egTaper := @EgTaper naturelle naturelle_egMelange.
-Compute (eg_op naturelle_egTaper neuf dix).
+Definition naturelle_egTaper := EgTaper naturelle egnaturelle naturelle_egP.
 
 Lemma egvraie_estvraie : forall b : booleenne, egale _ b vraie -> estvraie b.
 Proof. intros b H. apply egsym in H. case H. apply identite. Qed.
@@ -296,72 +306,67 @@ Proof.
 Qed.
 
 Definition neufNdix (H : egale _ neuf dix) :=
-  Eval compute in (egale_ind _ (eg_op naturelle_egTaper neuf dix) (fun b => estvraie (nepasb b))
+  Eval compute in (egale_ind _ (egop naturelle_egTaper neuf dix) (fun b => estvraie (nepasb b))
    identite vraie (estvraie_egvraie _ (introVraie _ _ (egP naturelle_egTaper neuf dix) H))) .
 
 
 (* ===== Ensemble ===== *)
 
 Definition Ensemble (M: Type) := M -> Prop.
-Definition ensemble (M: Type) := M -> booleenne.
+Definition ensemble (M: egtaper) := sorte M -> booleenne.
 
-Lemma axiom_ensemble : forall (M: Type) (A: ensemble M), 
-  forall (x: M), estvraie (oub (A x) (nepasb (A x))).
+Lemma axiom_ensemble : forall (M: egtaper) (A: ensemble M), 
+  forall (x: sorte M), estvraie (oub (A x) (nepasb (A x))).
 Proof.
   intros.
   case (A x); apply identite.
 Qed.
 
-Definition appartenir (M: Type) (x: M) (ens: ensemble M) := estvraie (ens x).
+Axiom Axiom_Ensemble : forall (T: Type) (A: Ensemble T),
+  forall (x: T), ou (A x) (nepas (A x)).
 
-Definition videensemble (M: Type): ensemble M := fun _ => faux.
-Definition memeensemble (M: Type): ensemble M := fun _ => vraie.
+Definition VideEnsemble (T: Type): Ensemble T := fun _ => Faux.
+Definition MemeEnsemble (T: Type): Ensemble T := fun _ => Vraie.
+Definition SousEnsemble (T: Type) (A B: Ensemble T)
+  := forall (x: T), A x -> B x.
 
-Definition sousensemble (M: Type) (A B: ensemble M)
-  := forall (x: M), appartenir _ x A -> appartenir _ x B.
+Definition appartenir (M: egtaper) (x: sorte M) (ens: ensemble M) := estvraie (ens x).
+
+Definition videensemble (M: egtaper): ensemble M := fun _ => faux.
+Definition memeensemble (M: egtaper): ensemble M := fun _ => vraie.
+
+Definition sousensemble (M: egtaper) (A B: ensemble M)
+  := forall (x: sorte M), appartenir _ x A -> appartenir _ x B.
 
 (* ===== Group ===== *)
 
-Record groupe: Type := Groupe {
-  porteur: Type;
-  (* support set *)
+Record groupe: Type := _groupe {
+  porteur: egtaper;
   support: ensemble porteur;
-  (* operator *)
-  operatrice: porteur -> porteur -> porteur;
-  (* inverse *)
-  inverse: porteur -> porteur;
-  (* identity *)
-  elemid: porteur;
-  (* closure property of the operator *)
-  fermer_ope: forall (x y: porteur), 
+  operatrice: sorte porteur -> sorte porteur -> sorte porteur;
+  inverse: sorte porteur -> sorte porteur;
+  elemid: sorte porteur;
+  fermer_ope: forall (x y: sorte porteur), 
     appartenir _ x support -> appartenir _ y support
     -> appartenir _ (operatrice x y) support;
-  (* closure property of taking inverse *)
-  fermer_inv: forall (x: porteur),
+  fermer_inv: forall (x: sorte porteur),
     appartenir _ x support -> appartenir _ (inverse x) support;
-  (* identity is in the group *)
   fermer_id: appartenir _ elemid support;
-  (* assocciative property of the operator *)
-  assoc_ope: forall (x y z: porteur),
+  assoc_ope: forall (x y z: sorte porteur),
     appartenir _ x support -> appartenir _ y support -> appartenir _ z support
     -> egale _ (operatrice (operatrice x y) z) (operatrice x (operatrice y z));
-  inv_gauche: forall (x: porteur),
+  inv_gauche: forall (x: sorte porteur),
     appartenir _ x support -> egale _ elemid (operatrice (inverse x) x);
-  inv_droite: forall (x: porteur),
+  inv_droite: forall (x: sorte porteur),
     appartenir _ x support -> egale _ elemid (operatrice x (inverse x));
-  id_droite: forall (x: porteur),
+  id_droite: forall (x: sorte porteur),
     appartenir _ x support -> egale _ x (operatrice x elemid)
 }.
 
-Lemma eg_loitransitive: forall (A: Type) (x y z: A),
-  egale _ x y -> egale _ y z -> egale _ x z.
-Proof.
-  intros A x y z Hxy Hyz.
-  case Hyz.
-  apply Hxy.
-Qed.
+Definition gtaper G := sorte (porteur G).
+Definition gegop G := egop (porteur G).
 
-Lemma id_gauche: forall (G: groupe) (x: porteur G),
+Lemma id_gauche: forall (G: groupe) (x: gtaper G),
   appartenir _ x (support G) -> egale _ x (operatrice G (elemid G) x).
 Proof.
   intros G x H.
@@ -372,17 +377,151 @@ Proof.
   apply egreflexion.
 Qed.
 
-Check (egale _ naturelle naturelle).
-
-Definition homomorphisme (G H: groupe) (f: porteur H -> porteur G) :=
-  (* egale _ (porteur H) (porteur G) -> *)
-  (forall x: porteur H, appartenir _ x (support H) -> appartenir _ (f x) (support G)) ->
+Definition homomorphisme (G H: groupe) (f: gtaper H -> gtaper G) :=
+  (forall x: gtaper H, appartenir _ x (support H) -> appartenir _ (f x) (support G)) ->
   egale _ (f (elemid H)) (elemid G) ->
-  (forall x y: porteur H, egale _ (f (operatrice H x y)) (operatrice G (f x) (f y))) ->
-  (forall x: porteur H, egale _ (f (inverse H x)) (inverse G (f x))).
+  (forall x y: gtaper H, egale _ (f (operatrice H x y)) (operatrice G (f x) (f y))) ->
+  (forall x: gtaper H, egale _ (f (inverse H x)) (inverse G (f x))).
 
-Definition injection (A B: Type) (f: A -> B) :=
-  forall x y: A, egale _ (f x) (f y) -> egale _ x y.
 
-Definition noyau (G H: groupe) (f: porteur H -> porteur G) : ensemble (porteur H) :=
-  fun (x: porteur H) => egale 
+Definition noyau (G H: groupe) (f: gtaper H -> gtaper G) : ensemble (porteur H) :=
+  fun x => gegop _ (elemid G) (f x).
+
+(* Definition image (G H: groupe) (f: gtaper H -> gtaper G) : ensemble (porteur G) := *)
+
+
+Record Groupe: Type := _Groupe {
+  Porteur: Type;
+  Support: Ensemble Porteur;
+  Operatrice: Porteur -> Porteur -> Porteur;
+  Inverse: Porteur -> Porteur;
+  Elemid: Porteur;
+  Fermer_ope: forall (x y: Porteur), 
+    Support x -> Support y -> Support (Operatrice x y);
+  Fermer_inv: forall (x: Porteur),
+    Support x -> Support (Inverse x);
+  Fermer_id: Support Elemid;
+  Assoc_ope: forall (x y z: Porteur),
+    Support x -> Support y -> Support z
+    -> egale _ (Operatrice (Operatrice x y) z) (Operatrice x (Operatrice y z));
+  Inv_gauche: forall (x: Porteur),
+    Support x -> egale _ Elemid (Operatrice (Inverse x) x);
+  Inv_droite: forall (x: Porteur),
+    Support x -> egale _ Elemid (Operatrice x (Inverse x));
+  Id_droite: forall (x: Porteur),
+    Support x -> egale _ x (Operatrice x Elemid)
+}.
+
+Lemma Id_gauche: forall (G: Groupe) (x: Porteur G),
+  (Support G) x -> egale _ x (Operatrice _ (Elemid G) x).
+Proof.
+  intros G x H.
+  case (egsym _ _ _ (Inv_droite G x H)).
+  case (egsym _ _ _ (Assoc_ope _ x (Inverse _ x) x H (Fermer_inv _ x H) H)).
+  case (Inv_gauche G x H).
+  case (Id_droite G x H).
+  apply egreflexion.
+Qed.
+
+Lemma Reduire_gauche: forall (G: Groupe) (x y z: Porteur G), 
+  (Support G) x -> (Support G) y -> (Support G) z
+  -> egale _ (Operatrice _ x y) (Operatrice _ x z)
+  -> egale _ y z.
+Proof.
+  intros G x y z Gx Gy Gz Hxyxz.
+  case (egsym _ _ _(Id_gauche _ y Gy)).
+  case (egsym _ _ _(Id_gauche _ z Gz)).
+  case (egsym _ _ _ (Inv_gauche _ x Gx)).
+  case (egsym _ _ _ (Assoc_ope _ (Inverse _ x) x y (Fermer_inv _ x Gx) Gx Gy)).
+  case (egsym _ _ _ (Assoc_ope _ (Inverse _ x) x z (Fermer_inv _ x Gx) Gx Gz)).
+  apply fegale, Hxyxz.
+Qed.
+
+Lemma Transpo_gauche: forall (G: Groupe) (x y z: Porteur G),
+  (Support G) x -> (Support G) y -> (Support G) z
+  -> egale _ (Operatrice _ x y) z -> egale _ y (Operatrice _ (Inverse _ x) z).
+Proof.
+  intros G x y z Gx Gy Gz H0.
+  case (egsym _ _ _ (Id_gauche _ y Gy)).
+  case (egsym _ _ _ (Inv_gauche _ x Gx)).
+  case (egsym _ _ _ (Assoc_ope _ (Inverse _ x) x y (Fermer_inv _ x Gx) Gx Gy)).
+  apply fegale, H0.
+Qed.
+
+Lemma InvInv: forall (G: Groupe) (x: Porteur G),
+  (Support G) x -> egale _ x (Inverse _ (Inverse _ x)).
+Proof.
+  intros G x Gx.
+  pose (Fermer_inv _ x Gx) as Ginvx.
+  apply (Reduire_gauche _ (Inverse _ x) x (Inverse _ (Inverse _ x)) Ginvx Gx (Fermer_inv _ (Inverse _ x) Ginvx)).
+  case (Inv_gauche _ x Gx).
+  case (Inv_droite _ (Inverse _ x) Ginvx).
+  apply egreflexion.
+Qed.
+
+
+Definition cartographie (T1 T2: Type) (A: Ensemble T1) (B: Ensemble T2)
+  (f: T1 -> T2) := forall (x: T1), A x -> B (f x).
+
+Definition injection (T1 T2: Type) (A: Ensemble T1) (B: Ensemble T2)
+  (f: T1 -> T2)
+  := (cartographie _ _ A B f) -> forall x y: T1, A x -> A y -> egale _ (f x) (f y) -> egale _ x y.
+
+Definition Homomorphisme (G H: Groupe) (f: Porteur H -> Porteur G) 
+  := et (cartographie _ _ (Support H) (Support G) f)
+   (forall x y: Porteur H, egale _ (f (Operatrice H x y)) (Operatrice G (f x) (f y))).
+
+Theorem Hom_preserve_id: forall (G H: Groupe) (f: Porteur H -> Porteur G),
+  Homomorphisme _ _ f -> egale _ (Elemid G) (f (Elemid H)).
+Proof.
+  intros G H f _Hhom.
+  unfold Homomorphisme in _Hhom.
+  case _Hhom.
+  intros Hcart Hhom.
+  unfold cartographie in Hcart.
+  case (egsym _ _ _ (Inv_gauche _ (f (Elemid H)) (Hcart (Elemid H) (Fermer_id H)))).
+  apply egsym.
+  pose (Hcart (Elemid H) (Fermer_id H)) as Gfe.
+  apply (Transpo_gauche _ (f (Elemid H)) (f (Elemid H)) (f (Elemid H)) Gfe Gfe Gfe).
+  case (Hhom (Elemid H) (Elemid H)).
+  case (Id_droite _ (Elemid H) (Fermer_id H)).
+  apply egreflexion.
+Qed.
+
+Theorem Hom_preserve_inv: forall (G H: Groupe) (f: Porteur H -> Porteur G),
+  Homomorphisme _ _ f -> 
+  forall (x: Porteur H), (Support H) x -> egale _ (f (Inverse _ x)) (Inverse _ (f x)).
+Proof.
+  intros G H f _Hhom.
+  case _Hhom.
+  intros Hcart Hhom.
+  intros x Hx.
+  unfold cartographie in Hcart.
+  pose (Fermer_inv _ (f x) (Hcart x Hx)) as Ginvfx.
+  case (egsym _ _ _ (Id_droite _ (Inverse _ (f x)) Ginvfx)).
+  apply (Transpo_gauche _ _ _ _ (Hcart x Hx) (Hcart (Inverse _ x) (Fermer_inv _ x Hx)) (Fermer_id _)).
+  case Hhom.
+  case (Inv_droite _ _ Hx).
+  apply (egsym _ _ _ (Hom_preserve_id _ _ f _Hhom)).
+Qed.
+
+Definition SousGroupe (G: Groupe) (Hsupp: Ensemble (Porteur G))
+  (HsousG: SousEnsemble _ Hsupp (Support G))
+  (HFermer_ope: forall (x y: Porteur G), Hsupp x -> Hsupp y -> Hsupp (Operatrice G x y))
+  (HFermer_inv: forall (x: Porteur G), Hsupp x -> Hsupp (Inverse G x))
+  (HFermer_id: Hsupp (Elemid G))
+  
+  := _Groupe (Porteur G) Hsupp (Operatrice G) (Inverse G) (Elemid G)
+  HFermer_ope HFermer_inv HFermer_id
+  (fun (x y z: Porteur G) (Hx: Hsupp x) (Hy: Hsupp y) (Hz: Hsupp z)
+   => Assoc_ope G x y z (HsousG x Hx) (HsousG y Hy) (HsousG z Hz))
+  (fun (x: Porteur G) (Hx: Hsupp x) => Inv_gauche G x (HsousG x Hx))
+  (fun (x: Porteur G) (Hx: Hsupp x) => Inv_droite G x (HsousG x Hx))
+  (fun (x: Porteur G) (Hx: Hsupp x) => Id_droite G x (HsousG x Hx)).
+
+
+
+Definition SousGroupeNormal (G H: Groupe) (f: Porteur H -> Porteur G) (Homomorphisme G H f)
+
+Definition Noyau_Supp (G H: Groupe) (f: Porteur H -> Porteur G) : Ensemble (Porteur H) :=
+  fun x => egale _ (Elemid G) (f x).
