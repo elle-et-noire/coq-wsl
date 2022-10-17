@@ -48,6 +48,18 @@ Inductive booleenne : Set :=
 | vraie : booleenne
 | faux : booleenne.
 
+Definition nepasb b :=
+  match b with
+  | vraie => faux
+  | faux => vraie
+  end.
+
+Definition egb b1 b2 :=
+  match b1 with
+  | vraie => b2
+  | faux => nepasb b2
+  end.
+
 Definition etb b1 b2 :=
   match b1 with
   | vraie => b2
@@ -60,48 +72,34 @@ Definition oub b1 b2 :=
   | faux => b2
   end.
 
-Definition nepasb b :=
-  match b with
-  | vraie => faux
-  | faux => vraie
-  end.
-
-Definition impliquerb b1 b2 :=
+Definition impliqb b1 b2 :=
   match b1 with
   | vraie => b2
   | faux => vraie
   end.
 
-Definition xor b1 b2 :=
-  match b1 with
-  | vraie => nepasb b2
-  | faux => b2
-  end.
-  
-
-(*===== Reflexion =====*)
-
-Definition egbooleenne b1 b2 := nepasb (xor b1 b2).
+Definition xor b1 b2 := nepasb (egb b1 b2).
 
 Definition estvraie b :=
   match b with
   | vraie => Vraie
   | faux => Faux
   end.
+  
 
-Lemma vraieredondant: forall (b: booleenne), egale _ b (egbooleenne b vraie).
-Proof.
-  induction b; apply egreflexion.
-Qed.
+(*===== Reflexion =====*)
 
-Inductive refleter (P : Prop) : booleenne -> Set :=
+
+
+Inductive refleter (P : Prop): booleenne -> Set :=
   | refletervraie : P -> refleter P vraie
   | refleterfaux : (nepas P) -> refleter P faux.
 
 Lemma iffP : forall (P Q : Prop) (b : booleenne),
-  refleter P b -> (P -> Q) -> (Q -> P) -> refleter Q b.
+  refleter P b -> (ssi P Q) -> refleter Q b.
 Proof.
-  intros P Q b HPb HPQ HQP.
+  intros P Q b HPb HPQ.
+  case HPQ as [HPQ HQP].
   case HPb; intros HP.
   - apply refletervraie. apply HPQ; apply HP.
   - apply refleterfaux. intros HQ. apply HQP in HQ. apply HP in HQ. case HQ.
@@ -115,14 +113,33 @@ Proof.
   - apply refleterfaux. intros F. case F.
 Qed.
 
+Lemma egb_egale: forall (b1 b2: booleenne), refleter (egale _ b1 b2) (egb b1 b2).
+Proof.
+  intros b1 b2.
+  case b1, b2.
+  - apply refletervraie, egreflexion.
+  - apply refleterfaux. unfold nepas. apply (egale_ind _ vraie (estvraie) identite faux).
+  - apply refleterfaux. unfold nepas. apply (egale_ind _ faux (fun b => estvraie (nepasb b)) identite vraie).
+  - apply refletervraie, egreflexion.
+Qed.
 
-Lemma introVraieFaux : forall (P : Prop) (b c : booleenne), refleter P b ->
+Lemma vraie_redondant: forall (b: booleenne), ssi (estvraie b) (estvraie (egb vraie b)).
+Proof.
+  intros b.
+  apply conjonction; case b.
+  - intros _; apply identite.
+  - intros F; case F.
+  - intros _; apply identite.
+  - intros F; case F.
+Qed.
+
+Lemma introVraieFaux : forall (P : Prop) (c b : booleenne), refleter P b ->
   (match c with
   | vraie => P
   | faux => nepas P
-  end) -> estvraie (egbooleenne b c).
+  end) -> estvraie (egb c b).
 Proof.
-  intros P b c Hb.
+  intros P c b Hb.
   case c; case Hb; intros H1 H2.
   - apply identite.
   - apply H1 in H2. case H2.
@@ -130,13 +147,13 @@ Proof.
   - apply identite.
 Qed.
 
-Lemma elimVraieFaux : forall (P : Prop) (b c : booleenne), refleter P b -> estvraie (egbooleenne b c) ->
+Lemma elimVraieFaux : forall (P : Prop) (c b : booleenne), refleter P b -> estvraie (egb c b) ->
   (match c with
   | vraie => P
   | faux => nepas P
   end).
 Proof.
-  intros P b c HPb.
+  intros P c b HPb.
   induction HPb; case c; intros Hbc.
   - apply p.
   - case Hbc.
@@ -147,24 +164,27 @@ Qed.
 Lemma elimVraie : forall (P : Prop) (b : booleenne), refleter P b -> estvraie b -> P.
 Proof.
   intros P b HPb Hb.
-  apply (elimVraieFaux P b vraie HPb).
-  case (vraieredondant b).
-  apply Hb.
+  case (vraie_redondant b); intros Hb' _; apply Hb' in Hb.
+  apply (elimVraieFaux P vraie b HPb Hb).
 Qed.
 
 Lemma introVraie : forall (P : Prop) (b : booleenne), refleter P b -> P -> estvraie b.
 Proof.
-  intros P b Hb HP.
-  assert (estvraie (egbooleenne b vraie) -> estvraie b).
-  {
-    case (vraieredondant b).
-    intro Hbv; apply Hbv.
-  }
-  apply (H (introVraieFaux P b vraie Hb HP)).
+  intros P b HPb HP.
+  case (vraie_redondant b); intros _ Hb; apply Hb.
+  apply (introVraieFaux P vraie b HPb HP).
 Qed.
 
+Lemma impliqP: forall b1 b2, refleter (estvraie b1 -> estvraie b2) (impliqb b1 b2).
+Proof.
+  intros b1 b2; case b1, b2.
+  - apply refletervraie. intros. apply identite.
+  - apply refleterfaux. intros F. apply F, identite.
+  - apply refletervraie. intros F; case F.
+  - apply refletervraie. intros F; apply F.
+Qed.
 
-(*===== Direct product =====*)
+Section ProduitDirect.
 
 Inductive produit (A B : Type) : Type :=
 | paire : A -> B -> produit A B.
@@ -178,9 +198,9 @@ Definition deuxieme := fun (A B : Type) (p : produit A B)
   => match p with
   | paire _ _ _ x => x
   end.
+End ProduitDirect.
 
-
-(*===== Natural number =====*)
+Section Naturelle.
 
 Inductive naturelle : Set :=
 | nulle : naturelle
@@ -281,17 +301,18 @@ Fixpoint egnaturelle (n m : naturelle) :=
 Lemma naturelle_egP : forall (n m : naturelle), refleter (egale _ n m) (egnaturelle n m).
 Proof.
   induction n; induction m.
-  - simpl. apply refletervraie. apply egreflexion.
-  - simpl. apply refleterfaux. intros F. apply (egale_ind _ nulle (fun n => match n with |nulle => Vraie |_ => Faux end) identite (successeur m)). apply F.
-  - simpl. apply refleterfaux. intros F. apply (egale_ind _ (successeur n) (fun n => match n with |successeur _ => Vraie |nulle => Faux end) identite nulle). apply F.
-  - simpl. apply (iffP (estvraie (egnaturelle n m)) (egale _ (successeur n) (successeur m)) (egnaturelle n m)).
+  - apply refletervraie, egreflexion.
+  - apply refleterfaux; unfold nepas. apply (egale_ind _ nulle (fun n => match n with |nulle => Vraie |_ => Faux end) identite (successeur m)).
+  - apply refleterfaux; unfold nepas. apply (egale_ind _ (successeur n) (fun n => match n with |successeur _ => Vraie |nulle => Faux end) identite nulle).
+  - apply (iffP (estvraie (egnaturelle n m)) (egale _ (successeur n) (successeur m)) (egnaturelle n m)).
   -- apply idP.
-  -- case (IHn m).
-  --- intros H _. apply fegale. apply H.
-  --- intros _ F. case F.
-  -- case (IHn m).
-  --- intros. apply identite.
-  --- intros F1 F2. apply egalesucc in F2. apply F1 in F2. case F2.
+  -- apply conjonction.
+  --- case (IHn m).
+  ---- intros H _. apply fegale. apply H.
+  ---- intros _ F. case F.
+  --- case (IHn m).
+  ---- intros. apply identite.
+  ---- intros F1 F2. apply egalesucc in F2. apply F1 in F2. case F2.
 Qed. 
 
 Definition trois := successeur (successeur (successeur nulle)).
@@ -314,31 +335,140 @@ Definition neufNdix (H : egale _ neuf dix) :=
   Eval compute in (egale_ind _ (egop naturelle_egTaper neuf dix) (fun b => estvraie (nepasb b))
    identite vraie (estvraie_egvraie _ (introVraie _ _ (egP naturelle_egTaper neuf dix) H))) .
 
+End Naturelle.
 
-(* ===== Ensemble ===== *)
 
-(* Definition Ensemble (M: Type) := M -> Prop. *)
-Record Ensemble := _Ensemble {
-  Sorte: Type;
-  avoir: Sorte -> Prop
-}.
 
-Definition ensemble (M: egtaper) := sorte M -> booleenne.
+Module Ensemble.
+  Section ClasseDef.
 
-Lemma axiom_ensemble : forall (M: egtaper) (A: ensemble M), 
-  forall (x: sorte M), estvraie (oub (A x) (nepasb (A x))).
+    Record classe_de (T: Type) := Classe {
+      avoir: T -> Prop;
+      eg: T -> T -> Prop;
+      exclu: forall (x: T), ou (avoir x) (nepas (avoir x))
+    }.
+
+    Structure taper := Paquet { sorte; classe: classe_de sorte }.
+    (* Definition classe (cT: taper) := classe_de (sorte cT). *)
+  End ClasseDef.
+
+  Module Exports.
+    (* Coercion porteur: taper >-> Sortclass. *)
+    Notation ensembleTaper := taper.
+    Definition avoir T := avoir _ (classe T).
+    Definition eg T := eg _ (classe T).
+    Definition exclu T := exclu _ (classe T).
+  End Exports.
+End Ensemble.
+Import Ensemble.Exports.
+
+Section EnsembleTheorie.
+  Variable T: Type.
+  Definition inc (A B: Type) (H: egale _ A B): A -> B :=
+    match H in (egale _ _ T) return (_ -> T) with
+    | egreflexion _ _ => (fun x => x)
+    end.
+  Eval compute in (inc _ _ (egreflexion _ _) nulle).
+
+  Definition f_vide := (fun _: T => Faux).
+  Lemma f_vide_exclu: forall (x: T), ou (f_vide x) (nepas (f_vide x)).
+  Proof. intros x; apply oudroite; intros F; case F. Qed.
+  Definition VideEnsemble :=
+    Ensemble.Classe T f_vide (egale T) f_vide_exclu.
+
+  Definition f_meme := (fun _: T => Vraie).
+  Lemma f_meme_exclu: forall (x: T), ou (f_meme x) (nepas (f_meme x)).
+  Proof. intros x; apply ougauche; apply identite. Qed.
+  Definition MemeEnsemble := 
+    Ensemble.Classe T f_meme (egale T) f_meme_exclu.
+
+End EnsembleTheorie.
+
+Section CartographieTheorie.
+  Variables A B: ensembleTaper.
+  Definition Ta := Ensemble.sorte A.
+  Definition Tb := Ensemble.sorte B.
+
+  Definition fermer (f: Ta -> Tb) := forall x, avoir A x -> avoir B (f x).
+  Definition sousensemble (H: egale _ Ta Tb) := fermer (inc _ _ H).
+End CartographieTheorie.
+
+Module Cartographie.
+  Section ClasseDef.
+
+    Record classe_de := Classe {
+      domaine: ensembleTaper;
+      codomaine: ensembleTaper;
+      carto: Ensemble.sorte domaine -> Ensemble.sorte codomaine;
+      fermer: fermer _ _ carto
+    }.
+
+  End ClasseDef.
+
+  Module Exports.
+    Notation cartoTaper := classe_de.
+  End Exports.
+End Cartographie.
+Import Cartographie.Exports.
+
+Fixpoint nompaire n :=
+  match n with
+  | nulle => vraie
+  | successeur n' => nepasb (nompaire n')
+  end.
+
+Fixpoint multde4 n :=
+  match n with
+  | nulle => vraie
+  | successeur nulle => faux
+  | successeur (successeur nulle) => faux
+  | successeur (successeur (successeur nulle)) => faux
+  | successeur (successeur (successeur (successeur n'))) => multde4 n'
+  end.
+
+Lemma nepasb_nepasb: forall (b: booleenne),
+  estvraie (egb b (nepasb (nepasb b))).
+Proof. intros b; case b; apply identite. Qed.
+
+Lemma multde4_nompaire: forall (n: naturelle),
+  estvraie (impliqb (multde4 n) (nompaire n)).
 Proof.
-  intros.
-  case (A x); apply identite.
+  fix multde4_nompaire 1.
+  intros n; destruct n as [|[|[|[|n]]]]; try apply identite.
+  simpl. 
+  case (elimVraie _ _ (egb_egale (nompaire n) (nepasb (nepasb (nompaire n)))) (nepasb_nepasb (nompaire n))).
+  case (elimVraie _ _ (egb_egale (nompaire n) (nepasb (nepasb (nompaire n)))) (nepasb_nepasb (nompaire n))).
+  apply multde4_nompaire.
 Qed.
 
-Axiom Axiom_Ensemble : forall (A: Ensemble),
-  forall (x: Sorte A), ou (avoir A x) (nepas (avoir A x)).
 
-Definition VideEnsemble (T: Type) := _Ensemble T (fun _ => Faux).
-Definition MemeEnsemble (T: Type) := _Ensemble T (fun _ => Vraie).
+Definition nomimpaire := fun n => nepasb (nompaire n).
+
+Lemma bool_exclu: forall (b: booleenne), ou (estvraie b) (nepas (estvraie b)).
+Proof.
+  intros b; case b.
+  - apply ougauche, identite.
+  - apply oudroite; intros F; case F.
+Qed.
+
+Definition nompaireensemble := Ensemble.Paquet _ (
+  Ensemble.Classe naturelle (fun n => estvraie (nompaire n)) (egale naturelle) (fun n => bool_exclu (nompaire n))).
+
+Definition multde4ensemble := Ensemble.Paquet _ (
+  Ensemble.Classe naturelle (fun n => estvraie (multde4 n)) (egale naturelle) (fun n => bool_exclu (multde4 n))).
+
+
+
+Lemma sous_multde4_nompaire: sousensemble multde4ensemble nompaireensemble (egreflexion _ _).
+Proof.
+  unfold sousensemble, Ta. simpl.
+  unfold fermer. intros n.
+  apply (elimVraie _ _ (impliqP _ _)).
+  apply multde4_nompaire.
+Qed.
+
 Record SousEnsMelange (A: Ensemble) := _SousEnsMelange {
-  
+
 }
   := forall (x: T), A x -> B x.
 
