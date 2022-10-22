@@ -345,7 +345,13 @@ Module Ensemble.
     Record classe_de (T: Type) := Classe {
       avoir: T -> Prop;
       eg: T -> T -> Prop;
-      exclu: forall (x: T), ou (avoir x) (nepas (avoir x))
+      exclu: forall x, ou (avoir x) (nepas (avoir x));
+      eg_ref: forall x, avoir x -> eg x x;
+      eg_mission: forall x y, avoir x -> avoir y ->
+        eg x y -> forall (P: _ -> Prop), ssi (P x) (P y)
+      (* eg_sym: forall x y, avoir x -> avoir y -> eg x y -> eg y x;
+      eg_trans: forall x y z, avoir x -> avoir y -> avoir z ->
+        eg x y -> eg y z -> eg x z *)
     }.
 
     Structure taper := Paquet { sorte; classe: classe_de sorte }.
@@ -353,18 +359,36 @@ Module Ensemble.
   End ClasseDef.
 
   Module Exports.
-    (* Coercion porteur: taper >-> Sortclass. *)
+    (* Coercion sorte: taper >-> Sortclass. *)
     Notation ensembleTaper := taper.
     Definition avoir T := avoir _ (classe T).
     Definition eg T := eg _ (classe T).
     Definition exclu T := exclu _ (classe T).
+    Definition eg_ref T := eg_ref _ (classe T).
+    Definition eg_mission T := eg_mission _ (classe T).
   End Exports.
 End Ensemble.
 Import Ensemble.Exports.
 
 Section EnsembleTheorie.
+  Variable A: ensembleTaper.
+
+  Lemma eg_sym: forall x y, avoir A x -> avoir A y ->
+    eg _ x y -> eg _ y x.
+  Proof.
+    intros x y Ax Ay Exy.
+    apply (eg_mission _ _ _ Ax Ay Exy (fun z => eg _ z x)), eg_ref, Ax.
+  Qed.
+
+  Lemma eg_trans: forall x y z, avoir A x -> avoir A y -> avoir A z ->
+    eg _ x y -> eg _ y z -> eg _ x z.
+  Proof.
+    intros x y z Ax Ay Az Exy Eyz.
+    apply (eg_mission _ _ _ Ax Ay Exy (fun w => eg _ w z)), Eyz.
+  Qed.
+
   Variable T: Type.
-  Definition inc (A B: Type) (H: egale _ A B): A -> B :=
+  Definition inc (T1 T2: Type) (H: egale _ T1 T2): T1 -> T2 :=
     match H in (egale _ _ T) return (_ -> T) with
     | egreflexion _ _ => (fun x => x)
     end.
@@ -451,11 +475,29 @@ Proof.
   - apply oudroite; intros F; case F.
 Qed.
 
+Lemma egale_trans: forall (T: Type) (x y z: T),
+  egale _ x y -> egale _ y z -> egale _ x z.
+Proof.
+  intros T x y z Exy Eyz.
+  case Eyz; apply Exy.
+Qed.
+
+Lemma egale_mission: forall (T: Type) (x y: T), egale _ x y ->
+  forall (P: _ -> Prop), ssi (P x) (P y).
+Proof.
+  intros T x y Exy P.
+  apply conjonction.
+  - intros Px. apply (egale_ind _ _ _ Px y Exy).
+  - intros Py. apply (egale_ind _ _ _ Py x (egsym _ _ _ Exy)).
+Qed.
+
 Definition nompaireensemble := Ensemble.Paquet _ (
-  Ensemble.Classe naturelle (fun n => estvraie (nompaire n)) (egale naturelle) (fun n => bool_exclu (nompaire n))).
+  Ensemble.Classe naturelle (fun n => estvraie (nompaire n)) (egale naturelle) (fun n => bool_exclu (nompaire n))
+  (fun x _ => egreflexion _ x) (fun x y _ _ => egale_mission _ x y)).
 
 Definition multde4ensemble := Ensemble.Paquet _ (
-  Ensemble.Classe naturelle (fun n => estvraie (multde4 n)) (egale naturelle) (fun n => bool_exclu (multde4 n))).
+  Ensemble.Classe naturelle (fun n => estvraie (multde4 n)) (egale naturelle) (fun n => bool_exclu (multde4 n))
+  (fun x _ => egreflexion _ x) (fun x y _ _ => egale_mission _ x y)).
 
 
 
@@ -466,6 +508,96 @@ Proof.
   apply (elimVraie _ _ (impliqP _ _)).
   apply multde4_nompaire.
 Qed.
+
+
+Module Groupe.
+  Record melange_de (A: ensembleTaper) := Melange {
+    ope: Ensemble.sorte A -> Ensemble.sorte A -> Ensemble.sorte A;
+    inv: Ensemble.sorte A -> Ensemble.sorte A;
+    id: Ensemble.sorte A;
+    fermer_ope: forall x y, avoir A x -> avoir A y -> avoir A (ope x y);
+    fermer_inv: forall x, avoir A x -> avoir A (inv x);
+    fermer_id: avoir A id;
+    assoc_ope: forall x y z, avoir A x -> avoir A y -> avoir A z ->
+      eg _ (ope x (ope y z)) (ope (ope x y) z);
+    droite_id: forall x, avoir A x -> eg _ x (ope x id);
+    gauche_inv: forall x, avoir A x -> eg _ id (ope (inv x) x);
+    droite_inv: forall x, avoir A x -> eg _ id (ope x (inv x))
+  }.
+
+  Section ClasseDef.
+    Record classe_de (A: Type) := Classe {
+      base: Ensemble.classe_de A;
+      melange: melange_de (Ensemble.Paquet _ base)
+    }.
+    Structure taper := Paquet { sorte; classe: classe_de sorte }.
+    Definition ensembleTaper (cT: taper) := Ensemble.Paquet (sorte cT) (base _ (classe cT)).
+  End ClasseDef.
+  Module Exports.
+    Notation groupeTaper := taper.
+    Definition sorteg G := Ensemble.sorte (ensembleTaper G).
+    Definition avoirg G := avoir (ensembleTaper G).
+    Definition egg G := eg (ensembleTaper G).
+    Definition exclug G := exclu (ensembleTaper G).
+    Definition egg_ref G := eg_ref (ensembleTaper G).
+    Definition egg_mission G := eg_mission (ensembleTaper G).
+    Definition opeg G := ope _ (melange _ (classe G)).
+    Definition invg G := inv _ (melange _ (classe G)).
+    Definition idg G := id _ (melange _ (classe G)).
+    Definition egg_trans G := eg_trans (ensembleTaper G).
+    Definition fermer_ope G := fermer_ope _ (melange _ (classe G)).
+    Definition fermer_inv G := fermer_inv _ (melange _ (classe G)).
+    Definition fermer_id G := fermer_id _ (melange _ (classe G)).
+    Definition assoc_ope G := assoc_ope _ (melange _ (classe G)).
+    Definition droite_id G := droite_id _ (melange _ (classe G)).
+    Definition gauche_inv G := gauche_inv _ (melange _ (classe G)).
+    Definition droite_inv G := droite_inv _ (melange _ (classe G)).
+  End Exports.
+End Groupe.
+Import Groupe.Exports. 
+
+Lemma gauche_id: forall (G: groupeTaper) (x: sorteg G),
+  avoirg G x -> egg _ x (opeg _ (idg _) x).
+Proof.
+  intros G x Gx.
+  pose (eg_mission _ _ _ (fermer_id _)
+    (fermer_ope _ _ _ Gx (fermer_inv _ _ Gx)) 
+    (droite_inv _ x Gx)
+    (fun w => egg _ w x)) as Eex_xxinvx.
+  case Eex_xxinvx; intros E1 E2.
+  apply (eg_trans _ _ _ _ Gx
+    (fermer_ope _ _ _ (fermer_ope _ _ _ Gx (fermer_inv _ _ Gx)) Gx)
+    (fermer_ope _ _ _ (fermer_id _) Gx)); simpl.
+  - apply (eg_trans _ _ _ _ Gx 
+      (fermer_ope _ _ _ Gx (fermer_ope _ _ _ (fermer_inv _ _ Gx) Gx))
+      (fermer_ope _ _ _ (fermer_ope _ _ _ Gx (fermer_inv _ _ Gx)) Gx)).
+  -- apply (eg_trans _ _ _ _ Gx 
+       (fermer_ope _ _ _ Gx (fermer_id _)) 
+       (fermer_ope _ _ _ Gx (fermer_ope _ _ _ (fermer_inv _ _ Gx) Gx))).
+  --- apply droite_id, Gx.
+  --- pose (eg_mission _ _ _ (fermer_id _)
+        (fermer_ope _ _ _ (fermer_inv _ _ Gx) Gx)
+        (gauche_inv _ _ Gx)
+        (fun w => egg _ (opeg _ x (idg G)) (opeg _ x w))) 
+        as Exe_xxinvx.
+      case Exe_xxinvx; intros E3 E4.
+      apply E3. apply egg_ref.
+      apply (fermer_ope _ _ _ Gx (fermer_id _)).
+  -- apply (assoc_ope _ _ _ _ Gx (fermer_inv _ _ Gx) Gx).
+  - pose (eg_mission _ _ _ (fermer_id _)
+      (fermer_ope _ _ _ Gx (fermer_inv _ _ Gx))
+      (droite_inv _ _ Gx)
+      (fun w => egg _ (opeg _ w x) (opeg _ (idg G) x))) 
+      as Exxinvx_ex.
+    case Exxinvx_ex; intros E5 E6.
+    apply E5. apply egg_ref.
+    apply fermer_ope. apply fermer_id. apply Gx.
+Qed.
+
+Ltac recrire
+
+
+    
 
 Record SousEnsMelange (A: Ensemble) := _SousEnsMelange {
 
@@ -479,15 +611,6 @@ Definition memeensemble (M: egtaper): ensemble M := fun _ => vraie.
 
 Definition sousensemble (M: egtaper) (A B: ensemble M)
   := forall (x: sorte M), appartenir _ x A -> appartenir _ x B.
-  
-Record Cartographie := _Cartographie {
-  Tdom: Type;
-  Tcod: Type;
-  Domaine: Ensemble Tdom;
-  Codomaine: Ensemble Tcod;
-  Fonc: Tdom -> Tcod;
-  Fermer_fonc : forall (x: Tdom), Domaine x -> Codomaine (Fonc x)
-}.
 
 Definition Injection (f: Cartographie)
   := forall (x y: Tdom f), Domaine _ x -> Domaine _ y -> egale _ (Fonc f x) (Fonc f y) -> egale _ x y.
@@ -496,57 +619,6 @@ Definition Surjection (f: Cartographie)
   := forall (x: Tcod f), exists x': Tdom f, egale _ x (Fonc f x').
 
 Definition Bijection (f: Cartographie) := et (Injection f) (Surjection f).
-
-(* ===== Group ===== *)
-(* 
-Record groupe: Type := _groupe {
-  porteur: egtaper;
-  support: ensemble porteur;
-  operatrice: sorte porteur -> sorte porteur -> sorte porteur;
-  inverse: sorte porteur -> sorte porteur;
-  elemid: sorte porteur;
-  fermer_ope: forall (x y: sorte porteur), 
-    appartenir _ x support -> appartenir _ y support
-    -> appartenir _ (operatrice x y) support;
-  fermer_inv: forall (x: sorte porteur),
-    appartenir _ x support -> appartenir _ (inverse x) support;
-  fermer_id: appartenir _ elemid support;
-  assoc_ope: forall (x y z: sorte porteur),
-    appartenir _ x support -> appartenir _ y support -> appartenir _ z support
-    -> egale _ (operatrice (operatrice x y) z) (operatrice x (operatrice y z));
-  inv_gauche: forall (x: sorte porteur),
-    appartenir _ x support -> egale _ elemid (operatrice (inverse x) x);
-  inv_droite: forall (x: sorte porteur),
-    appartenir _ x support -> egale _ elemid (operatrice x (inverse x));
-  id_droite: forall (x: sorte porteur),
-    appartenir _ x support -> egale _ x (operatrice x elemid)
-}.
-
-Definition gtaper G := sorte (porteur G).
-Definition gegop G := egop (porteur G).
-
-Lemma id_gauche: forall (G: groupe) (x: gtaper G),
-  appartenir _ x (support G) -> egale _ x (operatrice G (elemid G) x).
-Proof.
-  intros G x H.
-  case (egsym _ _ _ (inv_droite G x H)).
-  case (egsym _ _ _ (assoc_ope _ x (inverse _ x) x H (fermer_inv _ x H) H)).
-  case (inv_gauche G x H).
-  case (id_droite G x H).
-  apply egreflexion.
-Qed.
-
-Definition homomorphisme (G H: groupe) (f: gtaper H -> gtaper G) :=
-  (forall x: gtaper H, appartenir _ x (support H) -> appartenir _ (f x) (support G)) ->
-  egale _ (f (elemid H)) (elemid G) ->
-  (forall x y: gtaper H, egale _ (f (operatrice H x y)) (operatrice G (f x) (f y))) ->
-  (forall x: gtaper H, egale _ (f (inverse H x)) (inverse G (f x))).
-
-
-Definition noyau (G H: groupe) (f: gtaper H -> gtaper G) : ensemble (porteur H) :=
-  fun x => gegop _ (elemid G) (f x). *)
-
-(* Definition image (G H: groupe) (f: gtaper H -> gtaper G) : ensemble (porteur G) := *)
 
 
 Record Groupe: Type := _Groupe {
