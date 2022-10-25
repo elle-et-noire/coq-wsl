@@ -356,10 +356,23 @@ Module Ensemble.
   Module Exports.
     (* Coercion sorte: taper >-> Sortclass. *)
     Notation ensembleTaper := taper.
+    (* Definition sortee A := match A with
+      | Paquet t _ => t
+      end. *)
+    Definition sortee A := sorte A.
     Definition avoir T := avoir _ (classe T).
+    (* Definition avoir A := match classe A with
+      | Classe _ a _ _ _ => a
+      end. *)
     Definition eg T := eg _ (classe T).
+    (* Definition eg A := match classe A with
+      | Classe _ _ e _ _ => e
+      end. *)
     (* Definition exclu T := exclu _ (classe T). *)
     Definition eg_ref T := eg_ref _ (classe T).
+    (* Definition eg_ref (A: ensembleTaper) := match classe A with
+      | Classe _ _ _ e' _ => e'
+      end. *)
     Definition eg_mission T := eg_mission _ (classe T).
   End Exports.
 End Ensemble.
@@ -405,8 +418,8 @@ End EnsembleTheorie.
 
 Section CartographieTheorie.
   Variables A B: ensembleTaper.
-  Definition Ta := Ensemble.sorte A.
-  Definition Tb := Ensemble.sorte B.
+  Definition Ta := sortee A.
+  Definition Tb := sortee B.
 
   Definition fermer (f: Ta -> Tb) := forall x, avoir A x -> avoir B (f x).
   Definition sousensemble (H: egale _ Ta Tb) := fermer (inc _ _ H).
@@ -415,7 +428,7 @@ End CartographieTheorie.
 Module Cartographie.
   Section ClasseDef.
     Record classe_de (domaine codomaine: ensembleTaper) := Classe {
-      carto: Ensemble.sorte domaine -> Ensemble.sorte codomaine;
+      carto: sortee domaine -> sortee codomaine;
       fermer: fermer _ _ carto
     }.  
     Structure taper := Paquet { domaine; codomaine; _: classe_de domaine codomaine }.
@@ -436,7 +449,7 @@ Import Cartographie.Exports.
 
 Section SousEnsemble.
   Variable A: ensembleTaper.
-  Definition sorteA := Ensemble.sorte A.
+  Definition sorteA := sortee A.
   Variable confavoir: sorteA -> Prop.
   Variable sous_confavoir: forall x, confavoir x -> avoir A x.
   Lemma sous_eg_ref: forall x, confavoir x -> eg _ x x.
@@ -458,12 +471,12 @@ End SousEnsemble.
 
 Section CartographieTheorie.
   Definition injection (f: cartoTaper) :=
-    forall (x y: Ensemble.sorte (domaine f)), avoir _ x -> avoir _ y ->
+    forall (x y: sortee (domaine f)), avoir _ x -> avoir _ y ->
     eg (codomaine f) (carto f x) (carto f y).
   
   Definition surjection (f: cartoTaper) :=
-    forall (x: Ensemble.sorte (codomaine f)), avoir _ x ->
-    exists x': Ensemble.sorte (domaine f), eg _ x (carto f x').
+    forall (x: sortee (codomaine f)), avoir _ x ->
+    exists x': sortee (domaine f), eg _ x (carto f x').
 
   Definition bijection (f: cartoTaper) := et (injection f) (surjection f).
 
@@ -553,9 +566,9 @@ End Nompaire.
 
 Module Groupe.
   Record melange_de (A: ensembleTaper) := Melange {
-    ope: Ensemble.sorte A -> Ensemble.sorte A -> Ensemble.sorte A;
-    inv: Ensemble.sorte A -> Ensemble.sorte A;
-    id: Ensemble.sorte A;
+    ope: sortee A -> sortee A -> sortee A;
+    inv: sortee A -> sortee A;
+    id: sortee A;
     fermer_ope: forall x y, avoir A x -> avoir A y -> avoir A (ope x y);
     fermer_inv: forall x, avoir A x -> avoir A (inv x);
     fermer_id: avoir A id;
@@ -577,10 +590,17 @@ Module Groupe.
       | Paquet _ c => c
       end.
     Definition ensembleTaper (cT: taper) := Ensemble.Paquet (sorte cT) (base _ (classe cT)).
+    (* Definition ensembleTaper (cT: taper) :=
+      match classe cT return ensembleTaper with
+      | Classe _ b _ => Ensemble.Paquet _ b
+      end. *)
   End ClasseDef.
   Module Exports.
     Notation groupeTaper := taper.
-    Definition sorteg G := Ensemble.sorte (ensembleTaper G).
+    Definition sorteg G := sortee (ensembleTaper G).
+    (* Definition sorteg G := match G with
+      | Paquet t _ => t
+      end. *)
     Definition avoirg G := avoir (ensembleTaper G).
     Definition egg G := eg (ensembleTaper G).
     (* Definition exclug G := exclu (ensembleTaper G). *)
@@ -905,7 +925,7 @@ Section SousGroupe.
 
   Definition sousgroupenormal :=
     forall (g: sorteg G) (h: sorteg H), avoirg _ g -> avoirg _ h ->
-    exists h', egg _ (i h') (opeg _ (opeg _ g (i h)) (invg _ g)).
+    exists h', et (avoirg H h') (egg _ (i h') (opeg _ (opeg _ g (i h)) (invg _ g))).
 End SousGroupe.
 Section Noyau.
   Variable f: homTaper.
@@ -984,14 +1004,89 @@ Section Noyau.
     - apply fermer_id.
     - apply hom_preserve_id.
   Qed.
-  Definition noyauGroupe := Groupe.Paquet (Ensemble.sorte noyauEnsemble) (Groupe.Classe (Ensemble.sorte noyauEnsemble)
+  Definition noyauGroupe := Groupe.Paquet (sortee noyauEnsemble) (Groupe.Classe (sortee noyauEnsemble)
     (Ensemble.classe noyauEnsemble) (Groupe.Melange noyauEnsemble (opeg H) (invg _ ) (idg _)
       noyau_fermer_ope noyau_fermer_inv noyau_fermer_id
       (fun x y z Hx Hy Hz => assoc_ope _ _ _ _ (noyauf_sous _ Hx) (noyauf_sous _ Hy) (noyauf_sous _ Hz))
       (fun x Hx => droite_id _ _ (noyauf_sous _ Hx))
       (fun x Hx => gauche_inv _ _ (noyauf_sous _ Hx))
       (fun x Hx => droite_inv _ _ (noyauf_sous _ Hx)))).
-
+  Lemma noyau_sousgroupenormal: sousgroupenormal H noyauGroupe (egreflexion _ _).
+  Proof.
+    unfold sousgroupenormal. simpl.
+    intros g h Hg Nh. exists (opeg _ (opeg _ g h) (invg _ g)).
+    pose (noyauf_sous _ Nh) as Hh. apply conjonction. 
+    - unfold noyauGroupe. unfold noyauEnsemble. unfold noyauf_avoir.
+      unfold avoirg. unfold Groupe.ensembleTaper. 
+      unfold avoir. simpl. apply conjonction.
+    -- apply fermer_ope. apply fermer_ope. apply Hg.
+       apply Nh. apply fermer_inv. apply Hg.
+    -- apply (eg_trans _ _ _ _
+         (fermer_id _)
+         (fermer_ope _ _ _ (fermf _ _ Hg) (fermer_inv _ _ (fermf _ _ Hg)))
+         (fermf _ _ (fermer_ope _ _ _ (fermer_ope _ _ _ Hg Hh) (fermer_inv _ _ Hg)))).
+    --- apply droite_inv. apply fermf. apply Hg.
+    --- apply (eg_trans _ _ _ _
+          (fermer_ope _ _ _ (fermf _ _ Hg) (fermer_inv _ _ (fermf _ _ Hg)))
+          (fermer_ope _ _ _ (fermer_ope _ _ _ (fermf _ _ Hg) (fermer_id _)) (fermer_inv _ _ (fermf _ _ Hg)))
+          (fermf _ _ (fermer_ope _ _ _ (fermer_ope _ _ _ Hg Hh) (fermer_inv _ _ Hg)))).
+    ---- apply (eg_mission _ _ _
+           (fermf _ _ Hg) (fermer_ope _ _ _ (fermf _ _ Hg) (fermer_id _))
+           (droite_id _ _ (fermf _ _ Hg))
+           (fun w => egg _ (opeg _ ((carte f) g) (invg _ ((carte f) g))) (opeg _ w (invg _ ((carte f) g))))).
+         apply eg_ref. apply fermer_ope. apply fermf. apply Hg. apply fermer_inv.
+         apply fermf. apply Hg.
+    ---- apply (eg_trans _ _ _ _
+          (fermer_ope _ _ _ (fermer_ope _ _ _ (fermf _ _ Hg) (fermer_id _)) (fermer_inv _ _ (fermf _ _ Hg)))
+          (fermer_ope _ _ _ (fermer_ope _ _ _ (fermf _ _ Hg) (fermf _ _ Hh)) (fermer_inv _ _ (fermf _ _ Hg)))
+          (fermf _ _ (fermer_ope _ _ _ (fermer_ope _ _ _ Hg Hh) (fermer_inv _ _ Hg)))).
+    ----- case Nh; intros Nh0 Eefh.
+          apply (eg_mission _ _ _
+                  (fermer_id _) (fermf _ _ Hh)
+                  Eefh
+                  (fun w => egg _ (opeg _ (opeg _ ((carte f) g) (idg _)) (invg _ ((carte f) g)))
+                                  (opeg _ (opeg _ ((carte f) g) w) (invg _ ((carte f) g))))).
+          apply eg_ref. apply fermer_ope. apply fermer_ope. apply fermf. apply Hg.
+          apply fermer_id. apply fermer_inv. apply fermf. apply Hg.
+    ----- apply (eg_trans _ _ _ _
+            (fermer_ope _ _ _ (fermer_ope _ _ _ (fermf _ _ Hg) (fermf _ _ Hh)) (fermer_inv _ _ (fermf _ _ Hg)))
+            (fermer_ope _ _ _ (fermf _ _ (fermer_ope _ _ _ Hg Hh)) (fermer_inv _ _ (fermf _ _ Hg)))
+            (fermf _ _ (fermer_ope _ _ _ (fermer_ope _ _ _ Hg Hh) (fermer_inv _ _ Hg)))).                                  
+    ------ apply eg_sym. apply fermer_ope. apply fermf. apply fermer_ope.
+           apply Hg. apply Hh. apply fermer_inv. apply fermf. apply Hg.
+           apply fermer_ope. apply fermer_ope. apply fermf. apply Hg.
+           apply fermf. apply Hh. apply fermer_inv. apply fermf. apply Hg. 
+           apply (eg_mission _ _ _
+             (fermf _ _ (fermer_ope _ _ _ Hg Hh)) 
+             (fermer_ope _ _ _ (fermf _ _ Hg) (fermf _ _ Hh))
+             (hom f _ _ Hg Hh)
+             (fun w => egg _ (opeg _ ((carte f) (opeg _ g h)) (invg _ ((carte f) g)))
+                             (opeg _ w (invg _ ((carte f) g))))).
+           apply eg_ref. apply fermer_ope. apply fermf. apply fermer_ope.
+           apply Hg. apply Hh. apply fermer_inv. apply fermf. apply Hg.
+    ------ apply (eg_trans _ _ _ _
+            (fermer_ope _ _ _ (fermf _ _ (fermer_ope _ _ _ Hg Hh)) (fermer_inv _ _ (fermf _ _ Hg)))
+            (fermer_ope _ _ _ (fermf _ _ (fermer_ope _ _ _ Hg Hh)) (fermf _ _ (fermer_inv _ _ Hg)))
+            (fermf _ _ (fermer_ope _ _ _ (fermer_ope _ _ _ Hg Hh) (fermer_inv _ _ Hg)))).
+    ------- apply eg_sym. apply fermer_ope. apply fermf. apply fermer_ope.
+            apply Hg. apply Hh. apply fermf. apply fermer_inv. apply Hg.
+            apply fermer_ope. apply fermf. apply fermer_ope. apply Hg. apply Hh.
+            apply fermer_inv. apply fermf. apply Hg.
+            apply (eg_mission _ _ _
+              (fermf _ _ (fermer_inv _ _ Hg))
+              (fermer_inv _ _ (fermf _ _ Hg))
+              (hom_preserve_inv _ _ Hg)
+              (fun w => egg _ (opeg _ ((carte f) (opeg _ g h)) w)
+                              (opeg _ ((carte f) (opeg _ g h)) (invg _ ((carte f) g))))).      
+            apply eg_ref. apply fermer_ope. apply fermf. apply fermer_ope.
+            apply Hg. apply Hh. apply fermer_inv. apply fermf. apply Hg.
+    ------- apply eg_sym. apply fermf. apply fermer_ope. apply fermer_ope.
+            apply Hg. apply Hh. apply fermer_inv. apply Hg. apply fermer_ope.
+            apply fermf. apply fermer_ope. apply Hg. apply Hh. apply fermf.
+            apply fermer_inv. apply Hg. apply hom. apply fermer_ope.
+            apply Hg. apply Hh. apply fermer_inv. apply Hg.
+    - apply eg_ref. apply (fermer_ope _ _ _ (fermer_ope _ _ _ Hg Hh) (fermer_inv _ _ Hg)).
+Qed.
 End Noyau.
 
 Record reldequiv := _reldequiv {
