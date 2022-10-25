@@ -481,13 +481,13 @@ Section CartographieTheorie.
   Definition bijection (f: cartoTaper) := et (injection f) (surjection f).
 
   Variable f: cartoTaper.
-  Definition imagef_avoir := fun x => exists x', et (avoir _ x) (eg _ x ((carto f) x')).
+  Definition imagef_avoir := fun x => et (avoir _ x) (exists x', et (avoir _ x') (eg _ x ((carto f) x'))).
   Lemma imagef_sous: forall x, imagef_avoir x -> avoir (codomaine f) x.
   Proof. 
-    unfold imagef_avoir. intros x sAx. destruct sAx as [x' H].
-    case H; intros H1 H2. apply H1.
+    unfold imagef_avoir. intros x H.
+    case H; intros Ax sAx. apply Ax.
   Qed.
-  Definition image := produire_sousensemble (codomaine f) imagef_avoir imagef_sous.
+  Definition imageEnsemble := produire_sousensemble (codomaine f) imagef_avoir imagef_sous.
 End CartographieTheorie.
 
 Section Nompaire.
@@ -832,6 +832,7 @@ Module Homomorphisme.
       match cT return classe_de (domaine cT) (codomaine cT) with
       | Paquet _ _ c => c
       end.
+    Definition cartoTaper (cT: taper) := Cartographie.Paquet _ _ (base _ _ (classe cT)).
   End ClasseDef.
   Module Exports.
     Notation homTaper := taper.
@@ -1088,6 +1089,80 @@ Section Noyau.
     - apply eg_ref. apply (fermer_ope _ _ _ (fermer_ope _ _ _ Hg Hh) (fermer_inv _ _ Hg)).
 Qed.
 End Noyau.
+
+Section Image.
+  Variable f: homTaper.
+  Definition phi := carte f.
+  Definition Imf := imageEnsemble (Homomorphisme.cartoTaper f).
+  Lemma image_fermer_ope: forall x y, avoir Imf x -> avoir Imf y ->
+    avoir Imf (opeg _ x y).
+  Proof.
+    intros x y Imx Imy.
+    destruct Imx as [Gx H0]. destruct H0 as [x' H1].
+    destruct H1 as [Hx' xfx'].
+    destruct Imy as [Gy H0]. destruct H0 as [y' H1].
+    destruct H1 as [Hy' yfy'].
+    apply conjonction.
+    - apply fermer_ope. apply Gx. apply Gy.
+    - exists (opeg _ x' y'). apply conjonction.
+    -- apply fermer_ope. apply Hx'. apply Hy'.
+    -- apply (eg_trans _ _ _ _
+         (fermer_ope _ _ _ Gx Gy)
+         (fermer_ope _ _ _ (fermf _ _ Hx') Gy)
+         (fermf _ _ (fermer_ope _ _ _ Hx' Hy'))).
+    --- apply (eg_mission _ _ _
+          Gx (fermf _ _ Hx') xfx' 
+          (fun w => egg _ (opeg _ x y) (opeg _ w y))).
+        apply eg_ref. apply (fermer_ope _ _ _ Gx Gy).
+    --- apply (eg_trans _ _ _ _
+          (fermer_ope _ _ _ (fermf _ _ Hx') Gy)
+          (fermer_ope _ _ _ (fermf _ _ Hx') (fermf _ _ Hy'))
+          (fermf _ _ (fermer_ope _ _ _ Hx' Hy'))).
+    ---- apply (eg_mission _ _ _
+           Gy (fermf _ _ Hy') yfy' 
+           (fun w => egg _ (opeg _ (phi x') y) (opeg _ (phi x') w))).
+         apply eg_ref. apply (fermer_ope _ _ _ (fermf _ _ Hx') Gy).
+    ---- apply eg_sym. apply fermf. apply fermer_ope. apply Hx'. 
+         apply Hy'. apply fermer_ope. apply fermf. apply Hx'. 
+         apply fermf. apply Hy'.
+         apply hom. apply Hx'. apply Hy'.
+  Qed.
+  Lemma image_fermer_inv: forall x, avoir Imf x ->
+    avoir Imf (invg _ x).
+  Proof.
+    intros x Imx. destruct Imx as [Gx H0]. destruct H0 as [x' H1].
+    destruct H1 as [Hx' xfx']. apply conjonction.
+    - apply fermer_inv. apply Gx.
+    - exists (invg _ x'). apply conjonction.
+    -- apply fermer_inv. apply Hx'.
+    -- apply (eg_trans _ _ _ _
+         (fermer_inv _ _ Gx)
+         (fermer_inv _ _ (fermf _ _ Hx'))
+         (fermf _ _ (fermer_inv _ _ Hx'))).
+    --- apply (eg_mission _ _ _
+          Gx (fermf _ _ Hx') xfx'
+          (fun w => egg _ (invg _ x) (invg _ w))).
+        apply eg_ref. apply (fermer_inv _ _ Gx).
+    --- apply eg_sym. apply (fermf _ _ (fermer_inv _ _ Hx')).
+        apply (fermer_inv _ _ (fermf _ _ Hx')).
+        apply hom_preserve_inv. apply Hx'.
+  Qed.
+  Lemma image_fermer_id: avoir Imf (idg _).
+  Proof.
+    apply conjonction.
+    - apply fermer_id.
+    - exists (idg _). apply conjonction.
+    -- apply fermer_id.
+    -- apply hom_preserve_id.
+  Qed.
+  Definition imageGroupe := Groupe.Paquet (sortee Imf) (Groupe.Classe (sortee Imf)
+  (Ensemble.classe Imf) (Groupe.Melange Imf (opeg (codomf f)) (invg _ ) (idg _)
+    image_fermer_ope image_fermer_inv image_fermer_id
+    (fun x y z Hx Hy Hz => assoc_ope _ _ _ _ (imagef_sous _ _ Hx) (imagef_sous _ _ Hy) (imagef_sous _ _ Hz))
+    (fun x Hx => droite_id _ _ (imagef_sous _ _ Hx))
+    (fun x Hx => gauche_inv _ _ (imagef_sous _ _ Hx))
+    (fun x Hx => droite_inv _ _ (imagef_sous _ _ Hx)))).
+End Image.
 
 Record reldequiv := _reldequiv {
   relsorte: Type;

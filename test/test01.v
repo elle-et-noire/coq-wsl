@@ -33,3 +33,11 @@ Proof.
   move=> X Y Xis. by apply.
 Qed.
 
+Section uouo.
+  Variable T: Type.
+  Variable a: T.
+End uouo.
+
+Section uouo.
+  Variable b: T.
+End uouo.
