@@ -13,7 +13,7 @@ Inductive ou (A B : Prop) : Prop :=
 | ougauche : A -> (ou A B)
 | oudroite : B -> (ou A B).
 
-Inductive egale (A : Type) (x : A) : A -> Prop :=
+Inductive egale (A : _) (x : A) : A -> Prop :=
 | egreflexion : egale A x x.
 
 Axiom fonc_egalite: forall (A: Type) (B: A -> Type) (f g: forall x:A, B x),
@@ -356,23 +356,10 @@ Module Ensemble.
   Module Exports.
     (* Coercion sorte: taper >-> Sortclass. *)
     Notation ensembleTaper := taper.
-    (* Definition sortee A := match A with
-      | Paquet t _ => t
-      end. *)
     Definition sortee A := sorte A.
     Definition avoir T := avoir _ (classe T).
-    (* Definition avoir A := match classe A with
-      | Classe _ a _ _ _ => a
-      end. *)
     Definition eg T := eg _ (classe T).
-    (* Definition eg A := match classe A with
-      | Classe _ _ e _ _ => e
-      end. *)
-    (* Definition exclu T := exclu _ (classe T). *)
     Definition eg_ref T := eg_ref _ (classe T).
-    (* Definition eg_ref (A: ensembleTaper) := match classe A with
-      | Classe _ _ _ e' _ => e'
-      end. *)
     Definition eg_mission T := eg_mission _ (classe T).
   End Exports.
 End Ensemble.
@@ -416,14 +403,20 @@ Section EnsembleTheorie.
 
 End EnsembleTheorie.
 
-Section CartographieTheorie.
-  Variables A B: ensembleTaper.
-  Definition Ta := sortee A.
-  Definition Tb := sortee B.
-
-  Definition fermer (f: Ta -> Tb) := forall x, avoir A x -> avoir B (f x).
-  Definition sousensemble (H: egale _ Ta Tb) := fermer (inc _ _ H).
+Module CartographieTheorie.
+  Section Defs.
+    Variables A B: ensembleTaper.
+    Definition Ta := sortee A.
+    Definition Tb := sortee B.
+    Definition fermer (f: Ta -> Tb) := forall x, avoir A x -> avoir B (f x).
+    Definition sousensemble (H: egale _ Ta Tb) := fermer (inc _ _ H).
+  End Defs.
+  Module Exports.
+    Notation fermer := fermer.
+    Notation sousensemble := sousensemble.
+  End Exports.
 End CartographieTheorie.
+Import CartographieTheorie.Exports.
 
 Module Cartographie.
   Section ClasseDef.
@@ -468,6 +461,29 @@ Section SousEnsemble.
   Definition produire_sousensemble := Ensemble.Paquet sorteA
     (Ensemble.Classe _ confavoir (eg A) sous_eg_ref sous_eg_mission).
 End SousEnsemble.
+
+Module EnsembleTheorie.
+  Section Defs.
+    Variables A B:ensembleTaper.
+    Hypothesis HTaTb: egale _ (sortee A) (sortee B).
+    Definition  HTbTa := egsym _ _ _ HTaTb.
+    Definition ege :=  et (sousensemble A B HTaTb) (sousensemble B A HTbTa).
+    Axiom ege_mission : forall (P:ensembleTaper -> Prop), ege -> ssi (P A) (P B).
+  End Defs.
+  Module Exports.
+    Definition ege := ege.
+    Definition ege_mission := ege_mission.
+  End Exports.
+End EnsembleTheorie.
+Import EnsembleTheorie.Exports.
+Section EnsembleTheorie.
+  Lemma ege_ref : forall (A:ensembleTaper), ege A A (egreflexion _ _).
+  Proof.
+    intros A. apply conjonction;
+    unfold sousensemble; unfold CartographieTheorie.Exports.fermer;
+    simpl; intros x Ax; apply Ax.
+  Qed.
+End EnsembleTheorie.
 
 Section CartographieTheorie.
   Definition injection (f: cartoTaper) :=
@@ -557,7 +573,7 @@ Section Nompaire.
 
   Lemma sous_multde4_nompaire: sousensemble multde4ensemble nompaireensemble (egreflexion _ _).
   Proof.
-    unfold sousensemble, Ta. simpl.
+    unfold sousensemble. simpl.
     unfold fermer. intros n.
     apply (elimVraie _ _ (impliqP _ _)).
     apply multde4_nompaire.
@@ -590,20 +606,12 @@ Module Groupe.
       | Paquet _ c => c
       end.
     Definition ensembleTaper (cT: taper) := Ensemble.Paquet (sorte cT) (base _ (classe cT)).
-    (* Definition ensembleTaper (cT: taper) :=
-      match classe cT return ensembleTaper with
-      | Classe _ b _ => Ensemble.Paquet _ b
-      end. *)
   End ClasseDef.
   Module Exports.
     Notation groupeTaper := taper.
     Definition sorteg G := sortee (ensembleTaper G).
-    (* Definition sorteg G := match G with
-      | Paquet t _ => t
-      end. *)
     Definition avoirg G := avoir (ensembleTaper G).
     Definition egg G := eg (ensembleTaper G).
-    (* Definition exclug G := exclu (ensembleTaper G). *)
     Definition egg_ref G := eg_ref (ensembleTaper G).
     Definition egg_mission G := eg_mission (ensembleTaper G).
     Definition opeg G := ope _ (melange _ (classe G)).
@@ -1164,14 +1172,111 @@ Section Image.
     (fun x Hx => droite_inv _ _ (imagef_sous _ _ Hx)))).
 End Image.
 
-Record reldequiv := _reldequiv {
-  relsorte: Type;
-  relens: Ensemble relsorte;
-  rel: relsorte -> relsorte -> Prop;
-  loireflexe: forall a: relsorte, relens a -> rel a a;
-  loisymetrie: forall a b: relsorte, relens a -> relens b -> rel a b -> rel b a;
-  loitransitive: forall a b c: relsorte, relens a -> relens b -> relens c -> rel a b -> rel b c -> rel a c
-}.
+Module Equivalence.
+  Section Defs.
+    Variable A: ensembleTaper.
+    Definition Ta := sortee A.
+    Variable rel: Ta -> Ta -> Prop.
+    Variable eqrel_ref: forall a: sortee A, avoir A a -> rel a a.
+    Variable eqrel_sym: forall a b: sortee A, 
+      avoir A a -> avoir A b -> rel a b -> rel b a.
+    Variable eqrel_trans: forall a b c: sortee A,
+      avoir A a -> avoir A b -> avoir A c -> 
+      rel a b -> rel b c -> rel a c.
+    Definition eqclasse_avoir (a: Ta) (_: avoir A a) := fun b => et (avoir A b) (rel a b).
+    Lemma eqclasse_sous : forall (a: Ta) (Aa: avoir A a) (b:Ta),
+      eqclasse_avoir _ Aa b -> avoir A b.
+    Proof. intros. case H0; intros. apply H1. Qed.
+    Definition eqclasseEnsemble (a: Ta) (Aa: avoir A a) := produire_sousensemble A 
+      (eqclasse_avoir _ Aa) (eqclasse_sous _ Aa).
+    Lemma eqclasse_rel_ege : forall (x y:Ta) (Ax: avoir A x) (Ay: avoir A y),
+      rel x y -> ege (eqclasseEnsemble _ Ax) (eqclasseEnsemble _ Ay) (egreflexion _ _) .
+    Proof.
+      intros x y Ax Ay Rxy. 
+      apply conjonction; unfold sousensemble; 
+      unfold CartographieTheorie.Exports.fermer; 
+      simpl; intros z H0; case H0; intros Az C_z;
+      apply conjonction.
+      - apply Az.
+      - apply (eqrel_trans _ _ _ Ay Ax Az). apply eqrel_sym. apply Ax.
+        apply Ay. apply Rxy. apply C_z.
+      - apply Az.
+      - apply (eqrel_trans _ _ _ Ax Ay Az). apply Rxy. apply C_z.
+    Qed.
+    
+    Inductive prodEnsEg : Type :=
+      enseg : forall (B:ensembleTaper), egale _ Ta (sortee B) -> prodEnsEg.
+    Definition prodee_ens (ee:prodEnsEg) :=
+      match ee with enseg e _ => e end.
+    Definition prodee_eg (ee:prodEnsEg) :=
+      match ee return egale _ Ta (sortee (prodee_ens ee)) with enseg _ e => e end.
+    Definition eqclasseEnsemble_avoir (ee:prodEnsEg) :=
+      match ee with
+      | enseg B EAB => exists (a:Ta), et (avoir A a) (forall (Aa: avoir A a), ege (eqclasseEnsemble _ Aa) B EAB)
+      end.
+    (* Definition eqclasseEnsemble_eg (ee1 ee2:prodEnsEg) :=
+      match ee1, ee2 with
+      | enseg B EAB, enseg C EAC => ege B C (egale_trans _ _ _ _ (egsym _ _ _ EAB) EAC) 
+      end. *)
+    (* Definition eqclasseEnsemble_eg (ee1 ee2:prodEnsEg) :=
+      match ee1, ee2 with
+      | enseg B EAB, enseg C EAC => ege (prodee_ens ee1) (prodee_ens ee2) (egale_trans _ _ _ _ (egsym _ _ _ EAB) EAC) 
+      end. *)
+    Definition eqclasseEnsemble_eg (ee1 ee2:prodEnsEg) :=
+      ege (prodee_ens ee1) (prodee_ens ee2) (egale_trans _ _ _ _ (egsym _ _ _ (prodee_eg ee1)) (prodee_eg ee2)).
+    Lemma eqclasseEnsemble_eg_ref : forall (ee:prodEnsEg),
+      eqclasseEnsemble_eg ee ee.
+    Proof.
+      intros ee. unfold eqclasseEnsemble_eg.
+      pose (prodee_eg ee) as Eee.
+      Check (egale _ Type Type).
+      Check (egsym _ _ _ (egreflexion _ Type)).
+      case Eee.
+      Check (egsym _ _ _ Eee).
+      pose (egale_trans _ _ _ _ (egsym _ _ _ Eee) Eee) as uouo.
+      case uouo.
+      case Eee. apply ege_ref. unfold ege. unfold EnsembleTheorie.ege.
+
+    Definition eqclasseEnsemble := 
+      Ensemble.Classe prodEnsEg eqclasseEnsemble_avoir eqclasseEnsemble_eg
+
+
+    Inductive eqclasse: Type :=
+      | C : eqclasseEnsemble -> eqclasse.
+    Definition eqclasse_eg (Cx Cy: eqclasse) :=
+      match Cx, Cy with
+      | C x _, C y _ => rel x y
+      end.
+    
+    (* Variable a b: Ta.
+    Variables Aa: avoir A a.
+    Variable Ab: avoir A b.
+    Definition Ca := C a Aa.
+    Definition Cb := C _ Ab.
+    Compute (eqclasse_eg Ca Cb). *)
+    
+  Section ClasseDef.
+    Record classe_de (A: ensembleTaper) := Classe {
+      rel: sortee A -> sortee A -> Prop;
+      equiv_ref: forall a: sortee A, avoir A a -> rel a a;
+      equiv_sym: forall a b: sortee A, 
+        avoir A a -> avoir A b -> rel a b -> rel b a;
+      equiv_trans: forall a b c: sortee A,
+        avoir A a -> avoir A b -> avoir A c -> 
+        rel a b -> rel b c -> rel a c
+    }.
+    Structure taper := Paquet { pos; _: classe_de pos }.
+    Variable cT: taper.
+    Definition classe :=
+      match cT return classe_de (pos cT) with
+      | Paquet _ c => c
+      end.
+  End ClasseDef.
+  Module Exports.
+    Notation
+
+
+
 
 (* relens の内部について同値関係がwell-definedなら外部がどうなろうと知ったこっちゃないので
    (rel R) y -> みたいなチェックは省く。そもそも実用上relにチェックが内包されそうだけどね。 *)
