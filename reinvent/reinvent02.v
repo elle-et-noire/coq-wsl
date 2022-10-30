@@ -587,19 +587,42 @@ Section Homomorphisme.
        apply ferm_inv, Gg.
   Qed.
 End Homomorphisme.
+Module Reldeq.
+  Section ClasseDef.
+    Record classe_de {T} {A: @Ensemble T} := Classe {
+      rel: T -> T -> Prop;
+      rel_ref: forall a, A a -> rel a a;
+      rel_sym: forall a b, A a -> A b -> rel a b -> rel b a;
+      rel_trans: forall a b c, A a -> A b -> A c ->
+        rel a b -> rel b c -> rel c a
+    }.
+    Structure taper := Paquet { sorte; supp; _: @classe_de sorte supp }.
+    Definition classe (cT:taper) :=
+      match cT return @classe_de (sorte cT) (supp cT) with Paquet _ _ c => c end.
+  End ClasseDef.
+  Module Exports.
+    Notation reldeqTaper := taper.
+    Coercion supp : taper >-> Ensemble.
+    Coercion sorte: taper >-> Sortclass.
+    Definition rel {cT:taper} := rel (classe cT).
+    Definition supp := supp.
+  End Exports.
+End Reldeq.
+Import Reldeq.Exports.
+Section ReldeqTheorie.
+  Context {re:reldeqTaper}.
+  Definition rel_ref :=
+    match re return forall a, supp re a -> rel a a with
+    Reldeq.Paquet _ _ (Reldeq.Classe _ _ _ ref' _ _) => ref' end.
+  Definition rel_sym :=
+    match re return forall a b, supp re a -> supp re b -> rel a b -> rel b a with
+    Reldeq.Paquet _ _ (Reldeq.Classe _ _ _ _ sym' _) => sym' end.
+  Definition rel_trans :=
+    match re return forall a b c, supp re a -> supp re b -> supp re c ->
+        rel a b -> rel b c -> rel c a with
+    Reldeq.Paquet _ _ (Reldeq.Classe _ _ _ _ _ trans') => trans' end.
+End ReldeqTheorie.
 
-
-Module Equivalence.
-  Section Defs.
-    Variable A: ensembleTaper.
-    Definition Ta := sortee A.
-    Variable rel: Ta -> Ta -> Prop.
-    Variable eqrel_ref: forall a: sortee A, avoir A a -> rel a a.
-    Variable eqrel_sym: forall a b: sortee A, 
-      avoir A a -> avoir A b -> rel a b -> rel b a.
-    Variable eqrel_trans: forall a b c: sortee A,
-      avoir A a -> avoir A b -> avoir A c -> 
-      rel a b -> rel b c -> rel a c.
     Definition eqclasse_avoir (a: Ta) (_: avoir A a) := fun b => et (avoir A b) (rel a b).
     Lemma eqclasse_sous : forall (a: Ta) (Aa: avoir A a) (b:Ta),
       eqclasse_avoir _ Aa b -> avoir A b.
