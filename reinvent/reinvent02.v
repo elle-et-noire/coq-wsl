@@ -283,7 +283,7 @@ Section Ensemble.
   Context {T:Type}.
   Definition Ensemble := T -> Prop.
   Definition videEnsemble : Ensemble := fun _ => Faux.
-  Definition memeEnsemble : Ensemble := fun _ => Vraie.
+  Definition mereEnsemble : Ensemble := fun _ => Vraie.
   Definition sous (B A:Ensemble) := forall x, B x -> A x.
   Definition syndicat (A B:Ensemble) : Ensemble :=
     fun x => ou (A x) (B x).
@@ -296,7 +296,7 @@ Section Ensemble.
 End Ensemble.
 Section Cartographie.
   Context {T1 T2:Type} (A:@Ensemble T1) (B:@Ensemble T2) (f:T1 -> T2).
-  Definition image : Ensemble := fun y => exists x, egale y (f x).
+  Definition image : Ensemble := fun y => remplie (fun x => et (A x) (egale y (f x))).
   Definition iminv : Ensemble := fun x => B (f x).
   Definition carto := forall x, A x -> B (f x).
 End Cartographie.
@@ -305,7 +305,7 @@ Section Cartographie.
   Definition inject (Hf: carto A B f) :=
     forall x1 x2, egale (f x1) (f x2) -> egale x1 x2.
   Definition surject (Hf: carto A B f) :=
-    forall y, B y -> exists x, egale y (f x).
+    forall y, B y -> remplie (fun x => egale y (f x)).
   Definition biject (Hf: carto A B f) :=
     et (inject Hf) (surject Hf).
 End Cartographie.
@@ -437,29 +437,47 @@ Section GroupeTheorie.
     apply egale_sym, droite_id, ferm_id.
   Qed.
 End GroupeTheorie.
-Section Homomorphisme.
-  Context {dom codom:groupeTaper} {f: dom -> codom} (Hc: carto dom codom f).
-  Definition hom := forall x y, avoir dom x -> avoir _ y -> egale (f (opg x y)) (opg (f x) (f y)).
-  Lemma hom_preserve_id: hom -> egale idg (f idg).
+Module Homomorphisme.
+  Section ClasseDef.
+    Record classe_de {dom codom:groupeTaper} {f: dom -> codom} := Classe {
+      carto: carto dom codom f;
+      hom: forall x y, avoir dom x -> avoir _ y -> egale (f (opg x y)) (opg (f x) (f y))
+    }.
+    Structure taper := Paquet { dom; codom; f; _: @classe_de dom codom f }.
+    Definition classe (cT:taper) :=
+      match cT return @classe_de (dom cT) (codom cT) (f cT) with
+      Paquet _ _ _ c => c end.
+  End ClasseDef.
+  Module Exports.
+    Notation homTaper := taper.
+    Definition dom {cT:taper} := dom cT.
+    Definition codom {cT:taper} := codom cT.
+    Definition fonc {cT:taper} := f cT.
+    Definition carto {cT:taper} := carto (classe cT).
+    Definition hom {cT:taper} := hom (classe cT).
+  End Exports.
+End Homomorphisme.
+Import Homomorphisme.Exports.
+Section HomomorphismeTheorie.
+  Context {phi:homTaper} (f := @fonc phi).
+  Lemma hom_preserve_id: egale idg (f idg).
   Proof. 
-    intros Hhom.
-    recrire_egale (opg (invg (f idg)) (f idg)). apply gauche_inv, Hc, ferm_id.
-    apply egale_sym, gauche_transpo; try apply Hc, ferm_id.
-    recrire_egale (f (opg idg idg)). apply egale_sym, Hhom; apply ferm_id.
+    recrire_egale (opg (invg (f idg)) (f idg)). apply gauche_inv, carto, ferm_id.
+    apply egale_sym, gauche_transpo; try apply carto, ferm_id.
+    recrire_egale (f (opg idg idg)). apply egale_sym, hom; apply ferm_id.
     apply egale_sym. app_f_egale f. apply droite_id, ferm_id.
   Qed.
-  Lemma hom_preserve_inv: hom -> forall x, avoir dom x -> egale (f (invg x)) (invg (f x)).
+  Lemma hom_preserve_inv: forall x, avoir dom x -> egale (f (invg x)) (invg (f x)).
   Proof.
-    intros Hhom x Hx.
+    intros x Hx.
     recrire_egale (opg (invg (f x)) idg).
-    -- apply gauche_transpo; try apply Hc; try apply ferm_inv; try apply Hx; try apply ferm_id.
-       recrire_egale (f (opg x (invg x))). apply egale_sym, Hhom; try apply ferm_inv; try apply Hx.
+    -- apply gauche_transpo; try apply carto; try apply ferm_inv; try apply Hx; try apply ferm_id.
+       recrire_egale (f (opg x (invg x))). apply egale_sym, hom; try apply ferm_inv; try apply Hx.
        recrire_egale (f idg). apply f_egale, egale_sym, droite_inv, Hx.
-       apply egale_sym, hom_preserve_id, Hhom.
-    -- apply egale_sym, droite_id, ferm_inv, Hc, Hx.
+       apply egale_sym, hom_preserve_id.
+    -- apply egale_sym, droite_id, ferm_inv, carto, Hx.
   Qed.
-End Homomorphisme.
-
+End HomomorphismeTheorie.
 Module SousGroupe.
   Section ClasseDef.
     Record classe_de {G:groupeTaper} := Classe {
@@ -485,257 +503,91 @@ Module SousGroupe.
   Module Exports.
     Notation sousgroupeTaper := taper.
     Coercion groupeTaper : taper >-> Groupe.taper.
+    Definition mereg (H:taper) := sorte H.
   End Exports.
 End SousGroupe.
+Import SousGroupe.Exports.
+Section SousGroupeTheorie.
+  Context (H:sousgroupeTaper).
+  Definition sousg_sousens := 
+    match H return sous H (mereg H) with
+    SousGroupe.Paquet _ (SousGroupe.Classe _ _ se _ _ _) => se end.
+  Definition sousgnormal := forall h, avoir H h ->
+   forall (g: mereg H), avoir _ g -> avoir H (opg (opg g h) (invg g)).
+End SousGroupeTheorie.
+Section Homomorphisme.
+  Context {ht:homTaper} (f := @fonc ht) (imf := image dom f).
+  Definition image_sous : sous imf codom := fun y Imy =>
+    match Imy with exiter _ x Px => 
+      match Px with conjonction _ _ Hx Eyfx =>
+        egale_ind _ _ (avoir codom) (carto x Hx) _ (egale_sym Eyfx) end end.
+  Lemma image_sferm_op : forall x y, imf x -> imf y -> imf (opg x y).
+  Proof. 
+    intros x y Imx Imy. destruct Imx as [x' [Hx' Exfx']]. destruct Imy as [y' [Hy' Eyfy']].
+    apply (exiter _ (opg x' y')), conjonction.
+    -- apply ferm_op. apply Hx'. apply Hy'.
+    -- recrire_egale (opg x (f y')). apply f_egale, Eyfy'.
+       recrire_egale (opg (f x') (f y')).
+       app_f_egale (fun w => opg w (f y')). apply Exfx'.
+       apply egale_sym, hom. apply Hx'. apply Hy'.
+  Qed.
+  Lemma image_sferm_inv : forall x, imf x -> imf (invg x).
+  Proof.
+    intros x Imx. destruct Imx as [x' [Hx' Exfx']]. 
+    apply (exiter _ (invg x')), conjonction.
+    -- apply ferm_inv, Hx'.
+    -- recrire_egale (invg (f x')). apply f_egale, Exfx'.
+       apply egale_sym, hom_preserve_inv, Hx'.
+  Qed.
+  Lemma image_sferm_id : imf idg.
+  Proof. apply (exiter _ idg); apply conjonction. apply ferm_id. apply hom_preserve_id. Qed.
+  Definition imageSG := SousGroupe.Paquet codom (SousGroupe.Classe codom imf image_sous
+    image_sferm_op image_sferm_inv image_sferm_id).
 
+  Definition noyau : Ensemble := fun x => et (avoir dom x) (egale idg (f x)).
+  Lemma noyau_sous : sous noyau dom.
+  Proof. intros x Nx; apply (et_prj1 Nx). Qed.
+  Lemma noyau_sferm_op : forall x y, noyau x -> noyau y -> noyau (opg x y).
+  Proof.
+    intros x y Nx Ny; destruct Nx as [Nx Eefx]; destruct Ny as [Ny Eefy]; apply conjonction.
+    -- apply ferm_op. apply Nx. apply Ny.
+    -- recrire_egale (@opg (@codom ht) idg idg).
+       apply droite_id, ferm_id. recrire_egale (opg idg (f y)).
+       apply f_egale, Eefy. recrire_egale (opg (f x) (f y)).
+       app_f_egale (fun w => opg w (f y)). apply Eefx.
+       apply egale_sym, hom. apply Nx. apply Ny.
+  Qed.
+  Lemma noyau_sferm_inv : forall x, noyau x -> noyau (invg x).
+  Proof.
+    intros x Nx; destruct Nx as [Nx Eefx]; apply conjonction.
+    -- apply ferm_inv, Nx.
+    -- recrire_egale (@invg (@codom ht) idg). apply id_invid.
+       recrire_egale (invg (f x)). apply f_egale, Eefx.
+       apply egale_sym, hom_preserve_inv, Nx.
+  Qed.
+  Lemma noyau_sferm_id : noyau idg.
+  Proof. apply conjonction. apply ferm_id. apply hom_preserve_id. Qed.
+  Definition noyauSG := SousGroupe.Paquet dom (SousGroupe.Classe dom noyau noyau_sous
+  noyau_sferm_op noyau_sferm_inv noyau_sferm_id).
+  Lemma noyauSG_normal : sousgnormal noyauSG.
+  Proof.
+    intros h Hh g Gg; destruct Hh as [Nh Eefh]; apply conjonction.
+    -- apply ferm_op. apply ferm_op. apply Gg. apply Nh. 
+       apply ferm_inv. apply Gg.
+    -- recrire_egale (opg (f g) (invg (f g))). apply droite_inv, carto, Gg.
+       recrire_egale (opg (f (opg g h)) (invg (f g))).
+       assert (egale (f g) (f (opg g h))) as Efg_fgh.
+       { recrire_egale (opg (f g) idg). apply droite_id, carto, Gg.
+         recrire_egale (opg (f g) (f h)). apply f_egale, Eefh.
+         apply egale_sym, hom. apply Gg. apply Nh. }
+       app_f_egale (fun w => opg w (invg (f g))). apply Efg_fgh.
+       recrire_egale (opg (f (opg g h)) (f (invg g))).
+       apply f_egale, egale_sym, hom_preserve_inv, Gg.
+       apply egale_sym, hom. apply ferm_op. apply Gg. apply Nh.
+       apply ferm_inv, Gg.
+  Qed.
+End Homomorphisme.
 
-Section SousGroupe.
-  Variable G H: groupeTaper.
-  Definition Gtaper := sorteg G.
-  Definition Htaper := sorteg H.
-  Variable Eghtaper: egale _ Htaper Gtaper.
-  Definition i := inc _ _ Eghtaper.
-  Definition sousgroupe := homomorphisme H G i.
-
-  Definition sousgroupenormal :=
-    forall (g: sorteg G) (h: sorteg H), avoir _ g -> avoir _ h ->
-    exists h', et (avoir H h') (egg _ (i h') (opeg _ (opeg _ g (i h)) (invg _ g))).
-End SousGroupe.
-Section Noyau.
-  Variable f: homTaper.
-  Definition H := domf f.
-  Definition Hens := Groupe.ensembleTaper H.
-  Definition G := codomf f.
-  Definition hTaper := sorteg H.
-  Definition noyauf_avoir := fun (x: hTaper) => et (avoir Hens x) (egg G (idg _) ((carte f) x)).
-  Lemma noyauf_sous: forall x, noyauf_avoir x -> avoir _ x.
-  Proof.
-    unfold noyauf_avoir. intros x H0. case H0; intros H1 H2. apply H1.
-  Qed.
-  Definition noyauEnsemble := produire_sousensemble _ noyauf_avoir noyauf_sous.
-  Lemma noyau_fermer_ope: forall x y, avoir noyauEnsemble x -> avoir noyauEnsemble y ->
-    avoir noyauEnsemble (opeg _ x y).
-  Proof.
-    unfold noyauf_avoir. intros x y Hx Hy.
-    case Hx; intros Hx1 Hx2. case Hy; intros Hy1 Hy2.
-    apply conjonction.
-    - apply fermer_ope. apply Hx1. apply Hy1.
-    - apply (egale_trans _ _ _ _
-        (fermer_id _)
-        (fermer_ope _ _ _ (fermer_id _) (fermer_id _))
-        (fermf _ _ (fermer_ope _ _ _ Hx1 Hy1))).
-    -- apply droite_id. apply fermer_id.
-    -- apply (egale_trans _ _ _ _
-         (fermer_ope _ _ _ (fermer_id _) (fermer_id _))
-         (fermer_ope _ _ _ (fermer_id _) (fermf _ _ Hy1))
-         (fermf _ _ (fermer_ope _ _ _ Hx1 Hy1))).
-    --- apply (eg_mission _ _ _
-          (fermer_id _) (fermf _ _ Hy1)
-          Hy2
-          (fun w => egg _ (opeg _ (idg _) (idg _)) (opeg _ (idg _) w))).
-        apply egale_ref. apply fermer_ope. apply fermer_id. apply fermer_id.
-    --- apply (egale_trans _ _ _ _
-          (fermer_ope _ _ _ (fermer_id _) (fermf _ _ Hy1))
-          (fermer_ope _ _ _ (fermf _ _ Hx1) (fermf _ _ Hy1))
-          (fermf _ _ (fermer_ope _ _ _ Hx1 Hy1))).
-    ---- apply (eg_mission _ _ _
-           (fermer_id _) (fermf _ _ Hx1)
-           Hx2
-           (fun w => egg _ (opeg _ (idg _) ((carte f) y)) (opeg _ w ((carte f) y)))).
-          apply egale_ref. apply fermer_ope. apply fermer_id. apply fermf. apply Hy1.
-    ---- apply egale_sym. apply fermf. apply fermer_ope. apply Hx1. apply Hy1.
-         apply fermer_ope. apply fermf. apply Hx1. apply fermf. apply Hy1.
-         apply hom. apply Hx1. apply Hy1.
-  Qed.     
-  Lemma noyau_fermer_inv: forall x, avoir noyauEnsemble x ->
-    avoir noyauEnsemble (invg _ x).
-  Proof.
-    intros x Hx. case Hx; intros Hx1 Hx2.
-    apply conjonction.
-    - apply fermer_inv. apply Hx1.
-    - apply (egale_trans _ _ _ _
-        (fermer_id _)
-        (fermer_inv _ _ (fermer_id _))
-        (fermf _ _ (fermer_inv _ _ Hx1))).
-    -- apply id_invid.
-    -- apply (egale_trans _ _ _ _
-         (fermer_inv _ _ (fermer_id _))
-         (fermer_inv _ _ (fermf _ _ Hx1))
-         (fermf _ _ (fermer_inv _ _ Hx1))).
-    --- apply (eg_mission _ _ _
-          (fermer_id _)
-          (fermf _ _ Hx1)
-          Hx2
-          (fun w => egg _ (invg _ (idg _)) (invg _ w))).
-        apply egale_ref. apply fermer_inv. apply fermer_id.
-    --- apply egale_sym. apply fermf. apply fermer_inv. apply Hx1.
-        apply fermer_inv. apply fermf. apply Hx1.
-        apply hom_preserve_inv. apply Hx1.
-  Qed. 
-  Lemma noyau_fermer_id: avoir noyauEnsemble (idg _).
-  Proof.
-    apply conjonction.
-    - apply fermer_id.
-    - apply hom_preserve_id.
-  Qed.
-  Definition noyauGroupe := Groupe.Paquet (sortee noyauEnsemble) (Groupe.Classe (sortee noyauEnsemble)
-    (Ensemble.classe noyauEnsemble) (Groupe.Melange noyauEnsemble (opeg H) (invg _ ) (idg _)
-      noyau_fermer_ope noyau_fermer_inv noyau_fermer_id
-      (fun x y z Hx Hy Hz => assoc_ope _ _ _ _ (noyauf_sous _ Hx) (noyauf_sous _ Hy) (noyauf_sous _ Hz))
-      (fun x Hx => droite_id _ _ (noyauf_sous _ Hx))
-      (fun x Hx => gauche_inv _ _ (noyauf_sous _ Hx))
-      (fun x Hx => droite_inv _ _ (noyauf_sous _ Hx)))).
-  Lemma noyau_sousgroupenormal: sousgroupenormal H noyauGroupe (egreflexion _ _).
-  Proof.
-    unfold sousgroupenormal. simpl.
-    intros g h Hg Nh. exists (opeg _ (opeg _ g h) (invg _ g)).
-    pose (noyauf_sous _ Nh) as Hh. apply conjonction. 
-    - unfold noyauGroupe. unfold noyauEnsemble. unfold noyauf_avoir.
-      unfold avoir. unfold Groupe.ensembleTaper. 
-      unfold avoir. simpl. apply conjonction.
-    -- apply fermer_ope. apply fermer_ope. apply Hg.
-       apply Nh. apply fermer_inv. apply Hg.
-    -- apply (egale_trans _ _ _ _
-         (fermer_id _)
-         (fermer_ope _ _ _ (fermf _ _ Hg) (fermer_inv _ _ (fermf _ _ Hg)))
-         (fermf _ _ (fermer_ope _ _ _ (fermer_ope _ _ _ Hg Hh) (fermer_inv _ _ Hg)))).
-    --- apply droite_inv. apply fermf. apply Hg.
-    --- apply (egale_trans _ _ _ _
-          (fermer_ope _ _ _ (fermf _ _ Hg) (fermer_inv _ _ (fermf _ _ Hg)))
-          (fermer_ope _ _ _ (fermer_ope _ _ _ (fermf _ _ Hg) (fermer_id _)) (fermer_inv _ _ (fermf _ _ Hg)))
-          (fermf _ _ (fermer_ope _ _ _ (fermer_ope _ _ _ Hg Hh) (fermer_inv _ _ Hg)))).
-    ---- apply (eg_mission _ _ _
-           (fermf _ _ Hg) (fermer_ope _ _ _ (fermf _ _ Hg) (fermer_id _))
-           (droite_id _ _ (fermf _ _ Hg))
-           (fun w => egg _ (opeg _ ((carte f) g) (invg _ ((carte f) g))) (opeg _ w (invg _ ((carte f) g))))).
-         apply egale_ref. apply fermer_ope. apply fermf. apply Hg. apply fermer_inv.
-         apply fermf. apply Hg.
-    ---- apply (egale_trans _ _ _ _
-          (fermer_ope _ _ _ (fermer_ope _ _ _ (fermf _ _ Hg) (fermer_id _)) (fermer_inv _ _ (fermf _ _ Hg)))
-          (fermer_ope _ _ _ (fermer_ope _ _ _ (fermf _ _ Hg) (fermf _ _ Hh)) (fermer_inv _ _ (fermf _ _ Hg)))
-          (fermf _ _ (fermer_ope _ _ _ (fermer_ope _ _ _ Hg Hh) (fermer_inv _ _ Hg)))).
-    ----- case Nh; intros Nh0 Eefh.
-          apply (eg_mission _ _ _
-                  (fermer_id _) (fermf _ _ Hh)
-                  Eefh
-                  (fun w => egg _ (opeg _ (opeg _ ((carte f) g) (idg _)) (invg _ ((carte f) g)))
-                                  (opeg _ (opeg _ ((carte f) g) w) (invg _ ((carte f) g))))).
-          apply egale_ref. apply fermer_ope. apply fermer_ope. apply fermf. apply Hg.
-          apply fermer_id. apply fermer_inv. apply fermf. apply Hg.
-    ----- apply (egale_trans _ _ _ _
-            (fermer_ope _ _ _ (fermer_ope _ _ _ (fermf _ _ Hg) (fermf _ _ Hh)) (fermer_inv _ _ (fermf _ _ Hg)))
-            (fermer_ope _ _ _ (fermf _ _ (fermer_ope _ _ _ Hg Hh)) (fermer_inv _ _ (fermf _ _ Hg)))
-            (fermf _ _ (fermer_ope _ _ _ (fermer_ope _ _ _ Hg Hh) (fermer_inv _ _ Hg)))).                                  
-    ------ apply egale_sym. apply fermer_ope. apply fermf. apply fermer_ope.
-           apply Hg. apply Hh. apply fermer_inv. apply fermf. apply Hg.
-           apply fermer_ope. apply fermer_ope. apply fermf. apply Hg.
-           apply fermf. apply Hh. apply fermer_inv. apply fermf. apply Hg. 
-           apply (eg_mission _ _ _
-             (fermf _ _ (fermer_ope _ _ _ Hg Hh)) 
-             (fermer_ope _ _ _ (fermf _ _ Hg) (fermf _ _ Hh))
-             (hom f _ _ Hg Hh)
-             (fun w => egg _ (opeg _ ((carte f) (opeg _ g h)) (invg _ ((carte f) g)))
-                             (opeg _ w (invg _ ((carte f) g))))).
-           apply egale_ref. apply fermer_ope. apply fermf. apply fermer_ope.
-           apply Hg. apply Hh. apply fermer_inv. apply fermf. apply Hg.
-    ------ apply (egale_trans _ _ _ _
-            (fermer_ope _ _ _ (fermf _ _ (fermer_ope _ _ _ Hg Hh)) (fermer_inv _ _ (fermf _ _ Hg)))
-            (fermer_ope _ _ _ (fermf _ _ (fermer_ope _ _ _ Hg Hh)) (fermf _ _ (fermer_inv _ _ Hg)))
-            (fermf _ _ (fermer_ope _ _ _ (fermer_ope _ _ _ Hg Hh) (fermer_inv _ _ Hg)))).
-    ------- apply egale_sym. apply fermer_ope. apply fermf. apply fermer_ope.
-            apply Hg. apply Hh. apply fermf. apply fermer_inv. apply Hg.
-            apply fermer_ope. apply fermf. apply fermer_ope. apply Hg. apply Hh.
-            apply fermer_inv. apply fermf. apply Hg.
-            apply (eg_mission _ _ _
-              (fermf _ _ (fermer_inv _ _ Hg))
-              (fermer_inv _ _ (fermf _ _ Hg))
-              (hom_preserve_inv _ _ Hg)
-              (fun w => egg _ (opeg _ ((carte f) (opeg _ g h)) w)
-                              (opeg _ ((carte f) (opeg _ g h)) (invg _ ((carte f) g))))).      
-            apply egale_ref. apply fermer_ope. apply fermf. apply fermer_ope.
-            apply Hg. apply Hh. apply fermer_inv. apply fermf. apply Hg.
-    ------- apply egale_sym. apply fermf. apply fermer_ope. apply fermer_ope.
-            apply Hg. apply Hh. apply fermer_inv. apply Hg. apply fermer_ope.
-            apply fermf. apply fermer_ope. apply Hg. apply Hh. apply fermf.
-            apply fermer_inv. apply Hg. apply hom. apply fermer_ope.
-            apply Hg. apply Hh. apply fermer_inv. apply Hg.
-    - apply egale_ref. apply (fermer_ope _ _ _ (fermer_ope _ _ _ Hg Hh) (fermer_inv _ _ Hg)).
-Qed.
-End Noyau.
-
-Section Image.
-  Variable f: homTaper.
-  Definition phi := carte f.
-  Definition Imf := imageEnsemble (Homomorphisme.cartoTaper f).
-  Lemma image_fermer_ope: forall x y, avoir Imf x -> avoir Imf y ->
-    avoir Imf (opeg _ x y).
-  Proof.
-    intros x y Imx Imy.
-    destruct Imx as [Gx H0]. destruct H0 as [x' H1].
-    destruct H1 as [Hx' xfx'].
-    destruct Imy as [Gy H0]. destruct H0 as [y' H1].
-    destruct H1 as [Hy' yfy'].
-    apply conjonction.
-    - apply fermer_ope. apply Gx. apply Gy.
-    - exists (opeg _ x' y'). apply conjonction.
-    -- apply fermer_ope. apply Hx'. apply Hy'.
-    -- apply (egale_trans _ _ _ _
-         (fermer_ope _ _ _ Gx Gy)
-         (fermer_ope _ _ _ (fermf _ _ Hx') Gy)
-         (fermf _ _ (fermer_ope _ _ _ Hx' Hy'))).
-    --- apply (eg_mission _ _ _
-          Gx (fermf _ _ Hx') xfx' 
-          (fun w => egg _ (opeg _ x y) (opeg _ w y))).
-        apply egale_ref. apply (fermer_ope _ _ _ Gx Gy).
-    --- apply (egale_trans _ _ _ _
-          (fermer_ope _ _ _ (fermf _ _ Hx') Gy)
-          (fermer_ope _ _ _ (fermf _ _ Hx') (fermf _ _ Hy'))
-          (fermf _ _ (fermer_ope _ _ _ Hx' Hy'))).
-    ---- apply (eg_mission _ _ _
-           Gy (fermf _ _ Hy') yfy' 
-           (fun w => egg _ (opeg _ (phi x') y) (opeg _ (phi x') w))).
-         apply egale_ref. apply (fermer_ope _ _ _ (fermf _ _ Hx') Gy).
-    ---- apply egale_sym. apply fermf. apply fermer_ope. apply Hx'. 
-         apply Hy'. apply fermer_ope. apply fermf. apply Hx'. 
-         apply fermf. apply Hy'.
-         apply hom. apply Hx'. apply Hy'.
-  Qed.
-  Lemma image_fermer_inv: forall x, avoir Imf x ->
-    avoir Imf (invg _ x).
-  Proof.
-    intros x Imx. destruct Imx as [Gx H0]. destruct H0 as [x' H1].
-    destruct H1 as [Hx' xfx']. apply conjonction.
-    - apply fermer_inv. apply Gx.
-    - exists (invg _ x'). apply conjonction.
-    -- apply fermer_inv. apply Hx'.
-    -- apply (egale_trans _ _ _ _
-         (fermer_inv _ _ Gx)
-         (fermer_inv _ _ (fermf _ _ Hx'))
-         (fermf _ _ (fermer_inv _ _ Hx'))).
-    --- apply (eg_mission _ _ _
-          Gx (fermf _ _ Hx') xfx'
-          (fun w => egg _ (invg _ x) (invg _ w))).
-        apply egale_ref. apply (fermer_inv _ _ Gx).
-    --- apply egale_sym. apply (fermf _ _ (fermer_inv _ _ Hx')).
-        apply (fermer_inv _ _ (fermf _ _ Hx')).
-        apply hom_preserve_inv. apply Hx'.
-  Qed.
-  Lemma image_fermer_id: avoir Imf (idg _).
-  Proof.
-    apply conjonction.
-    - apply fermer_id.
-    - exists (idg _). apply conjonction.
-    -- apply fermer_id.
-    -- apply hom_preserve_id.
-  Qed.
-  Definition imageGroupe := Groupe.Paquet (sortee Imf) (Groupe.Classe (sortee Imf)
-  (Ensemble.classe Imf) (Groupe.Melange Imf (opeg (codomf f)) (invg _ ) (idg _)
-    image_fermer_ope image_fermer_inv image_fermer_id
-    (fun x y z Hx Hy Hz => assoc_ope _ _ _ _ (imagef_sous _ _ Hx) (imagef_sous _ _ Hy) (imagef_sous _ _ Hz))
-    (fun x Hx => droite_id _ _ (imagef_sous _ _ Hx))
-    (fun x Hx => gauche_inv _ _ (imagef_sous _ _ Hx))
-    (fun x Hx => droite_inv _ _ (imagef_sous _ _ Hx)))).
-End Image.
 
 Module Equivalence.
   Section Defs.
