@@ -47,14 +47,14 @@ Section Logique.
   End PremierOrdre.
   Section Egalite.
     Inductive egale {A:_} (x:A) : A -> Prop :=
-      | eg_ref : egale x x.
+      | egale_ref : egale x x.
     Axiom egale_fonc : forall {A:Type} {B: A -> Type} (f g: forall x:A, B x),
       (forall x: A, egale (f x) (g x)) -> egale f g.
     Definition f_egale {A B:_} (f: A -> B) {x y:A} (H: egale x y) :=
-      egale_ind _ _ (fun w => egale (f x) (f w)) (eg_ref (f x)) y H.
-    Definition eg_sym {A:_} {x y:A} (H: egale x y) :=
-      egale_ind _ _ (fun w => egale w x) (eg_ref x) _ H.
-    Definition eg_trans {A:_} {x y z:A} (Exy: egale x y) (Eyz: egale y z) :=
+      egale_ind _ _ (fun w => egale (f x) (f w)) (egale_ref (f x)) y H.
+    Definition egale_sym {A:_} {x y:A} (H: egale x y) :=
+      egale_ind _ _ (fun w => egale w x) (egale_ref x) _ H.
+    Definition egale_trans {A:_} {x y z:A} (Exy: egale x y) (Eyz: egale y z) :=
       egale_ind _ _ (egale x) Exy _ Eyz.
   End Egalite.
   Section Habitee.
@@ -109,8 +109,8 @@ End Booleenne.
 
 Section Refleter.
   Inductive refleter (P:Prop) : booleenne -> Set :=
-  | refleter_vraie : P -> refleter P vraie
-  | refleter_faux : nepas P -> refleter P faux.
+    | refleter_vraie : P -> refleter P vraie
+    | refleter_faux : nepas P -> refleter P faux.
   Definition ssiP {P Q b} (HPb: refleter P b) (HPQ: ssi P Q) :=
     match HPb with
       | refleter_vraie _ p => refleter_vraie Q (et_prj1 HPQ p)
@@ -123,606 +123,290 @@ Section Refleter.
     end.
   Definition egb_egale {b1 b2} :=
     match b1, b2 return refleter (egale b1 b2) (egb b1 b2) with
-      | vraie, vraie => refleter_vraie _ (eg_ref vraie)
+      | vraie, vraie => refleter_vraie _ (egale_ref vraie)
       | vraie, faux => refleter_faux _ (egale_ind _ vraie estvraie identite faux)
       | faux, vraie => refleter_faux _ (egale_ind _ faux estfaux identite vraie)
-      | faux, faux => refleter_vraie _ (eg_ref faux)
+      | faux, faux => refleter_vraie _ (egale_ref faux)
     end.
-
-  Lemma vraie_redondant: forall (b: booleenne), ssi (estvraie b) (estvraie (egb vraie b)).
-  Proof.
-    intros b.
-    apply conjonction; case b.
-    - intros _; apply identite.
-    - intros F; case F.
-    - intros _; apply identite.
-    - intros F; case F.
-  Qed.
-
-  Lemma introVraieFaux : forall (P : Prop) (c b : booleenne), refleter P b ->
-    (match c with
-    | vraie => P
-    | faux => nepas P
-    end) -> estvraie (egb c b).
-  Proof.
-    intros P c b Hb.
-    case c; case Hb; intros H1 H2.
-    - apply identite.
-    - apply H1 in H2. case H2.
-    - apply H2 in H1. case H1.
-    - apply identite.
-  Qed.
-
-  Lemma elimVraieFaux : forall (P : Prop) (c b : booleenne), refleter P b -> estvraie (egb c b) ->
-    (match c with
-    | vraie => P
-    | faux => nepas P
-    end).
-  Proof.
-    intros P c b HPb.
-    induction HPb; case c; intros Hbc.
-    - apply p.
-    - case Hbc.
-    - case Hbc.
-    - apply n.
-  Qed.
-
-  Lemma elimVraie : forall (P : Prop) (b : booleenne), refleter P b -> estvraie b -> P.
-  Proof.
-    intros P b HPb Hb.
-    case (vraie_redondant b); intros Hb' _; apply Hb' in Hb.
-    apply (elimVraieFaux P vraie b HPb Hb).
-  Qed.
-
-  Lemma introVraie : forall (P : Prop) (b : booleenne), refleter P b -> P -> estvraie b.
-  Proof.
-    intros P b HPb HP.
-    case (vraie_redondant b); intros _ Hb; apply Hb.
-    apply (introVraieFaux P vraie b HPb HP).
-  Qed.
-
+  Definition vraie_redondant {b} := conjonction _ _
+    match b return estvraie b -> estvraie (egb vraie b) with
+      | vraie => fun _ => identite
+      | faux => Faux_ind Faux
+    end
+    match b return estvraie (egb vraie b) -> estvraie b with
+      | vraie => fun _ => identite
+      | faux => Faux_ind Faux
+    end.
+  Definition casProp flag P := match flag with vraie=>P | faux=> nepas P end.
+  Definition introVraieFaux {P flag b} (HPb: refleter P b) :=
+    match flag, HPb in refleter _ c return casProp flag P -> estvraie (egb flag c) with
+      | vraie, refleter_vraie _ p => fun _ => identite
+      | vraie, refleter_faux _ n => n
+      | faux, refleter_vraie _ p => fun HnP => Faux_ind _ (HnP p)
+      | faux, refleter_faux _ n => fun _ => identite
+      end.
+  Definition elimVraieFaux {P flag b} (HPb: refleter P b) :=
+    match HPb in refleter _ c, flag return (estvraie (egb flag c) -> casProp flag P) with
+      | refleter_vraie _ p, vraie => fun _ => p
+      | refleter_vraie _ p, faux => Faux_ind _
+      | refleter_faux _ n, vraie => Faux_ind _
+      | refleter_faux _ n, faux => fun _ => n
+    end.
+  Definition elimVraie {P b} (HPb: refleter P b) (Hb: estvraie b) :=
+    elimVraieFaux HPb (et_prj1 vraie_redondant Hb).
+  Definition introVraie {P b} (HPb: refleter P b) (HP:P) :=
+    (et_prj2 vraie_redondant) (introVraieFaux(flag:=vraie) HPb HP).
+  
   Lemma impliqP: forall b1 b2, refleter (estvraie b1 -> estvraie b2) (impliqb b1 b2).
   Proof.
     intros b1 b2; case b1, b2.
-    - apply refletervraie. intros. apply identite.
-    - apply refleterfaux. intros F. apply F, identite.
-    - apply refletervraie. intros F; case F.
-    - apply refletervraie. intros F; apply F.
+    - apply refleter_vraie. intros. apply identite.
+    - apply refleter_faux. intros F. apply F, identite.
+    - apply refleter_vraie. intros F; case F.
+    - apply refleter_vraie. intros F; apply F.
   Qed.
-
+End Refleter.
 Section ProduitDirect.
-
-Inductive produit (A B : Type) : Type :=
-| paire : A -> B -> produit A B.
-
-Definition premiere := fun (A B : Type) (p : produit A B)
-  => match p with
-  | paire _ _ x _ => x
-  end.
-
-Definition deuxieme := fun (A B : Type) (p : produit A B)
-  => match p with
-  | paire _ _ _ x => x
-  end.
+  Inductive produit (A B:_) : Type :=
+    | paire : A -> B -> produit A B.
+  Definition premiere {A B} (p: produit A B) :=
+    match p with paire _ _ x _ => x end.
+  Definition deuxieme {A B} (p: produit A B) :=
+    match p with paire _ _ _ y => y end.
 End ProduitDirect.
-
 Section Naturelle.
+  Inductive naturelle : Set :=
+    | nulle : naturelle
+    | succ : naturelle -> naturelle.
+  Fixpoint ajouter n m {struct n} :=
+    match n with
+      | nulle => m
+      | succ n' => succ (ajouter n' m)
+    end.
+  Fixpoint soustraire n m :=
+    match n, m with
+      | nulle, _ => nulle
+      | _, nulle => n
+      | succ n', succ m' => soustraire n' m'
+    end.
+  Fixpoint multiplier n m :=
+    match n with
+      | nulle => nulle
+      | succ n' => ajouter m (multiplier n' m)
+    end.
+  Fixpoint _diviser x y q u :=
+    match x with
+      | nulle => paire _ _ q u
+      | succ x' =>
+        match u with
+          | nulle => _diviser x' y (succ q) y
+          | succ u' => _diviser x' y q u'
+        end
+    end.
+  Definition quotient x y :=
+    match y with
+      | nulle => nulle
+      | succ y' => premiere (_diviser x y' nulle y')
+    end.
+  Definition modulo x y :=
+    match y with
+      | nulle => nulle
+      | succ y' => deuxieme (_diviser x y' nulle y')
+    end.
+  Definition predecesseur n :=
+    match n with
+      | nulle => nulle
+      | succ n' => n'
+    end.
+  Definition egale_succ {n m} (H: egale (succ n) (succ m)) : egale n m
+    := f_egale predecesseur H.
 
-Inductive naturelle : Set :=
-| nulle : naturelle
-| successeur : naturelle -> naturelle.
-
-Fixpoint ajouter (n m : naturelle) {struct n} : naturelle :=
-  match n with
-  | nulle => m
-  | successeur n' => successeur (ajouter n' m)
-  end.
-
-Fixpoint soustraire (n m : naturelle) {struct n} : naturelle :=
-  match n, m with
-  | nulle, _ => nulle
-  | _, nulle => n
-  | successeur n', successeur m' => soustraire n' m'
-  end.
-
-Fixpoint multiplier (n m : naturelle) {struct n} : naturelle :=
-  match n with
-  | nulle => nulle
-  | successeur n' => ajouter m (multiplier n' m)
-  end.
-
-Fixpoint _diviser (x y q u : naturelle) {struct x} : produit naturelle naturelle :=
-  match x with
-  | nulle => paire _ _ q u
-  | successeur x' =>
-    match u with
-    | nulle => _diviser x' y (successeur q) y
-    | successeur u' => _diviser x' y q u'
-    end
-  end.
-
-Definition quotient x y :=
-  match y with
-  | nulle => nulle
-  | successeur y' => premiere _ _ (_diviser x y' nulle y')
-  end.
-
-Definition modulo x y :=
-  match y with
-  | nulle => nulle
-  | successeur y' => deuxieme _ _ (_diviser x y' nulle y')
-  end.
-
-Definition predecesseur (n : naturelle) :=
-  match n with
-  | nulle => nulle
-  | successeur n' => n'
-  end.
-
-Definition egalesucc (n m : naturelle) : egale _ (successeur n) (successeur m) -> egale _ n m
-  := fegale _ _ predecesseur (successeur n) (successeur m).
-
-Goal forall (n m : naturelle), egale _ n m -> egale _ nulle (soustraire n m).
-Proof.
-  induction n.
-  induction m.
-  - simpl. reflexivity.
-  - simpl. intros. apply egreflexion.
-  - induction m.
-  -- simpl. intros. apply egsym. apply H.
-  -- simpl. intros. apply IHn. apply egalesucc. apply H.
-Qed.
-
-Lemma addNS : forall n, egale _ n (successeur n) -> Faux.
-Proof.
-  induction n.
-  apply (egale_ind _ nulle (fun n => match n with |nulle => Vraie | _ => Faux end) identite (successeur nulle)).
-  intros.
-  apply egalesucc in H.
-  apply IHn. apply H.
-Qed.
-
-
-Record egtaper :=
-  EgTaper {
-    sorte: Type;
-    egop: sorte -> sorte -> booleenne;
-    reflegop: forall x y: sorte, refleter (egale _ x y) (egop x y)
-  }.
-
-Lemma egP : forall (T : egtaper) (x y : sorte T), refleter (egale _ x y) (egop _ x y).
-Proof.
-  intro T.
-  apply reflegop.
-Qed.
-
-Fixpoint egnaturelle (n m : naturelle) :=
-  match n, m with
-  | nulle, nulle => vraie
-  | nulle, successeur _ => faux
-  | successeur _, nulle => faux
-  | successeur n', successeur m' => egnaturelle n' m'
-  end.
-
-Lemma naturelle_egP : forall (n m : naturelle), refleter (egale _ n m) (egnaturelle n m).
-Proof.
-  induction n; induction m.
-  - apply refletervraie, egreflexion.
-  - apply refleterfaux; unfold nepas. apply (egale_ind _ nulle (fun n => match n with |nulle => Vraie |_ => Faux end) identite (successeur m)).
-  - apply refleterfaux; unfold nepas. apply (egale_ind _ (successeur n) (fun n => match n with |successeur _ => Vraie |nulle => Faux end) identite nulle).
-  - apply (iffP (estvraie (egnaturelle n m)) (egale _ (successeur n) (successeur m)) (egnaturelle n m)).
-  -- apply idP.
-  -- apply conjonction.
-  --- case (IHn m).
-  ---- intros H _. apply fegale. apply H.
-  ---- intros _ F. case F.
-  --- case (IHn m).
-  ---- intros. apply identite.
-  ---- intros F1 F2. apply egalesucc in F2. apply F1 in F2. case F2.
-Qed. 
-
-Definition trois := successeur (successeur (successeur nulle)).
-Definition neuf := Eval compute in multiplier trois trois.
-Definition dix := Eval compute in successeur neuf.
-
-Definition naturelle_egTaper := EgTaper naturelle egnaturelle naturelle_egP.
-
-Lemma egvraie_estvraie : forall b : booleenne, egale _ b vraie -> estvraie b.
-Proof. intros b H. apply egsym in H. case H. apply identite. Qed.
-
-Lemma estvraie_egvraie : forall b : booleenne, estvraie b -> egale _ b vraie.
-Proof.
-  induction b.
-  - intros _. apply egreflexion.
-  - intros F. case F.
-Qed.
-
-Definition neufNdix (H : egale _ neuf dix) :=
-  Eval compute in (egale_ind _ (egop naturelle_egTaper neuf dix) (fun b => estvraie (nepasb b))
-   identite vraie (estvraie_egvraie _ (introVraie _ _ (egP naturelle_egTaper neuf dix) H))) .
-
+  Lemma egale_sousnulle : forall n m, egale n m -> egale nulle (soustraire n m).
+  Proof. induction n, m; intros H; try apply egale_ref; try apply egale_sym, H; try apply IHn, egale_succ, H. Qed.
+  Lemma addNS : forall n, egale n (succ n) -> Faux.
+  Proof.
+    induction n.
+    -- apply (egale_ind _ nulle (fun n => match n with |nulle => Vraie | _ => Faux end) identite (succ nulle)).
+    -- intros H; apply (IHn (egale_succ H)).
+  Qed.
 End Naturelle.
 
-
-Module Ensemble.
+Module Egtaper.
   Section ClasseDef.
-    Record classe_de (T: Type) := Classe {
-      avoir: T -> Prop;
-      eg: T -> T -> Prop;
-      (* exclu: forall x, ou (avoir x) (nepas (avoir x)); *)
-      eg_ref: forall x, avoir x -> eg x x;
-      eg_mission: forall x y, avoir x -> avoir y ->
-        eg x y -> forall (P: _ -> Prop), ssi (P x) (P y)
+    Record classe_de (T:Type) := Classe {
+      op: T -> T -> booleenne;
+      ref: forall x y, refleter (egale x y) (op x y)
     }.
     Structure taper := Paquet { sorte; _: classe_de sorte }.
-    Definition classe (cT: taper) := match cT return classe_de (sorte cT) with
-      | Paquet _ c => c
-      end.
+    Definition classe (cT:taper) :=
+      match cT return classe_de (sorte cT) with Paquet _ c => c end.
   End ClasseDef.
   Module Exports.
-    (* Coercion sorte: taper >-> Sortclass. *)
-    Notation ensembleTaper := taper.
-    Definition sortee A := sorte A.
-    Definition avoir T := avoir _ (classe T).
-    Definition eg T := eg _ (classe T).
-    Definition eg_ref T := eg_ref _ (classe T).
-    Definition eg_mission T := eg_mission _ (classe T).
+    Coercion sorte: taper >-> Sortclass.
+    Notation egTaper := taper.
+    Definition egop {T} := op _ (classe T).
   End Exports.
+End Egtaper.
+Import Egtaper.Exports.
+Section EgtaperTheorie.
+  Definition egP {T:egTaper} :=
+    match T return forall x y:T, refleter (egale x y) (egop x y) with
+    Egtaper.Paquet _ (Egtaper.Classe _ _ ref') => ref' end.
+End EgtaperTheorie.
+Section EgNaturelle.
+  Fixpoint egnat n m :=
+    match n, m with
+    | nulle, nulle => vraie
+    | nulle, succ _ => faux
+    | succ _, nulle => faux
+    | succ n', succ m' => egnat n' m'
+    end.
+  Lemma egale_egnatP : forall n m, refleter (egale n m) (egnat n m).
+  Proof.
+    induction n; induction m.
+    - apply refleter_vraie, egale_ref.
+    - apply refleter_faux; unfold nepas. apply (egale_ind _ nulle (fun n => match n with |nulle => Vraie |_ => Faux end) identite (succ m)).
+    - apply refleter_faux; unfold nepas. apply (egale_ind _ (succ n) (fun n => match n with |succ _ => Vraie |nulle => Faux end) identite nulle).
+    - apply (ssiP(P:= egale n m)). apply IHn. apply conjonction.
+      apply f_egale. apply egale_succ.
+  Qed.
+
+  Definition trois := succ (succ (succ nulle)).
+  Definition neuf := Eval compute in multiplier trois trois.
+  Definition dix := Eval compute in succ neuf.
+  Definition naturelle_egTaper := Egtaper.Paquet _ (Egtaper.Classe naturelle egnat egale_egnatP).
+  Canonical Structure naturelle_egTaper.
+  Lemma egvraie_estvraie : forall b, egale vraie b -> estvraie b.
+  Proof. intros b H. case H. apply identite. Qed.
+  Lemma estvraie_egvraie : forall b, estvraie b -> egale vraie b.
+  Proof. intros b; case b; intros H. apply egale_ref. apply Faux_ind, H. Qed.
+  Definition neufNdix (H: egale neuf dix) :=
+    Eval compute in (egale_ind _ (egop neuf dix) estfaux
+    identite vraie (egale_sym (estvraie_egvraie _ (introVraie (egP neuf dix) H)))).
+End EgNaturelle.
+
+Section Ensemble.
+  Context {T:Type}.
+  Definition Ensemble := T -> Prop.
+  Definition videEnsemble : Ensemble := fun _ => Faux.
+  Definition memeEnsemble : Ensemble := fun _ => Vraie.
+  Definition sous (B A:Ensemble) := forall x, B x -> A x.
+  Definition syndicat (A B:Ensemble) : Ensemble :=
+    fun x => ou (A x) (B x).
+  Definition intsec (A B:Ensemble) : Ensemble :=
+    fun x => et (A x) (B x).
+  Definition compl (A:Ensemble) : Ensemble :=
+    fun x => nepas (A x).
+  Definition seul x : Ensemble := egale x.
+  Axiom egale_ens : forall A B, et (sous A B) (sous B A) -> egale A B.
 End Ensemble.
-Import Ensemble.Exports.
-
-Section EnsembleTheorie.
-  Variable A: ensembleTaper.
-
-  Lemma eg_sym: forall x y, avoir A x -> avoir A y ->
-    eg _ x y -> eg _ y x.
-  Proof.
-    intros x y Ax Ay Exy.
-    apply (eg_mission _ _ _ Ax Ay Exy (fun z => eg _ z x)), eg_ref, Ax.
-  Qed.
-
-  Lemma eg_trans: forall x y z, avoir A x -> avoir A y -> avoir A z ->
-    eg _ x y -> eg _ y z -> eg _ x z.
-  Proof.
-    intros x y z Ax Ay Az Exy Eyz.
-    apply (eg_mission _ _ _ Ax Ay Exy (fun w => eg _ w z)), Eyz.
-  Qed.
-
-  Variable T: Type.
-  Definition inc (T1 T2: Type) (H: egale _ T1 T2): T1 -> T2 :=
-    match H in (egale _ _ T) return (_ -> T) with
-    | egreflexion _ _ => (fun x => x)
-    end.
-  Eval compute in (inc _ _ (egreflexion _ _) nulle).
-
-  Definition f_vide := (fun _: T => Faux).
-  Lemma f_vide_exclu: forall (x: T), ou (f_vide x) (nepas (f_vide x)).
-  Proof. intros x; apply oudroite; intros F; case F. Qed.
-  Definition VideEnsemble :=
-    Ensemble.Classe T f_vide (egale T).
-
-  Definition f_meme := (fun _: T => Vraie).
-  Lemma f_meme_exclu: forall (x: T), ou (f_meme x) (nepas (f_meme x)).
-  Proof. intros x; apply ougauche; apply identite. Qed.
-  Definition MemeEnsemble := 
-    Ensemble.Classe T f_meme (egale T).
-
-End EnsembleTheorie.
-
-Module CartographieTheorie.
-  Section Defs.
-    Variables A B: ensembleTaper.
-    Definition Ta := sortee A.
-    Definition Tb := sortee B.
-    Definition fermer (f: Ta -> Tb) := forall x, avoir A x -> avoir B (f x).
-    Definition sousensemble (H: egale _ Ta Tb) := fermer (inc _ _ H).
-  End Defs.
-  Module Exports.
-    Notation fermer := fermer.
-    Notation sousensemble := sousensemble.
-  End Exports.
-End CartographieTheorie.
-Import CartographieTheorie.Exports.
-
-Module Cartographie.
-  Section ClasseDef.
-    Record classe_de (domaine codomaine: ensembleTaper) := Classe {
-      carto: sortee domaine -> sortee codomaine;
-      fermer: fermer _ _ carto
-    }.  
-    Structure taper := Paquet { domaine; codomaine; _: classe_de domaine codomaine }.
-    Definition classe (cT: taper) := 
-      match cT return classe_de (domaine cT) (codomaine cT) with
-      | Paquet _ _ c => c
-      end.
-  End ClasseDef.
-  Module Exports.
-    Notation cartoTaper := taper.
-    Definition domaine T := domaine T.
-    Definition codomaine T := codomaine T.
-    Definition carto T := carto _ _ (classe T).
-    Definition fermer T := fermer _ _ (classe T).
-  End Exports.
+Section Cartographie.
+  Context {T1 T2:Type} (A:@Ensemble T1) (B:@Ensemble T2) (f:T1 -> T2).
+  Definition image : Ensemble := fun y => exists x, egale y (f x).
+  Definition iminv : Ensemble := fun x => B (f x).
+  Definition carto := forall x, A x -> B (f x).
 End Cartographie.
-Import Cartographie.Exports.
-
-Section SousEnsemble.
-  Variable A: ensembleTaper.
-  Definition sorteA := sortee A.
-  Variable confavoir: sorteA -> Prop.
-  Variable sous_confavoir: forall x, confavoir x -> avoir A x.
-  Lemma sous_eg_ref: forall x, confavoir x -> eg _ x x.
-  Proof.
-    intros x sAx.
-    apply eg_ref. apply sous_confavoir. apply sAx.
-  Qed.
-  Lemma sous_eg_mission: forall x y, confavoir x -> confavoir y ->
-    eg _ x y -> forall (P: _ -> Prop), ssi (P x) (P y).
-  Proof.
-    intros x y sAx sAy.
-    apply eg_mission. apply sous_confavoir. apply sAx.
-    apply sous_confavoir. apply sAy.
-  Qed.
-
-  Definition produire_sousensemble := Ensemble.Paquet sorteA
-    (Ensemble.Classe _ confavoir (eg A) sous_eg_ref sous_eg_mission).
-End SousEnsemble.
-
-Module EnsembleTheorie.
-  Section Defs.
-    Variables A B:ensembleTaper.
-    Hypothesis HTaTb: egale _ (sortee A) (sortee B).
-    Definition  HTbTa := egsym _ _ _ HTaTb.
-    Definition ege :=  et (sousensemble A B HTaTb) (sousensemble B A HTbTa).
-    Axiom ege_mission : forall (P:ensembleTaper -> Prop), ege -> ssi (P A) (P B).
-  End Defs.
-  Module Exports.
-    Definition ege := ege.
-    Definition ege_mission := ege_mission.
-  End Exports.
-End EnsembleTheorie.
-Import EnsembleTheorie.Exports.
-Section EnsembleTheorie.
-  Lemma ege_ref : forall (A:ensembleTaper), ege A A (egreflexion _ _).
-  Proof.
-    intros A. apply conjonction;
-    unfold sousensemble; unfold CartographieTheorie.Exports.fermer;
-    simpl; intros x Ax; apply Ax.
-  Qed.
-End EnsembleTheorie.
-
-Section CartographieTheorie.
-  Definition injection (f: cartoTaper) :=
-    forall (x y: sortee (domaine f)), avoir _ x -> avoir _ y ->
-    eg (codomaine f) (carto f x) (carto f y).
-  
-  Definition surjection (f: cartoTaper) :=
-    forall (x: sortee (codomaine f)), avoir _ x ->
-    exists x': sortee (domaine f), eg _ x (carto f x').
-
-  Definition bijection (f: cartoTaper) := et (injection f) (surjection f).
-
-  Variable f: cartoTaper.
-  Definition imagef_avoir := fun x => et (avoir _ x) (exists x', et (avoir _ x') (eg _ x ((carto f) x'))).
-  Lemma imagef_sous: forall x, imagef_avoir x -> avoir (codomaine f) x.
-  Proof. 
-    unfold imagef_avoir. intros x H.
-    case H; intros Ax sAx. apply Ax.
-  Qed.
-  Definition imageEnsemble := produire_sousensemble (codomaine f) imagef_avoir imagef_sous.
-End CartographieTheorie.
-
-Section Nompaire.
-
-  Fixpoint nompaire n :=
-    match n with
-    | nulle => vraie
-    | successeur n' => nepasb (nompaire n')
-    end.
-
-  Fixpoint multde4 n :=
-    match n with
-    | nulle => vraie
-    | successeur nulle => faux
-    | successeur (successeur nulle) => faux
-    | successeur (successeur (successeur nulle)) => faux
-    | successeur (successeur (successeur (successeur n'))) => multde4 n'
-    end.
-
-  Lemma nepasb_nepasb: forall (b: booleenne),
-    estvraie (egb b (nepasb (nepasb b))).
-  Proof. intros b; case b; apply identite. Qed.
-
-  Lemma multde4_nompaire: forall (n: naturelle),
-    estvraie (impliqb (multde4 n) (nompaire n)).
-  Proof.
-    fix multde4_nompaire 1.
-    intros n; destruct n as [|[|[|[|n]]]]; try apply identite.
-    simpl. 
-    case (elimVraie _ _ (egb_egale (nompaire n) (nepasb (nepasb (nompaire n)))) (nepasb_nepasb (nompaire n))).
-    case (elimVraie _ _ (egb_egale (nompaire n) (nepasb (nepasb (nompaire n)))) (nepasb_nepasb (nompaire n))).
-    apply multde4_nompaire.
-  Qed.
-
-  Definition nomimpaire := fun n => nepasb (nompaire n).
-
-  Lemma bool_exclu: forall (b: booleenne), ou (estvraie b) (nepas (estvraie b)).
-  Proof.
-    intros b; case b.
-    - apply ougauche, identite.
-    - apply oudroite; intros F; case F.
-  Qed.
-
-  Lemma egale_trans: forall (T: Type) (x y z: T),
-    egale _ x y -> egale _ y z -> egale _ x z.
-  Proof.
-    intros T x y z Exy Eyz.
-    case Eyz; apply Exy.
-  Qed.
-
-  Lemma egale_mission: forall (T: Type) (x y: T), egale _ x y ->
-    forall (P: _ -> Prop), ssi (P x) (P y).
-  Proof.
-    intros T x y Exy P.
-    apply conjonction.
-    - intros Px. apply (egale_ind _ _ _ Px y Exy).
-    - intros Py. apply (egale_ind _ _ _ Py x (egsym _ _ _ Exy)).
-  Qed.
-
-  Definition nompaireensemble := Ensemble.Paquet _ (
-    Ensemble.Classe naturelle (fun n => estvraie (nompaire n)) (egale naturelle)
-    (fun x _ => egreflexion _ x) (fun x y _ _ => egale_mission _ x y)).
-
-  Definition multde4ensemble := Ensemble.Paquet _ (
-    Ensemble.Classe naturelle (fun n => estvraie (multde4 n)) (egale naturelle)
-    (fun x _ => egreflexion _ x) (fun x y _ _ => egale_mission _ x y)).
-
-  Lemma sous_multde4_nompaire: sousensemble multde4ensemble nompaireensemble (egreflexion _ _).
-  Proof.
-    unfold sousensemble. simpl.
-    unfold fermer. intros n.
-    apply (elimVraie _ _ (impliqP _ _)).
-    apply multde4_nompaire.
-  Qed.
-End Nompaire.
+Section Cartographie.
+  Context {T1 T2:Type} {A:@Ensemble T1} {B:@Ensemble T2} {f: T1 -> T2}.
+  Definition inject (Hf: carto A B f) :=
+    forall x1 x2, egale (f x1) (f x2) -> egale x1 x2.
+  Definition surject (Hf: carto A B f) :=
+    forall y, B y -> exists x, egale y (f x).
+  Definition biject (Hf: carto A B f) :=
+    et (inject Hf) (surject Hf).
+End Cartographie.
 
 Module Groupe.
-  Record melange_de (A: ensembleTaper) := Melange {
-    ope: sortee A -> sortee A -> sortee A;
-    inv: sortee A -> sortee A;
-    id: sortee A;
-    fermer_ope: forall x y, avoir A x -> avoir A y -> avoir A (ope x y);
-    fermer_inv: forall x, avoir A x -> avoir A (inv x);
-    fermer_id: avoir A id;
-    assoc_ope: forall x y z, avoir A x -> avoir A y -> avoir A z ->
-      eg _ (ope x (ope y z)) (ope (ope x y) z);
-    droite_id: forall x, avoir A x -> eg _ x (ope x id);
-    gauche_inv: forall x, avoir A x -> eg _ id (ope (inv x) x);
-    droite_inv: forall x, avoir A x -> eg _ id (ope x (inv x))
-  }.
-
   Section ClasseDef.
-    Record classe_de (A: Type) := Classe {
-      base: Ensemble.classe_de A;
-      melange: melange_de (Ensemble.Paquet _ base)
+    Record classe_de {T:Type} := Classe {
+      avoir : Ensemble;
+      op: T -> T -> T;
+      inv: T -> T;
+      id: T;
+      ferm_op: forall x y, avoir x -> avoir y -> avoir (op x y);
+      ferm_inv: forall x, avoir x -> avoir (inv x);
+      ferm_id: avoir id;
+      assoc_op: forall x y z, avoir x -> avoir y -> avoir z ->
+        egale (op x (op y z)) (op (op x y) z);
+      droite_id: forall x, avoir x -> egale x (op x id);
+      gauche_inv: forall x, avoir x -> egale id (op (inv x) x);
+      droite_inv: forall x, avoir x -> egale id (op x (inv x))
     }.
-    Structure taper := Paquet { sorte; _: classe_de sorte }.
+    Structure taper := Paquet { sorte; _: @classe_de sorte }.
     Definition classe (cT: taper) :=
-      match cT return classe_de (sorte cT) with
+      match cT return @classe_de (sorte cT) with
       | Paquet _ c => c
       end.
-    Definition ensembleTaper (cT: taper) := Ensemble.Paquet (sorte cT) (base _ (classe cT)).
+    Definition ensemble (cT: taper) := avoir (classe cT).
   End ClasseDef.
   Module Exports.
     Notation groupeTaper := taper.
-    Definition sorteg G := sortee (ensembleTaper G).
-    Definition avoirg G := avoir (ensembleTaper G).
-    Definition egg G := eg (ensembleTaper G).
-    Definition egg_ref G := eg_ref (ensembleTaper G).
-    Definition egg_mission G := eg_mission (ensembleTaper G).
-    Definition opeg G := ope _ (melange _ (classe G)).
-    Definition invg G := inv _ (melange _ (classe G)).
-    Definition idg G := id _ (melange _ (classe G)).
-    Definition egg_trans G := eg_trans (ensembleTaper G).
-    Definition fermer_ope G := fermer_ope _ (melange _ (classe G)).
-    Definition fermer_inv G := fermer_inv _ (melange _ (classe G)).
-    Definition fermer_id G := fermer_id _ (melange _ (classe G)).
-    Definition assoc_ope G := assoc_ope _ (melange _ (classe G)).
-    Definition droite_id G := droite_id _ (melange _ (classe G)).
-    Definition gauche_inv G := gauche_inv _ (melange _ (classe G)).
-    Definition droite_inv G := droite_inv _ (melange _ (classe G)).
+    Coercion sorte: taper >-> Sortclass.
+    Coercion ensemble: taper >-> Ensemble.
+    Definition avoir G := avoir (classe G).
+    Definition opg {G} := op (classe G).
+    Definition invg {G} := inv (classe G).
+    Definition idg {G} := id (classe G).
   End Exports.
 End Groupe.
-Import Groupe.Exports. 
-
+Import Groupe.Exports.
 Section GroupeTheorie.
-
-  Lemma gauche_id: forall (G: groupeTaper) (x: sorteg G),
-    avoirg G x -> egg _ x (opeg _ (idg _) x).
+  Context {G:groupeTaper}.
+  Definition ferm_op := 
+    match G return forall x y, avoir G x -> avoir G y -> avoir G (opg x y) with
+    Groupe.Paquet _ (Groupe.Classe _ _ _ _ _ fop _ _ _ _ _ _) => fop end.
+  Definition ferm_inv :=
+    match G return forall x, avoir G x -> avoir G (invg x) with
+    Groupe.Paquet _ (Groupe.Classe _ _ _ _ _ _ finv _ _ _ _ _) => finv end.
+  Definition ferm_id :=
+    match G return avoir G idg with
+    Groupe.Paquet _ (Groupe.Classe _ _ _ _ _ _ _ fid _ _ _ _) => fid end.
+  Definition assoc_op :=
+    match G return forall x y z, avoir G x -> avoir G y -> avoir G z ->
+      egale (opg x (opg y z)) (opg (opg x y) z) with
+    Groupe.Paquet _ (Groupe.Classe _ _ _ _ _ _ _ _ aop _ _ _) => aop end.
+  Definition droite_id :=
+    match G return forall x, avoir G x -> egale x (opg x idg) with
+    Groupe.Paquet _ (Groupe.Classe _ _ _ _ _ _ _ _ _ did _ _) => did end.
+  Definition gauche_inv :=
+    match G return forall x, avoir G x -> egale idg (opg (invg x) x) with
+    Groupe.Paquet _ (Groupe.Classe _ _ _ _ _ _ _ _ _ _ ginv _) => ginv end.
+  Definition droite_inv :=
+    match G return forall x, avoir G x -> egale idg (opg x (invg x)) with
+    Groupe.Paquet _ (Groupe.Classe _ _ _ _ _ _ _ _ _ _ _ dinv) => dinv end.
+  Lemma gauche_id: forall x, avoir G x -> egale x (opg idg x).
   Proof.
-    intros G x Gx.
-    pose (eg_mission _ _ _ (fermer_id _)
-      (fermer_ope _ _ _ Gx (fermer_inv _ _ Gx)) 
-      (droite_inv _ x Gx)
-      (fun w => egg _ w x)) as Eex_xxinvx.
-    case Eex_xxinvx; intros E1 E2.
-    apply (eg_trans _ _ _ _ Gx
-      (fermer_ope _ _ _ (fermer_ope _ _ _ Gx (fermer_inv _ _ Gx)) Gx)
-      (fermer_ope _ _ _ (fermer_id _) Gx)); simpl.
-    - apply (eg_trans _ _ _ _ Gx 
-        (fermer_ope _ _ _ Gx (fermer_ope _ _ _ (fermer_inv _ _ Gx) Gx))
-        (fermer_ope _ _ _ (fermer_ope _ _ _ Gx (fermer_inv _ _ Gx)) Gx)).
-    -- apply (eg_trans _ _ _ _ Gx 
-        (fermer_ope _ _ _ Gx (fermer_id _)) 
-        (fermer_ope _ _ _ Gx (fermer_ope _ _ _ (fermer_inv _ _ Gx) Gx))).
-    --- apply droite_id, Gx.
-    --- pose (eg_mission _ _ _ (fermer_id _)
-          (fermer_ope _ _ _ (fermer_inv _ _ Gx) Gx)
-          (gauche_inv _ _ Gx)
-          (fun w => egg _ (opeg _ x (idg G)) (opeg _ x w))) 
-          as Exe_xxinvx.
-        case Exe_xxinvx; intros E3 E4.
-        apply E3. apply egg_ref.
-        apply (fermer_ope _ _ _ Gx (fermer_id _)).
-    -- apply (assoc_ope _ _ _ _ Gx (fermer_inv _ _ Gx) Gx).
-    - pose (eg_mission _ _ _ (fermer_id _)
-        (fermer_ope _ _ _ Gx (fermer_inv _ _ Gx))
-        (droite_inv _ _ Gx)
-        (fun w => egg _ (opeg _ w x) (opeg _ (idg G) x))) 
-        as Exxinvx_ex.
-      case Exxinvx_ex; intros E5 E6.
-      apply E5. apply egg_ref.
-      apply fermer_ope. apply fermer_id. apply Gx.
+    intros x Gx.
+    apply (egale_trans(y:= opg x idg)).
+    -- apply droite_id, Gx.
+    -- apply (egale_trans(y:= opg x (opg (invg x) x))).
+    ---- apply (egale_ind _ _ (fun w => egale (opg x idg) (opg x w)) (egale_ref _)).
+         apply gauche_inv, Gx.
+    ---- apply (egale_trans(y:= opg (opg x (invg x)) x)).
+    ------ apply assoc_op; try apply ferm_inv; apply Gx.
+    ------ apply (egale_ind _ _ (fun w => egale (opg w x) (opg idg x)) (egale_ref _)).
+           apply droite_inv, Gx.
+  Qed.
+  Lemma gauche_op_egale : forall g x y, egale x y -> egale (@opg G g x) (opg g y).
+  Proof. intros g x y; apply f_egale. Qed.
+  Ltac recrire_egale y :=
+    apply (egale_trans(y:=y)).
+  Ltac recrirex_ex x Gx :=
+    apply (egale_trans(y := opg idg x)); try apply gauche_id, Gx.
+  Ltac recrirex_ginvgx x Gx g Gg :=
+    recrirex_ex x Gx; recrire_egale (opg (opg (invg g) g) x); try apply (egale_ind _ _ (fun w => egale (opg idg x) (opg w x)) (egale_ref _)), gauche_inv, Gg;
+    recrire_egale (opg (invg g) (opg g x));
+    try apply egale_sym, assoc_op; try apply ferm_inv; try apply Gg; try apply Gx.
+  Lemma gauche_op_inj: forall g x y, avoir G g -> avoir _ x -> avoir _ y ->
+    egale (opg g x) (opg g y) -> egale x y.
+  Proof.
+    intros g x y Gg Gx Gy Egx_gy.
+    recrirex_ginvgx x Gx g Gg.
+    apply egale_sym.
+    recrirex_ginvgx y Gy g Gg.
+    apply f_egale, egale_sym, Egx_gy.
   Qed.
 
-  Lemma gauche_reduire: forall (G: groupeTaper) (x y z: sorteg G),
-    avoirg G x -> avoirg _ y -> avoirg _ z ->
-    egg _ (opeg _ x y) (opeg _ x z) -> egg _ y z.
-  Proof.
-    intros G x y z Gx Gy Gz Exy_xz.
-    apply (egg_trans _ _ _ _ Gy (fermer_ope _ _ _ (fermer_id _) Gy) Gz).
-    - apply gauche_id, Gy.
-    - apply (egg_trans _ _ _ _ 
-        (fermer_ope _ _ _ (fermer_id _) Gy)
-        (fermer_ope _ _ _ (fermer_ope _ _ _ (fermer_inv _ _ Gx) Gx) Gy)
-        Gz).
-    -- apply (egg_mission _ _ _ (fermer_id _) (fermer_ope _ _ _ (fermer_inv _ _ Gx) Gx) (gauche_inv _ _ Gx) (fun w => egg _ (opeg _ (idg _) y) (opeg _ w y))).
-      apply egg_ref, fermer_ope. apply fermer_id. apply Gy.
-    -- apply (egg_trans _ _ _ _
-        (fermer_ope _ _ _ (fermer_ope _ _ _ (fermer_inv _ _ Gx) Gx) Gy)
-        (fermer_ope _ _ _ (fermer_inv _ _ Gx) (fermer_ope _ _ _ Gx Gy))
-        Gz).
-    --- apply eg_sym. apply (fermer_ope _ _ _ (fermer_inv _ _ Gx) (fermer_ope _ _ _ Gx Gy)).
-        apply (fermer_ope _ _ _ (fermer_ope _ _ _ (fermer_inv _ _ Gx) Gx) Gy).
-        apply (assoc_ope _ _ _ _ (fermer_inv _ _ Gx) Gx Gy).
-    --- apply (egg_trans _ _ _ _
-          (fermer_ope _ _ _ (fermer_inv _ _ Gx) (fermer_ope _ _ _ Gx Gy))
-          (fermer_ope _ _ _ (fermer_inv _ _ Gx) (fermer_ope _ _ _ Gx Gz))
-          Gz).
-    ---- apply (egg_mission _ _ _ (fermer_ope _ _ _ Gx Gy)
-          (fermer_ope _ _ _ Gx Gz) Exy_xz
-          (fun w => egg _ (opeg _ (invg _ x) (opeg _ x y)) (opeg _ (invg _ x) w))).
-        apply egg_ref, fermer_ope. apply fermer_inv, Gx.
-        apply fermer_ope. apply Gx. apply Gy.
-    ---- apply (egg_trans _ _ _ _
-          (fermer_ope _ _ _ (fermer_inv _ _ Gx) (fermer_ope _ _ _ Gx Gz))
-          (fermer_ope _ _ _ (fermer_ope _ _ _ (fermer_inv _ _ Gx) Gx) Gz)
-          Gz).
-    ----- apply assoc_ope. apply fermer_inv, Gx.
-          apply Gx. apply Gz.
-    ----- apply (egg_trans _ _ _ _
-            (fermer_ope _ _ _ (fermer_ope _ _ _ (fermer_inv _ _ Gx) Gx) Gz)
-            (fermer_ope _ _ _ (fermer_id _) Gz)
-            Gz).
-    ------ apply (egg_mission _ _ _ 
-            (fermer_id _)
-            (fermer_ope _ _ _ (fermer_inv _ _ Gx) Gx)
-            (gauche_inv _ _ Gx)
-            (fun w => egg _ (opeg _ w z) (opeg _ (idg G) z))).
-          apply eg_ref. apply (fermer_ope _ _ _ (fermer_id _) Gz).
-    ------ apply eg_sym. apply Gz. apply fermer_ope. apply fermer_id.
-          apply Gz. apply gauche_id. apply Gz.
-  Qed.
 
   Lemma gauche_transpo: forall (G: groupeTaper) (x y z: sorteg G),
     avoirg G x -> avoirg G y -> avoirg G z ->
@@ -741,12 +425,12 @@ Section GroupeTheorie.
         (fermer_ope _ _ _ (fermer_inv _ _ Gy) Gy)
         (gauche_inv _ _ Gy)
         (fun w => egg _ (opeg _ (idg _) x) (opeg _ w x))).
-      apply eg_ref. apply (fermer_ope _ _ _ (fermer_id _) Gx).
-    -- apply (eg_trans _ _ _ _
+      apply egale_ref. apply (fermer_ope _ _ _ (fermer_id _) Gx).
+    -- apply (egale_trans _ _ _ _
         (fermer_ope _ _ _ (fermer_ope _ _ _ (fermer_inv _ _ Gy) Gy) Gx)
         (fermer_ope _ _ _ (fermer_inv _ _ Gy) (fermer_ope _ _ _ Gy Gx))
         (fermer_ope _ _ _ (fermer_inv _ _ Gy) Gz)).
-    --- apply eg_sym. apply fermer_ope. apply fermer_inv.
+    --- apply egale_sym. apply fermer_ope. apply fermer_inv.
         apply Gy. apply fermer_ope. apply Gy. apply Gx.
         apply fermer_ope. apply fermer_ope. apply fermer_inv.
         apply Gy. apply Gy. apply Gx. apply assoc_ope.
@@ -755,7 +439,7 @@ Section GroupeTheorie.
           (fermer_ope _ _ _ Gy Gx)
           Gz Eyx_z
           (fun w => egg _ (opeg _ (invg _ y) w) (opeg _ (invg _ y) z))).
-        apply eg_ref. apply fermer_ope. apply fermer_inv, Gy.
+        apply egale_ref. apply fermer_ope. apply fermer_inv, Gy.
         apply Gz.
   Qed.
 
@@ -765,11 +449,11 @@ Section GroupeTheorie.
     intros G x Gx.
     apply (gauche_reduire _ _ _ _ (fermer_inv _ _ Gx) Gx
       (fermer_inv _ _ (fermer_inv _ _ Gx))).
-    apply (eg_trans _ _ _ _
+    apply (egale_trans _ _ _ _
       (fermer_ope _ _ _ (fermer_inv _ _ Gx) Gx)
       (fermer_id _)
       (fermer_ope _ _ _ (fermer_inv _ _ Gx) (fermer_inv _ _ (fermer_inv _ _ Gx)))).
-    - apply eg_sym. apply fermer_id. apply fermer_ope.
+    - apply egale_sym. apply fermer_id. apply fermer_ope.
       apply fermer_inv. apply Gx. apply Gx.
       apply gauche_inv. apply Gx.
     - apply droite_inv. apply fermer_inv. apply Gx.
@@ -784,27 +468,27 @@ Section GroupeTheorie.
     - apply fermer_inv. apply fermer_ope. apply Gx. apply Gy.
     - apply Gy.
     - apply fermer_inv, Gx.
-    - apply (eg_trans _ _ _ _
+    - apply (egale_trans _ _ _ _
         (fermer_ope _ _ _ Gy (fermer_inv _ _ (fermer_ope _ _ _ Gx Gy)))
         (fermer_ope _ _ _ (fermer_inv _ _ Gx) (fermer_id _))
         (fermer_inv _ _ Gx)).
     -- apply gauche_transpo. apply fermer_ope.
       apply Gy. apply fermer_inv. apply fermer_ope.
       apply Gx. apply Gy. apply Gx. apply fermer_id.
-      apply (eg_trans _ _ _ _
+      apply (egale_trans _ _ _ _
         (fermer_ope _ _ _ Gx (fermer_ope _ _ _ Gy (fermer_inv _ _ (fermer_ope _ _ _ Gx Gy))))
         (fermer_ope _ _ _ (fermer_ope _ _ _ Gx Gy) (fermer_inv _ _ (fermer_ope _ _ _ Gx Gy)))
         (fermer_id _)).
     --- apply assoc_ope. apply Gx. apply Gy.
         apply fermer_inv. apply fermer_ope.
         apply Gx. apply Gy.
-    --- apply eg_sym. apply fermer_id. apply fermer_ope.
+    --- apply egale_sym. apply fermer_id. apply fermer_ope.
         apply fermer_ope. apply Gx. apply Gy.
         apply fermer_inv. apply fermer_ope.
         apply Gx. apply Gy.
         apply droite_inv. apply fermer_ope.
         apply Gx. apply Gy.
-    -- apply eg_sym. apply fermer_inv.
+    -- apply egale_sym. apply fermer_inv.
       apply Gx. apply fermer_ope. apply fermer_inv.
       apply Gx. apply fermer_id. apply droite_id.
       apply fermer_inv. apply Gx.
@@ -813,16 +497,16 @@ Section GroupeTheorie.
   Lemma id_invid: forall (G: groupeTaper), egg _ (idg G) (invg _ (idg G)).
   Proof.
     intros G.
-    apply (eg_trans _ _ _ _
+    apply (egale_trans _ _ _ _
       (fermer_id _)
       (fermer_ope _ _ _ (fermer_inv _ _ (fermer_id _)) (fermer_id _))
       (fermer_inv _ _ (fermer_id _))).
     - apply gauche_transpo. apply fermer_id.
       apply fermer_id. apply fermer_id.
-      apply eg_sym. apply fermer_id. apply fermer_ope.
+      apply egale_sym. apply fermer_id. apply fermer_ope.
       apply fermer_id. apply fermer_id.
       apply droite_id. apply fermer_id.
-    - apply eg_sym. apply fermer_inv.
+    - apply egale_sym. apply fermer_inv.
       apply fermer_id. apply fermer_ope.
       apply fermer_inv. apply fermer_id.
       apply fermer_id. apply droite_id.
@@ -869,12 +553,12 @@ Section HomomorphismeTheorie.
     pose (fermf _ _ (fermer_id (domf f))) as Gfe.
     apply (gauche_reduire _ _ _ _
       Gfe (fermer_id _) Gfe).
-    apply (eg_trans _ _ _ _
+    apply (egale_trans _ _ _ _
       (fermer_ope _ _ _ Gfe (fermer_id (codomf f)))
       Gfe (fermer_ope _ _ _ Gfe Gfe)).
-    - apply eg_sym. apply Gfe. apply fermer_ope. apply Gfe.
+    - apply egale_sym. apply Gfe. apply fermer_ope. apply Gfe.
       apply fermer_id. apply droite_id. apply Gfe.
-    - apply (eg_trans _ _ _ _
+    - apply (egale_trans _ _ _ _
         Gfe
         (fermf _ _ (fermer_ope _ _ _ (fermer_id (domf f)) (fermer_id _)))
         (fermer_ope _ _ _ Gfe Gfe)).
@@ -882,7 +566,7 @@ Section HomomorphismeTheorie.
         (fermer_id _) (fermer_ope _ _ _ (fermer_id _) (fermer_id _))
         (droite_id _ _ (fermer_id _))
         (fun w => egg _ ((carte f) (idg (domf f))) ((carte f) w))).
-      apply eg_ref. apply Gfe.
+      apply egale_ref. apply Gfe.
     -- apply hom. apply fermer_id. apply fermer_id.
   Qed.
 
@@ -892,27 +576,27 @@ Section HomomorphismeTheorie.
     intros f x Hx.
     pose (fermf _ _ Hx) as Gfx.
     pose (fermf _ _ (fermer_inv _ _ Hx)) as Gfxinv.
-    apply (eg_trans _ _ _ _
+    apply (egale_trans _ _ _ _
       Gfxinv
       (fermer_ope _ _ _ (fermer_inv _ _ Gfx) (fermer_id _))
       (fermer_inv _ _ Gfx)).
     - apply gauche_transpo. apply Gfxinv.
       apply Gfx. apply fermer_id.
-      apply (eg_trans _ _ _ _
+      apply (egale_trans _ _ _ _
         (fermer_ope _ _ _ Gfx Gfxinv)
         (fermf _ _ (fermer_ope _ _ _ Hx (fermer_inv _ _ Hx)))
         (fermer_id _)).
-    -- apply eg_sym. apply fermf. apply fermer_ope.
+    -- apply egale_sym. apply fermf. apply fermer_ope.
       apply Hx. apply fermer_inv. apply Hx.
       apply fermer_ope. apply fermf. apply Hx.
       apply fermf. apply fermer_inv. apply Hx.
       apply hom. apply Hx. apply fermer_inv.
       apply Hx.
-    -- apply (eg_trans _ _ _ _
+    -- apply (egale_trans _ _ _ _
         (fermf _ _ (fermer_ope _ _ _ Hx (fermer_inv _ _ Hx)))
         (fermf _ _ (fermer_id _))
         (fermer_id _)).
-    --- apply eg_sym. apply fermf. apply fermer_id.
+    --- apply egale_sym. apply fermf. apply fermer_id.
         apply fermf. apply fermer_ope. apply Hx.
         apply fermer_inv. apply Hx.
         apply (eg_mission _ _ _
@@ -920,10 +604,10 @@ Section HomomorphismeTheorie.
           (fermer_ope _ _ _ Hx (fermer_inv _ _ Hx))
           (droite_inv _ _ Hx)
           (fun w => egg _ ((carte f) (idg (domf f))) ((carte f) w))).
-        apply eg_ref. apply fermf. apply fermer_id.
-    --- apply eg_sym. apply fermer_id. apply fermf. apply fermer_id.
+        apply egale_ref. apply fermf. apply fermer_id.
+    --- apply egale_sym. apply fermer_id. apply fermf. apply fermer_id.
         apply hom_preserve_id.
-    - apply eg_sym. apply fermer_inv. apply fermf. apply Hx.
+    - apply egale_sym. apply fermer_inv. apply fermf. apply Hx.
       apply fermer_ope. apply fermer_inv. apply fermf.
       apply Hx. apply fermer_id. apply droite_id.
       apply fermer_inv. apply fermf. apply Hx.
@@ -961,12 +645,12 @@ Section Noyau.
     case Hx; intros Hx1 Hx2. case Hy; intros Hy1 Hy2.
     apply conjonction.
     - apply fermer_ope. apply Hx1. apply Hy1.
-    - apply (eg_trans _ _ _ _
+    - apply (egale_trans _ _ _ _
         (fermer_id _)
         (fermer_ope _ _ _ (fermer_id _) (fermer_id _))
         (fermf _ _ (fermer_ope _ _ _ Hx1 Hy1))).
     -- apply droite_id. apply fermer_id.
-    -- apply (eg_trans _ _ _ _
+    -- apply (egale_trans _ _ _ _
          (fermer_ope _ _ _ (fermer_id _) (fermer_id _))
          (fermer_ope _ _ _ (fermer_id _) (fermf _ _ Hy1))
          (fermf _ _ (fermer_ope _ _ _ Hx1 Hy1))).
@@ -974,8 +658,8 @@ Section Noyau.
           (fermer_id _) (fermf _ _ Hy1)
           Hy2
           (fun w => egg _ (opeg _ (idg _) (idg _)) (opeg _ (idg _) w))).
-        apply eg_ref. apply fermer_ope. apply fermer_id. apply fermer_id.
-    --- apply (eg_trans _ _ _ _
+        apply egale_ref. apply fermer_ope. apply fermer_id. apply fermer_id.
+    --- apply (egale_trans _ _ _ _
           (fermer_ope _ _ _ (fermer_id _) (fermf _ _ Hy1))
           (fermer_ope _ _ _ (fermf _ _ Hx1) (fermf _ _ Hy1))
           (fermf _ _ (fermer_ope _ _ _ Hx1 Hy1))).
@@ -983,8 +667,8 @@ Section Noyau.
            (fermer_id _) (fermf _ _ Hx1)
            Hx2
            (fun w => egg _ (opeg _ (idg _) ((carte f) y)) (opeg _ w ((carte f) y)))).
-          apply eg_ref. apply fermer_ope. apply fermer_id. apply fermf. apply Hy1.
-    ---- apply eg_sym. apply fermf. apply fermer_ope. apply Hx1. apply Hy1.
+          apply egale_ref. apply fermer_ope. apply fermer_id. apply fermf. apply Hy1.
+    ---- apply egale_sym. apply fermf. apply fermer_ope. apply Hx1. apply Hy1.
          apply fermer_ope. apply fermf. apply Hx1. apply fermf. apply Hy1.
          apply hom. apply Hx1. apply Hy1.
   Qed.     
@@ -994,12 +678,12 @@ Section Noyau.
     intros x Hx. case Hx; intros Hx1 Hx2.
     apply conjonction.
     - apply fermer_inv. apply Hx1.
-    - apply (eg_trans _ _ _ _
+    - apply (egale_trans _ _ _ _
         (fermer_id _)
         (fermer_inv _ _ (fermer_id _))
         (fermf _ _ (fermer_inv _ _ Hx1))).
     -- apply id_invid.
-    -- apply (eg_trans _ _ _ _
+    -- apply (egale_trans _ _ _ _
          (fermer_inv _ _ (fermer_id _))
          (fermer_inv _ _ (fermf _ _ Hx1))
          (fermf _ _ (fermer_inv _ _ Hx1))).
@@ -1008,8 +692,8 @@ Section Noyau.
           (fermf _ _ Hx1)
           Hx2
           (fun w => egg _ (invg _ (idg _)) (invg _ w))).
-        apply eg_ref. apply fermer_inv. apply fermer_id.
-    --- apply eg_sym. apply fermf. apply fermer_inv. apply Hx1.
+        apply egale_ref. apply fermer_inv. apply fermer_id.
+    --- apply egale_sym. apply fermf. apply fermer_inv. apply Hx1.
         apply fermer_inv. apply fermf. apply Hx1.
         apply hom_preserve_inv. apply Hx1.
   Qed. 
@@ -1036,12 +720,12 @@ Section Noyau.
       unfold avoir. simpl. apply conjonction.
     -- apply fermer_ope. apply fermer_ope. apply Hg.
        apply Nh. apply fermer_inv. apply Hg.
-    -- apply (eg_trans _ _ _ _
+    -- apply (egale_trans _ _ _ _
          (fermer_id _)
          (fermer_ope _ _ _ (fermf _ _ Hg) (fermer_inv _ _ (fermf _ _ Hg)))
          (fermf _ _ (fermer_ope _ _ _ (fermer_ope _ _ _ Hg Hh) (fermer_inv _ _ Hg)))).
     --- apply droite_inv. apply fermf. apply Hg.
-    --- apply (eg_trans _ _ _ _
+    --- apply (egale_trans _ _ _ _
           (fermer_ope _ _ _ (fermf _ _ Hg) (fermer_inv _ _ (fermf _ _ Hg)))
           (fermer_ope _ _ _ (fermer_ope _ _ _ (fermf _ _ Hg) (fermer_id _)) (fermer_inv _ _ (fermf _ _ Hg)))
           (fermf _ _ (fermer_ope _ _ _ (fermer_ope _ _ _ Hg Hh) (fermer_inv _ _ Hg)))).
@@ -1049,9 +733,9 @@ Section Noyau.
            (fermf _ _ Hg) (fermer_ope _ _ _ (fermf _ _ Hg) (fermer_id _))
            (droite_id _ _ (fermf _ _ Hg))
            (fun w => egg _ (opeg _ ((carte f) g) (invg _ ((carte f) g))) (opeg _ w (invg _ ((carte f) g))))).
-         apply eg_ref. apply fermer_ope. apply fermf. apply Hg. apply fermer_inv.
+         apply egale_ref. apply fermer_ope. apply fermf. apply Hg. apply fermer_inv.
          apply fermf. apply Hg.
-    ---- apply (eg_trans _ _ _ _
+    ---- apply (egale_trans _ _ _ _
           (fermer_ope _ _ _ (fermer_ope _ _ _ (fermf _ _ Hg) (fermer_id _)) (fermer_inv _ _ (fermf _ _ Hg)))
           (fermer_ope _ _ _ (fermer_ope _ _ _ (fermf _ _ Hg) (fermf _ _ Hh)) (fermer_inv _ _ (fermf _ _ Hg)))
           (fermf _ _ (fermer_ope _ _ _ (fermer_ope _ _ _ Hg Hh) (fermer_inv _ _ Hg)))).
@@ -1061,13 +745,13 @@ Section Noyau.
                   Eefh
                   (fun w => egg _ (opeg _ (opeg _ ((carte f) g) (idg _)) (invg _ ((carte f) g)))
                                   (opeg _ (opeg _ ((carte f) g) w) (invg _ ((carte f) g))))).
-          apply eg_ref. apply fermer_ope. apply fermer_ope. apply fermf. apply Hg.
+          apply egale_ref. apply fermer_ope. apply fermer_ope. apply fermf. apply Hg.
           apply fermer_id. apply fermer_inv. apply fermf. apply Hg.
-    ----- apply (eg_trans _ _ _ _
+    ----- apply (egale_trans _ _ _ _
             (fermer_ope _ _ _ (fermer_ope _ _ _ (fermf _ _ Hg) (fermf _ _ Hh)) (fermer_inv _ _ (fermf _ _ Hg)))
             (fermer_ope _ _ _ (fermf _ _ (fermer_ope _ _ _ Hg Hh)) (fermer_inv _ _ (fermf _ _ Hg)))
             (fermf _ _ (fermer_ope _ _ _ (fermer_ope _ _ _ Hg Hh) (fermer_inv _ _ Hg)))).                                  
-    ------ apply eg_sym. apply fermer_ope. apply fermf. apply fermer_ope.
+    ------ apply egale_sym. apply fermer_ope. apply fermf. apply fermer_ope.
            apply Hg. apply Hh. apply fermer_inv. apply fermf. apply Hg.
            apply fermer_ope. apply fermer_ope. apply fermf. apply Hg.
            apply fermf. apply Hh. apply fermer_inv. apply fermf. apply Hg. 
@@ -1077,13 +761,13 @@ Section Noyau.
              (hom f _ _ Hg Hh)
              (fun w => egg _ (opeg _ ((carte f) (opeg _ g h)) (invg _ ((carte f) g)))
                              (opeg _ w (invg _ ((carte f) g))))).
-           apply eg_ref. apply fermer_ope. apply fermf. apply fermer_ope.
+           apply egale_ref. apply fermer_ope. apply fermf. apply fermer_ope.
            apply Hg. apply Hh. apply fermer_inv. apply fermf. apply Hg.
-    ------ apply (eg_trans _ _ _ _
+    ------ apply (egale_trans _ _ _ _
             (fermer_ope _ _ _ (fermf _ _ (fermer_ope _ _ _ Hg Hh)) (fermer_inv _ _ (fermf _ _ Hg)))
             (fermer_ope _ _ _ (fermf _ _ (fermer_ope _ _ _ Hg Hh)) (fermf _ _ (fermer_inv _ _ Hg)))
             (fermf _ _ (fermer_ope _ _ _ (fermer_ope _ _ _ Hg Hh) (fermer_inv _ _ Hg)))).
-    ------- apply eg_sym. apply fermer_ope. apply fermf. apply fermer_ope.
+    ------- apply egale_sym. apply fermer_ope. apply fermf. apply fermer_ope.
             apply Hg. apply Hh. apply fermf. apply fermer_inv. apply Hg.
             apply fermer_ope. apply fermf. apply fermer_ope. apply Hg. apply Hh.
             apply fermer_inv. apply fermf. apply Hg.
@@ -1093,14 +777,14 @@ Section Noyau.
               (hom_preserve_inv _ _ Hg)
               (fun w => egg _ (opeg _ ((carte f) (opeg _ g h)) w)
                               (opeg _ ((carte f) (opeg _ g h)) (invg _ ((carte f) g))))).      
-            apply eg_ref. apply fermer_ope. apply fermf. apply fermer_ope.
+            apply egale_ref. apply fermer_ope. apply fermf. apply fermer_ope.
             apply Hg. apply Hh. apply fermer_inv. apply fermf. apply Hg.
-    ------- apply eg_sym. apply fermf. apply fermer_ope. apply fermer_ope.
+    ------- apply egale_sym. apply fermf. apply fermer_ope. apply fermer_ope.
             apply Hg. apply Hh. apply fermer_inv. apply Hg. apply fermer_ope.
             apply fermf. apply fermer_ope. apply Hg. apply Hh. apply fermf.
             apply fermer_inv. apply Hg. apply hom. apply fermer_ope.
             apply Hg. apply Hh. apply fermer_inv. apply Hg.
-    - apply eg_ref. apply (fermer_ope _ _ _ (fermer_ope _ _ _ Hg Hh) (fermer_inv _ _ Hg)).
+    - apply egale_ref. apply (fermer_ope _ _ _ (fermer_ope _ _ _ Hg Hh) (fermer_inv _ _ Hg)).
 Qed.
 End Noyau.
 
@@ -1120,23 +804,23 @@ Section Image.
     - apply fermer_ope. apply Gx. apply Gy.
     - exists (opeg _ x' y'). apply conjonction.
     -- apply fermer_ope. apply Hx'. apply Hy'.
-    -- apply (eg_trans _ _ _ _
+    -- apply (egale_trans _ _ _ _
          (fermer_ope _ _ _ Gx Gy)
          (fermer_ope _ _ _ (fermf _ _ Hx') Gy)
          (fermf _ _ (fermer_ope _ _ _ Hx' Hy'))).
     --- apply (eg_mission _ _ _
           Gx (fermf _ _ Hx') xfx' 
           (fun w => egg _ (opeg _ x y) (opeg _ w y))).
-        apply eg_ref. apply (fermer_ope _ _ _ Gx Gy).
-    --- apply (eg_trans _ _ _ _
+        apply egale_ref. apply (fermer_ope _ _ _ Gx Gy).
+    --- apply (egale_trans _ _ _ _
           (fermer_ope _ _ _ (fermf _ _ Hx') Gy)
           (fermer_ope _ _ _ (fermf _ _ Hx') (fermf _ _ Hy'))
           (fermf _ _ (fermer_ope _ _ _ Hx' Hy'))).
     ---- apply (eg_mission _ _ _
            Gy (fermf _ _ Hy') yfy' 
            (fun w => egg _ (opeg _ (phi x') y) (opeg _ (phi x') w))).
-         apply eg_ref. apply (fermer_ope _ _ _ (fermf _ _ Hx') Gy).
-    ---- apply eg_sym. apply fermf. apply fermer_ope. apply Hx'. 
+         apply egale_ref. apply (fermer_ope _ _ _ (fermf _ _ Hx') Gy).
+    ---- apply egale_sym. apply fermf. apply fermer_ope. apply Hx'. 
          apply Hy'. apply fermer_ope. apply fermf. apply Hx'. 
          apply fermf. apply Hy'.
          apply hom. apply Hx'. apply Hy'.
@@ -1149,15 +833,15 @@ Section Image.
     - apply fermer_inv. apply Gx.
     - exists (invg _ x'). apply conjonction.
     -- apply fermer_inv. apply Hx'.
-    -- apply (eg_trans _ _ _ _
+    -- apply (egale_trans _ _ _ _
          (fermer_inv _ _ Gx)
          (fermer_inv _ _ (fermf _ _ Hx'))
          (fermf _ _ (fermer_inv _ _ Hx'))).
     --- apply (eg_mission _ _ _
           Gx (fermf _ _ Hx') xfx'
           (fun w => egg _ (invg _ x) (invg _ w))).
-        apply eg_ref. apply (fermer_inv _ _ Gx).
-    --- apply eg_sym. apply (fermf _ _ (fermer_inv _ _ Hx')).
+        apply egale_ref. apply (fermer_inv _ _ Gx).
+    --- apply egale_sym. apply (fermf _ _ (fermer_inv _ _ Hx')).
         apply (fermer_inv _ _ (fermf _ _ Hx')).
         apply hom_preserve_inv. apply Hx'.
   Qed.
