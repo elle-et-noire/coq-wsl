@@ -353,7 +353,7 @@ Import Groupe.Exports.
 Section GroupeTheorie.
   Context {G:groupeTaper}.
   Definition ferm_op := 
-    match G return forall x y, avoir G x -> avoir G y -> avoir G (opg x y) with
+    match G return forall x y, avoir G x -> avoir _ y -> avoir _ (opg x y) with
     Groupe.Paquet _ (Groupe.Classe _ _ _ _ _ fop _ _ _ _ _ _) => fop end.
   Definition ferm_inv :=
     match G return forall x, avoir G x -> avoir G (invg x) with
@@ -387,16 +387,17 @@ Section GroupeTheorie.
     ------ apply (egale_ind _ _ (fun w => egale (opg w x) (opg idg x)) (egale_ref _)).
            apply droite_inv, Gx.
   Qed.
-  Lemma gauche_op_egale : forall g x y, egale x y -> egale (@opg G g x) (opg g y).
-  Proof. intros g x y; apply f_egale. Qed.
   Ltac recrire_egale y :=
     apply (egale_trans(y:=y)).
+  Ltac app_f_egale f := apply (f_egale f).
   Ltac recrirex_ex x Gx :=
     apply (egale_trans(y := opg idg x)); try apply gauche_id, Gx.
+  Ltac recrirex_xe x Gx :=
+    apply (egale_trans(y := opg x idg)); try apply droite_id, Gx.
   Ltac recrirex_ginvgx x Gx g Gg :=
-    recrirex_ex x Gx; recrire_egale (opg (opg (invg g) g) x); try apply (egale_ind _ _ (fun w => egale (opg idg x) (opg w x)) (egale_ref _)), gauche_inv, Gg;
-    recrire_egale (opg (invg g) (opg g x));
-    try apply egale_sym, assoc_op; try apply ferm_inv; try apply Gg; try apply Gx.
+    recrirex_ex x Gx; recrire_egale (opg (opg (invg g) g) x);
+    try app_f_egale (fun w => opg w x); try apply gauche_inv, Gg;
+    recrire_egale (opg (invg g) (opg g x)); try apply egale_sym, assoc_op; try apply ferm_inv; try apply Gg; try apply Gx.
   Lemma gauche_op_inj: forall g x y, avoir G g -> avoir _ x -> avoir _ y ->
     egale (opg g x) (opg g y) -> egale x y.
   Proof.
@@ -406,117 +407,43 @@ Section GroupeTheorie.
     recrirex_ginvgx y Gy g Gg.
     apply f_egale, egale_sym, Egx_gy.
   Qed.
-
-
-  Lemma gauche_transpo: forall (G: groupeTaper) (x y z: sorteg G),
-    avoirg G x -> avoirg G y -> avoirg G z ->
-    egg _ (opeg _ y x) z -> egg _ x (opeg _ (invg _ y) z).
+  Lemma gauche_transpo: forall g x y, avoir G g -> avoir G x -> avoir G y ->
+    egale (opg g x) y -> egale x (opg (invg g) y).
   Proof.
-    intros G x y z Gx Gy Gz Eyx_z.
-    apply (egg_trans _ _ _ _
-      Gx (fermer_ope _ _ _ (fermer_id _) Gx)
-      (fermer_ope _ _ _ (fermer_inv _ _ Gy) Gz)).
-    - apply gauche_id, Gx.
-    - apply (egg_trans _ _ _ _
-        (fermer_ope _ _ _ (fermer_id _) Gx)
-        (fermer_ope _ _ _ (fermer_ope _ _ _ (fermer_inv _ _ Gy) Gy) Gx)
-        (fermer_ope _ _ _ (fermer_inv _ _ Gy) Gz)).
-    -- apply (eg_mission _ _ _ (fermer_id _)
-        (fermer_ope _ _ _ (fermer_inv _ _ Gy) Gy)
-        (gauche_inv _ _ Gy)
-        (fun w => egg _ (opeg _ (idg _) x) (opeg _ w x))).
-      apply egale_ref. apply (fermer_ope _ _ _ (fermer_id _) Gx).
-    -- apply (egale_trans _ _ _ _
-        (fermer_ope _ _ _ (fermer_ope _ _ _ (fermer_inv _ _ Gy) Gy) Gx)
-        (fermer_ope _ _ _ (fermer_inv _ _ Gy) (fermer_ope _ _ _ Gy Gx))
-        (fermer_ope _ _ _ (fermer_inv _ _ Gy) Gz)).
-    --- apply egale_sym. apply fermer_ope. apply fermer_inv.
-        apply Gy. apply fermer_ope. apply Gy. apply Gx.
-        apply fermer_ope. apply fermer_ope. apply fermer_inv.
-        apply Gy. apply Gy. apply Gx. apply assoc_ope.
-        apply fermer_inv. apply Gy. apply Gy. apply Gx.
-    --- apply (eg_mission _ _ _
-          (fermer_ope _ _ _ Gy Gx)
-          Gz Eyx_z
-          (fun w => egg _ (opeg _ (invg _ y) w) (opeg _ (invg _ y) z))).
-        apply egale_ref. apply fermer_ope. apply fermer_inv, Gy.
-        apply Gz.
+    intros g x y Gg Gx Gy Egx_y.
+    recrirex_ginvgx x Gx g Gg.
+    apply f_egale, Egx_y.
   Qed.
-
-  Lemma invinv_ident: forall (G: groupeTaper) (x: sorteg G),
-    avoirg G x -> egg _ x (invg _ (invg _ x)).
+  Lemma invinv_ident: forall x, avoir G x -> egale x (invg (invg x)).
   Proof.
-    intros G x Gx.
-    apply (gauche_reduire _ _ _ _ (fermer_inv _ _ Gx) Gx
-      (fermer_inv _ _ (fermer_inv _ _ Gx))).
-    apply (egale_trans _ _ _ _
-      (fermer_ope _ _ _ (fermer_inv _ _ Gx) Gx)
-      (fermer_id _)
-      (fermer_ope _ _ _ (fermer_inv _ _ Gx) (fermer_inv _ _ (fermer_inv _ _ Gx)))).
-    - apply egale_sym. apply fermer_id. apply fermer_ope.
-      apply fermer_inv. apply Gx. apply Gx.
-      apply gauche_inv. apply Gx.
-    - apply droite_inv. apply fermer_inv. apply Gx.
+    intros x Gx.
+    apply (gauche_op_inj (invg x)); try apply ferm_inv; try apply ferm_inv; try apply Gx.
+    recrire_egale (@idg G). apply egale_sym, gauche_inv, Gx.
+    apply droite_inv, ferm_inv, Gx.
   Qed.
-
-  Lemma invop_opinvinv: forall (G: groupeTaper) (x y: sorteg G),
-    avoirg G x -> avoirg G y ->
-    egg _ (invg _ (opeg _ x y)) (opeg _ (invg _ y) (invg _ x)).
+  Lemma invop_opinvinv: forall x y, avoir G x -> avoir G y ->
+    egale (invg (opg x y)) (opg (invg y) (invg x)).
   Proof.
-    intros G x y Gx Gy.
-    apply gauche_transpo.
-    - apply fermer_inv. apply fermer_ope. apply Gx. apply Gy.
-    - apply Gy.
-    - apply fermer_inv, Gx.
-    - apply (egale_trans _ _ _ _
-        (fermer_ope _ _ _ Gy (fermer_inv _ _ (fermer_ope _ _ _ Gx Gy)))
-        (fermer_ope _ _ _ (fermer_inv _ _ Gx) (fermer_id _))
-        (fermer_inv _ _ Gx)).
-    -- apply gauche_transpo. apply fermer_ope.
-      apply Gy. apply fermer_inv. apply fermer_ope.
-      apply Gx. apply Gy. apply Gx. apply fermer_id.
-      apply (egale_trans _ _ _ _
-        (fermer_ope _ _ _ Gx (fermer_ope _ _ _ Gy (fermer_inv _ _ (fermer_ope _ _ _ Gx Gy))))
-        (fermer_ope _ _ _ (fermer_ope _ _ _ Gx Gy) (fermer_inv _ _ (fermer_ope _ _ _ Gx Gy)))
-        (fermer_id _)).
-    --- apply assoc_ope. apply Gx. apply Gy.
-        apply fermer_inv. apply fermer_ope.
-        apply Gx. apply Gy.
-    --- apply egale_sym. apply fermer_id. apply fermer_ope.
-        apply fermer_ope. apply Gx. apply Gy.
-        apply fermer_inv. apply fermer_ope.
-        apply Gx. apply Gy.
-        apply droite_inv. apply fermer_ope.
-        apply Gx. apply Gy.
-    -- apply egale_sym. apply fermer_inv.
-      apply Gx. apply fermer_ope. apply fermer_inv.
-      apply Gx. apply fermer_id. apply droite_id.
-      apply fermer_inv. apply Gx.
+    intros x y Gx Gy.
+    apply gauche_transpo; try apply ferm_inv; try apply ferm_op; try apply Gx; try apply Gy.
+    apply egale_sym. recrire_egale (opg (invg x) idg).
+    apply droite_id, ferm_inv, Gx.
+    apply egale_sym. apply gauche_transpo.
+    apply Gx. apply (ferm_op _ _ Gy (ferm_inv _ (ferm_op _ _ Gx Gy))).
+    apply ferm_id. recrire_egale (opg (opg x y) (invg (opg x y))).
+    apply assoc_op; try apply ferm_inv, ferm_op; try apply Gx; try apply Gy.
+    apply egale_sym, droite_inv, ferm_op. apply Gx. apply Gy.
   Qed.
-
-  Lemma id_invid: forall (G: groupeTaper), egg _ (idg G) (invg _ (idg G)).
+  Lemma id_invid: egale (@idg G) (invg idg).
   Proof.
-    intros G.
-    apply (egale_trans _ _ _ _
-      (fermer_id _)
-      (fermer_ope _ _ _ (fermer_inv _ _ (fermer_id _)) (fermer_id _))
-      (fermer_inv _ _ (fermer_id _))).
-    - apply gauche_transpo. apply fermer_id.
-      apply fermer_id. apply fermer_id.
-      apply egale_sym. apply fermer_id. apply fermer_ope.
-      apply fermer_id. apply fermer_id.
-      apply droite_id. apply fermer_id.
-    - apply egale_sym. apply fermer_inv.
-      apply fermer_id. apply fermer_ope.
-      apply fermer_inv. apply fermer_id.
-      apply fermer_id. apply droite_id.
-      apply fermer_inv. apply fermer_id.
+    apply egale_sym. recrirex_xe (@invg G idg) (ferm_inv _ ferm_id).
+    apply egale_sym, gauche_transpo; try apply ferm_id.
+    apply egale_sym, droite_id, ferm_id.
   Qed.
-
 End GroupeTheorie.
 
 Definition homomorphisme (dom codom: groupeTaper) (f: sorteg dom -> sorteg codom) :=
-  forall x y, avoirg dom x -> avoirg dom y ->
+  forall x y, avoir dom x -> avoir dom y ->
   egg _ (f (opeg _ x y)) (opeg _ (f x) (f y)).
 
 Module Homomorphisme.
@@ -571,7 +498,7 @@ Section HomomorphismeTheorie.
   Qed.
 
   Lemma hom_preserve_inv: forall (f: homTaper) (x: domTaper f),
-    avoirg (domf f) x -> egg _ ((carte f) (invg _ x)) (invg _ ((carte f) x)).
+    avoir (domf f) x -> egg _ ((carte f) (invg _ x)) (invg _ ((carte f) x)).
   Proof.
     intros f x Hx.
     pose (fermf _ _ Hx) as Gfx.
@@ -623,8 +550,8 @@ Section SousGroupe.
   Definition sousgroupe := homomorphisme H G i.
 
   Definition sousgroupenormal :=
-    forall (g: sorteg G) (h: sorteg H), avoirg _ g -> avoirg _ h ->
-    exists h', et (avoirg H h') (egg _ (i h') (opeg _ (opeg _ g (i h)) (invg _ g))).
+    forall (g: sorteg G) (h: sorteg H), avoir _ g -> avoir _ h ->
+    exists h', et (avoir H h') (egg _ (i h') (opeg _ (opeg _ g (i h)) (invg _ g))).
 End SousGroupe.
 Section Noyau.
   Variable f: homTaper.
@@ -633,7 +560,7 @@ Section Noyau.
   Definition G := codomf f.
   Definition hTaper := sorteg H.
   Definition noyauf_avoir := fun (x: hTaper) => et (avoir Hens x) (egg G (idg _) ((carte f) x)).
-  Lemma noyauf_sous: forall x, noyauf_avoir x -> avoirg _ x.
+  Lemma noyauf_sous: forall x, noyauf_avoir x -> avoir _ x.
   Proof.
     unfold noyauf_avoir. intros x H0. case H0; intros H1 H2. apply H1.
   Qed.
@@ -716,7 +643,7 @@ Section Noyau.
     intros g h Hg Nh. exists (opeg _ (opeg _ g h) (invg _ g)).
     pose (noyauf_sous _ Nh) as Hh. apply conjonction. 
     - unfold noyauGroupe. unfold noyauEnsemble. unfold noyauf_avoir.
-      unfold avoirg. unfold Groupe.ensembleTaper. 
+      unfold avoir. unfold Groupe.ensembleTaper. 
       unfold avoir. simpl. apply conjonction.
     -- apply fermer_ope. apply fermer_ope. apply Hg.
        apply Nh. apply fermer_inv. apply Hg.
