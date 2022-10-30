@@ -1,4 +1,3 @@
-
 Section Logique.
   Section Propositionnelle.
     Inductive Vraie : Prop := identite : Vraie.
@@ -66,8 +65,6 @@ Section Logique.
       match hA with habit _ a => habit _ (P a) end.
   End Habitee.
 End Logique.
-
-
 Section Booleenne.
   Inductive booleenne : Set :=
     | vraie : booleenne
@@ -106,7 +103,6 @@ Section Booleenne.
     end.
   Definition estfaux b := estvraie (nepasb b).
 End Booleenne.
-
 Section Refleter.
   Inductive refleter (P:Prop) : booleenne -> Set :=
     | refleter_vraie : P -> refleter P vraie
@@ -230,7 +226,6 @@ Section Naturelle.
     -- intros H; apply (IHn (egale_succ H)).
   Qed.
 End Naturelle.
-
 Module Egtaper.
   Section ClasseDef.
     Record classe_de (T:Type) := Classe {
@@ -284,7 +279,6 @@ Section EgNaturelle.
     Eval compute in (egale_ind _ (egop neuf dix) estfaux
     identite vraie (egale_sym (estvraie_egvraie _ (introVraie (egP neuf dix) H)))).
 End EgNaturelle.
-
 Section Ensemble.
   Context {T:Type}.
   Definition Ensemble := T -> Prop.
@@ -315,7 +309,6 @@ Section Cartographie.
   Definition biject (Hf: carto A B f) :=
     et (inject Hf) (surject Hf).
 End Cartographie.
-
 Module Groupe.
   Section ClasseDef.
     Record classe_de {T:Type} := Classe {
@@ -337,12 +330,12 @@ Module Groupe.
       match cT return @classe_de (sorte cT) with
       | Paquet _ c => c
       end.
-    Definition ensemble (cT: taper) := avoir (classe cT).
+    Definition supp (cT: taper) := avoir (classe cT).
   End ClasseDef.
   Module Exports.
     Notation groupeTaper := taper.
     Coercion sorte: taper >-> Sortclass.
-    Coercion ensemble: taper >-> Ensemble.
+    Coercion supp: taper >-> Ensemble.
     Definition avoir G := avoir (classe G).
     Definition opg {G} := op (classe G).
     Definition invg {G} := inv (classe G).
@@ -387,6 +380,7 @@ Section GroupeTheorie.
     ------ apply (egale_ind _ _ (fun w => egale (opg w x) (opg idg x)) (egale_ref _)).
            apply droite_inv, Gx.
   Qed.
+End GroupeTheorie.
   Ltac recrire_egale y :=
     apply (egale_trans(y:=y)).
   Ltac app_f_egale f := apply (f_egale f).
@@ -398,6 +392,8 @@ Section GroupeTheorie.
     recrirex_ex x Gx; recrire_egale (opg (opg (invg g) g) x);
     try app_f_egale (fun w => opg w x); try apply gauche_inv, Gg;
     recrire_egale (opg (invg g) (opg g x)); try apply egale_sym, assoc_op; try apply ferm_inv; try apply Gg; try apply Gx.
+Section GroupeTheorie.
+  Context {G:groupeTaper}.
   Lemma gauche_op_inj: forall g x y, avoir G g -> avoir _ x -> avoir _ y ->
     egale (opg g x) (opg g y) -> egale x y.
   Proof.
@@ -436,110 +432,62 @@ Section GroupeTheorie.
   Qed.
   Lemma id_invid: egale (@idg G) (invg idg).
   Proof.
-    apply egale_sym. recrirex_xe (@invg G idg) (ferm_inv _ ferm_id).
+    apply egale_sym. recrirex_xe (@invg G idg) (@ferm_inv G _ ferm_id).
     apply egale_sym, gauche_transpo; try apply ferm_id.
     apply egale_sym, droite_id, ferm_id.
   Qed.
 End GroupeTheorie.
+Section Homomorphisme.
+  Context {dom codom:groupeTaper} {f: dom -> codom} (Hc: carto dom codom f).
+  Definition hom := forall x y, avoir dom x -> avoir _ y -> egale (f (opg x y)) (opg (f x) (f y)).
+  Lemma hom_preserve_id: hom -> egale idg (f idg).
+  Proof. 
+    intros Hhom.
+    recrire_egale (opg (invg (f idg)) (f idg)). apply gauche_inv, Hc, ferm_id.
+    apply egale_sym, gauche_transpo; try apply Hc, ferm_id.
+    recrire_egale (f (opg idg idg)). apply egale_sym, Hhom; apply ferm_id.
+    apply egale_sym. app_f_egale f. apply droite_id, ferm_id.
+  Qed.
+  Lemma hom_preserve_inv: hom -> forall x, avoir dom x -> egale (f (invg x)) (invg (f x)).
+  Proof.
+    intros Hhom x Hx.
+    recrire_egale (opg (invg (f x)) idg).
+    -- apply gauche_transpo; try apply Hc; try apply ferm_inv; try apply Hx; try apply ferm_id.
+       recrire_egale (f (opg x (invg x))). apply egale_sym, Hhom; try apply ferm_inv; try apply Hx.
+       recrire_egale (f idg). apply f_egale, egale_sym, droite_inv, Hx.
+       apply egale_sym, hom_preserve_id, Hhom.
+    -- apply egale_sym, droite_id, ferm_inv, Hc, Hx.
+  Qed.
+End Homomorphisme.
 
-Definition homomorphisme (dom codom: groupeTaper) (f: sorteg dom -> sorteg codom) :=
-  forall x y, avoir dom x -> avoir dom y ->
-  egg _ (f (opeg _ x y)) (opeg _ (f x) (f y)).
-
-Module Homomorphisme.
+Module SousGroupe.
   Section ClasseDef.
-    Record classe_de (dom codom: groupeTaper) := Classe {
-      base: Cartographie.classe_de (Groupe.ensembleTaper dom) (Groupe.ensembleTaper codom);
-      hom: homomorphisme _ _ (carto (Cartographie.Paquet _ _ base))
+    Record classe_de {G:groupeTaper} := Classe {
+      savoir: @Ensemble G;
+      sous_ensem: sous savoir G;
+      sferm_op: forall x y, savoir x -> savoir y -> savoir (opg x y);
+      sferm_inv: forall x, savoir x -> savoir (invg x);
+      sferm_id: savoir idg
     }.
-    Structure taper := Paquet { domaine; codomaine; _: classe_de domaine codomaine }.
-    Definition classe (cT: taper) :=
-      match cT return classe_de (domaine cT) (codomaine cT) with
-      | Paquet _ _ c => c
-      end.
-    Definition cartoTaper (cT: taper) := Cartographie.Paquet _ _ (base _ _ (classe cT)).
+    Structure taper := Paquet { sorte; _: @classe_de sorte }.
+    Context (cT:taper).
+    Definition classe := 
+      match cT return @classe_de (sorte cT) with Paquet _ c => c end.
+    Definition se := sous_ensem classe.
+    Definition groupeTaper :=
+      Groupe.Paquet _ (Groupe.Classe _ (savoir _) opg invg idg
+        (sferm_op _) (sferm_inv _) (sferm_id _)
+        (fun x y z Hx Hy Hz => assoc_op x y z (se _ Hx) (se _ Hy) (se _ Hz))
+        (fun x Hx => droite_id x (se _ Hx))
+        (fun x Hx => gauche_inv x (se _ Hx))
+        (fun x Hx => droite_inv x (se _ Hx))).
   End ClasseDef.
   Module Exports.
-    Notation homTaper := taper.
-    Definition domTaper T := sorteg (domaine T).
-    Definition codomTaper T := sorteg (codomaine T).
-    Definition domf T := domaine T.
-    Definition codomf T := codomaine T.
-    Definition carte T := carto (Cartographie.Paquet _ _ (base _ _ (classe T))).
-    Definition hom T := hom _ _ (classe T).
-    Definition fermf T := fermer (Cartographie.Paquet _ _ (base _ _ (classe T))).
-    Definition hom_as_carto T := Cartographie.Paquet _ _ (base _ _ (classe T)).
+    Notation sousgroupeTaper := taper.
+    Coercion groupeTaper : taper >-> Groupe.taper.
   End Exports.
-End Homomorphisme.
-Import Homomorphisme.Exports.
+End SousGroupe.
 
-Section HomomorphismeTheorie.
-  Lemma hom_preserve_id: forall (f: homTaper), egg _ (idg (codomf f)) ((carte f) (idg (domf f))).
-  Proof.
-    intros f.
-    pose (fermf _ _ (fermer_id (domf f))) as Gfe.
-    apply (gauche_reduire _ _ _ _
-      Gfe (fermer_id _) Gfe).
-    apply (egale_trans _ _ _ _
-      (fermer_ope _ _ _ Gfe (fermer_id (codomf f)))
-      Gfe (fermer_ope _ _ _ Gfe Gfe)).
-    - apply egale_sym. apply Gfe. apply fermer_ope. apply Gfe.
-      apply fermer_id. apply droite_id. apply Gfe.
-    - apply (egale_trans _ _ _ _
-        Gfe
-        (fermf _ _ (fermer_ope _ _ _ (fermer_id (domf f)) (fermer_id _)))
-        (fermer_ope _ _ _ Gfe Gfe)).
-    -- apply (eg_mission _ _ _
-        (fermer_id _) (fermer_ope _ _ _ (fermer_id _) (fermer_id _))
-        (droite_id _ _ (fermer_id _))
-        (fun w => egg _ ((carte f) (idg (domf f))) ((carte f) w))).
-      apply egale_ref. apply Gfe.
-    -- apply hom. apply fermer_id. apply fermer_id.
-  Qed.
-
-  Lemma hom_preserve_inv: forall (f: homTaper) (x: domTaper f),
-    avoir (domf f) x -> egg _ ((carte f) (invg _ x)) (invg _ ((carte f) x)).
-  Proof.
-    intros f x Hx.
-    pose (fermf _ _ Hx) as Gfx.
-    pose (fermf _ _ (fermer_inv _ _ Hx)) as Gfxinv.
-    apply (egale_trans _ _ _ _
-      Gfxinv
-      (fermer_ope _ _ _ (fermer_inv _ _ Gfx) (fermer_id _))
-      (fermer_inv _ _ Gfx)).
-    - apply gauche_transpo. apply Gfxinv.
-      apply Gfx. apply fermer_id.
-      apply (egale_trans _ _ _ _
-        (fermer_ope _ _ _ Gfx Gfxinv)
-        (fermf _ _ (fermer_ope _ _ _ Hx (fermer_inv _ _ Hx)))
-        (fermer_id _)).
-    -- apply egale_sym. apply fermf. apply fermer_ope.
-      apply Hx. apply fermer_inv. apply Hx.
-      apply fermer_ope. apply fermf. apply Hx.
-      apply fermf. apply fermer_inv. apply Hx.
-      apply hom. apply Hx. apply fermer_inv.
-      apply Hx.
-    -- apply (egale_trans _ _ _ _
-        (fermf _ _ (fermer_ope _ _ _ Hx (fermer_inv _ _ Hx)))
-        (fermf _ _ (fermer_id _))
-        (fermer_id _)).
-    --- apply egale_sym. apply fermf. apply fermer_id.
-        apply fermf. apply fermer_ope. apply Hx.
-        apply fermer_inv. apply Hx.
-        apply (eg_mission _ _ _
-          (fermer_id _)
-          (fermer_ope _ _ _ Hx (fermer_inv _ _ Hx))
-          (droite_inv _ _ Hx)
-          (fun w => egg _ ((carte f) (idg (domf f))) ((carte f) w))).
-        apply egale_ref. apply fermf. apply fermer_id.
-    --- apply egale_sym. apply fermer_id. apply fermf. apply fermer_id.
-        apply hom_preserve_id.
-    - apply egale_sym. apply fermer_inv. apply fermf. apply Hx.
-      apply fermer_ope. apply fermer_inv. apply fermf.
-      apply Hx. apply fermer_id. apply droite_id.
-      apply fermer_inv. apply fermf. apply Hx.
-  Qed.
-End HomomorphismeTheorie.
 
 Section SousGroupe.
   Variable G H: groupeTaper.
