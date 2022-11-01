@@ -594,7 +594,7 @@ Module Reldeq.
       rel_ref: forall a, A a -> rel a a;
       rel_sym: forall a b, A a -> A b -> rel a b -> rel b a;
       rel_trans: forall a b c, A a -> A b -> A c ->
-        rel a b -> rel b c -> rel c a
+        rel a b -> rel b c -> rel a c
     }.
     Structure taper := Paquet { sorte; supp; _: @classe_de sorte supp }.
     Definition classe (cT:taper) :=
@@ -619,133 +619,21 @@ Section ReldeqTheorie.
     Reldeq.Paquet _ _ (Reldeq.Classe _ _ _ _ sym' _) => sym' end.
   Definition rel_trans :=
     match re return forall a b c, supp re a -> supp re b -> supp re c ->
-        rel a b -> rel b c -> rel c a with
+        rel a b -> rel b c -> rel a c with
     Reldeq.Paquet _ _ (Reldeq.Classe _ _ _ _ _ trans') => trans' end.
+  Definition classedeq_de x : Ensemble := fun y => et (supp re y) (rel x y).
+  Lemma egale_classedeq : forall x y, supp re x -> supp re y ->
+    rel x y -> egale (classedeq_de x) (classedeq_de y).
+  Proof.
+    intros x y Rx Ry Rxy. apply egale_ens, conjonction.
+    -- intros z [Rz Rxz]. apply conjonction. apply Rz. apply (rel_trans y x z Ry Rx Rz (rel_sym _ _ Rx Ry Rxy) Rxz).
+    -- intros z [Rz Ryz]. apply conjonction. apply Rz. apply (rel_trans x y z Rx Ry Rz Rxy Ryz).
+  Qed.
+  Definition classedeqEnsemble : @Ensemble (@Ensemble re) :=
+    fun Cx => remplie (fun y => et (supp re y) (egale (classedeq_de y) Cx)).
+  Lemma classedeqEns_avoir_claassedeq : forall x, supp re x -> classedeqEnsemble (classedeq_de x).
+  Proof. intros x Rx. apply (exiter _ x). apply conjonction. apply Rx. apply egale_ref. Qed.
 End ReldeqTheorie.
-
-    Definition eqclasse_avoir (a: Ta) (_: avoir A a) := fun b => et (avoir A b) (rel a b).
-    Lemma eqclasse_sous : forall (a: Ta) (Aa: avoir A a) (b:Ta),
-      eqclasse_avoir _ Aa b -> avoir A b.
-    Proof. intros. case H0; intros. apply H1. Qed.
-    Definition eqclasseEnsemble (a: Ta) (Aa: avoir A a) := produire_sousensemble A 
-      (eqclasse_avoir _ Aa) (eqclasse_sous _ Aa).
-    Lemma eqclasse_rel_ege : forall (x y:Ta) (Ax: avoir A x) (Ay: avoir A y),
-      rel x y -> ege (eqclasseEnsemble _ Ax) (eqclasseEnsemble _ Ay) (egreflexion _ _) .
-    Proof.
-      intros x y Ax Ay Rxy. 
-      apply conjonction; unfold sousensemble; 
-      unfold CartographieTheorie.Exports.fermer; 
-      simpl; intros z H0; case H0; intros Az C_z;
-      apply conjonction.
-      - apply Az.
-      - apply (eqrel_trans _ _ _ Ay Ax Az). apply eqrel_sym. apply Ax.
-        apply Ay. apply Rxy. apply C_z.
-      - apply Az.
-      - apply (eqrel_trans _ _ _ Ax Ay Az). apply Rxy. apply C_z.
-    Qed.
-    
-    Inductive prodEnsEg : Type :=
-      enseg : forall (B:ensembleTaper), egale _ Ta (sortee B) -> prodEnsEg.
-    Definition prodee_ens (ee:prodEnsEg) :=
-      match ee with enseg e _ => e end.
-    Definition prodee_eg (ee:prodEnsEg) :=
-      match ee return egale _ Ta (sortee (prodee_ens ee)) with enseg _ e => e end.
-    Definition eqclasseEnsemble_avoir (ee:prodEnsEg) :=
-      match ee with
-      | enseg B EAB => exists (a:Ta), et (avoir A a) (forall (Aa: avoir A a), ege (eqclasseEnsemble _ Aa) B EAB)
-      end.
-    (* Definition eqclasseEnsemble_eg (ee1 ee2:prodEnsEg) :=
-      match ee1, ee2 with
-      | enseg B EAB, enseg C EAC => ege B C (egale_trans _ _ _ _ (egsym _ _ _ EAB) EAC) 
-      end. *)
-    (* Definition eqclasseEnsemble_eg (ee1 ee2:prodEnsEg) :=
-      match ee1, ee2 with
-      | enseg B EAB, enseg C EAC => ege (prodee_ens ee1) (prodee_ens ee2) (egale_trans _ _ _ _ (egsym _ _ _ EAB) EAC) 
-      end. *)
-    Definition eqclasseEnsemble_eg (ee1 ee2:prodEnsEg) :=
-      ege (prodee_ens ee1) (prodee_ens ee2) (egale_trans _ _ _ _ (egsym _ _ _ (prodee_eg ee1)) (prodee_eg ee2)).
-    Lemma eqclasseEnsemble_eg_ref : forall (ee:prodEnsEg),
-      eqclasseEnsemble_eg ee ee.
-    Proof.
-      intros ee. unfold eqclasseEnsemble_eg.
-      pose (prodee_eg ee) as Eee.
-      Check (egale _ Type Type).
-      Check (egsym _ _ _ (egreflexion _ Type)).
-      case Eee.
-      Check (egsym _ _ _ Eee).
-      pose (egale_trans _ _ _ _ (egsym _ _ _ Eee) Eee) as uouo.
-      case uouo.
-      case Eee. apply ege_ref. unfold ege. unfold EnsembleTheorie.ege.
-
-    Definition eqclasseEnsemble := 
-      Ensemble.Classe prodEnsEg eqclasseEnsemble_avoir eqclasseEnsemble_eg
-
-
-    Inductive eqclasse: Type :=
-      | C : eqclasseEnsemble -> eqclasse.
-    Definition eqclasse_eg (Cx Cy: eqclasse) :=
-      match Cx, Cy with
-      | C x _, C y _ => rel x y
-      end.
-    
-    (* Variable a b: Ta.
-    Variables Aa: avoir A a.
-    Variable Ab: avoir A b.
-    Definition Ca := C a Aa.
-    Definition Cb := C _ Ab.
-    Compute (eqclasse_eg Ca Cb). *)
-    
-  Section ClasseDef.
-    Record classe_de (A: ensembleTaper) := Classe {
-      rel: sortee A -> sortee A -> Prop;
-      equiv_ref: forall a: sortee A, avoir A a -> rel a a;
-      equiv_sym: forall a b: sortee A, 
-        avoir A a -> avoir A b -> rel a b -> rel b a;
-      equiv_trans: forall a b c: sortee A,
-        avoir A a -> avoir A b -> avoir A c -> 
-        rel a b -> rel b c -> rel a c
-    }.
-    Structure taper := Paquet { pos; _: classe_de pos }.
-    Variable cT: taper.
-    Definition classe :=
-      match cT return classe_de (pos cT) with
-      | Paquet _ c => c
-      end.
-  End ClasseDef.
-  Module Exports.
-    Notation
-
-
-
-
-(* relens の内部について同値関係がwell-definedなら外部がどうなろうと知ったこっちゃないので
-   (rel R) y -> みたいなチェックは省く。そもそも実用上relにチェックが内包されそうだけどね。 *)
-Inductive classdequivs (R: reldequiv): Type :=
-| classdequiv : relsorte R -> classdequivs R.
-
-Definition classdequivCommeEnsemble (R: reldequiv) (Cx: classdequivs R): Ensemble (relsorte _) :=
-  match Cx with
-  | classdequiv _ x => rel R x
-  end.
-
-Axiom classdequiv_egalite: forall (R: reldequiv) (Cx Cy: classdequivs R),
-  (forall a, (relens _ a) -> ssi ((classdequivCommeEnsemble _ Cx) a) ((classdequivCommeEnsemble _ Cy) a)) -> egale _ Cx Cy.
-
-Lemma egale_classdequivs: forall (R: reldequiv) (x y: relsorte R),
-  relens _ x -> relens _ y -> rel _ x y -> egale _ (classdequiv _ x) (classdequiv _ y).
-Proof.
-  intros R x y Rx Ry Rxy.
-  apply classdequiv_egalite.
-  simpl.
-  unfold ssi.
-  intros a Ra.
-  apply conjonction.
-  - intros Rxa. apply (loisymetrie _ _ _ Rx Ry) in Rxy. apply (loitransitive _ _ _ _ Ry Rx Ra Rxy Rxa).
-  - intros Rya. apply (loitransitive _ _ _ _ Rx Ry Ra Rxy Rya).
-Qed.
-
-Definition EnsembleDeQuotient (R: reldequiv) : Ensemble (classdequivs R) :=
-  fun Cx => forall x: relsorte R, (classdequivCommeEnsemble _ Cx) x -> relens _ x.
 
 Definition CosetGaucheRel (G: Groupe) (Hmel: SousGroupeMelange G) :=
   fun x y => (Hsupp _ Hmel) (Ope G (Inv G x) y).
