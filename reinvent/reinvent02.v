@@ -721,7 +721,18 @@ Section Coset.
   Definition cosetDroiteEnsemble := @classedeqEnsemble cosetDroiteReldeq.
   
   Context (H_normal: sousgnormal H).
-  Lemma cosetdesgnormal_gdegale : forall g, avoir (mereg H) g -> egale (@classedeq_de cosetGaucheReldeq g) (@classedeq_de cosetDroiteReldeq g).
+  Lemma sgnormal_gd_egale : forall g, avoir (mereg H) g -> forall h, avoir H h -> remplie (fun h' => et (avoir H h') (egale (@opg (mereg H) g h) (opg h' g))).
+  Proof.
+    intros g Gg h Hh. apply (exiter _ (opg (opg g h) (invg g))), conjonction.
+    -- apply H_normal. apply Hh. apply Gg.
+    -- assert (forall x, avoir (mereg H) x -> egale x (opg (opg x (invg g)) g)) as Ex_xxinvgg.
+       { intros x Gx. recrire_egale (opg x idg). apply droite_id, Gx. 
+         recrire_egale (opg x (opg (invg g) g)). apply f_egale, gauche_inv, Gg.
+         apply assoc_op. apply Gx. apply ferm_inv, Gg. apply Gg. }
+       apply Ex_xxinvgg, ferm_op. apply Gg. apply sousg_sousens, Hh.
+  Qed.
+  Lemma cosetdesgnormal_classedegd_egale : forall g, avoir (mereg H) g ->
+    egale (@classedeq_de cosetGaucheReldeq g) (@classedeq_de cosetDroiteReldeq g).
   Proof.
     intros g Gg. apply egale_ens, conjonction.
     -- intros g' [Gg' [h [Hh Eg_g'h]]]. apply conjonction. apply Gg'.
@@ -745,203 +756,42 @@ Section Coset.
          recrire_egale (opg (@idg (mereg H)) (@opg (mereg H) h g')). app_f_egale (fun w => opg w (@opg (mereg H) h g')).
          apply egale_sym, droite_inv, Gg'.
          apply egale_sym, gauche_id, ferm_op. apply sousg_sousens, Hh. apply Gg'.
-    Qed.
+  Qed.
+  Lemma cosetdesgnormal_quotdegd_egale : egale cosetGaucheEnsemble cosetDroiteEnsemble.
+  Proof. 
+    apply egale_ens, conjonction; intros Cg [g [Gg ECgCg]]; apply (exiter _ g), conjonction; try apply Gg. 
+    recrire_egale (@classedeq_de cosetGaucheReldeq g). apply egale_sym, cosetdesgnormal_classedegd_egale, Gg. apply ECgCg.
+    recrire_egale (@classedeq_de cosetDroiteReldeq g). apply cosetdesgnormal_classedegd_egale, Gg; apply ECgCg. apply ECgCg.
+  Qed.
+  Definition cosetop (g1H g2H: @Ensemble (mereg H)) : Ensemble := 
+    fun g => remplie (fun g1' => et (g1H g1') (remplie 
+      (fun g2' => et (g2H g2') (egale (@opg (mereg H) g1' g2') g)))).
+  Lemma coset_ferm_op : forall g1H g2H, cosetGaucheEnsemble g1H ->
+    cosetGaucheEnsemble g2H -> cosetGaucheEnsemble (cosetop g1H g2H).
+  Proof.
+    intros g1H g2H [g1' [Gg1' Eg1'H_g1H]] [g2' [Gg2' Eg2'H_g2H]]. 
+    apply (exiter _ (opg g1' g2')), conjonction.
+    -- apply ferm_op. apply Gg1'. apply Gg2'.
+    -- apply egale_ens, conjonction.
+    ---- intros g [Gg [h [Hh Eg1'g2'_gh]]]. apply (exiter _ g1'), conjonction.
+         apply (egale_ind _ _ (fun w => w g1') (classedeq_avoir_ref _ Gg1') _ Eg1'H_g1H).
+         apply (exiter _ (opg g2' (@invg H h))), conjonction.
+         apply (fun Hw => (egale_ind _ _ (fun w => w (opg g2' (invg h))) Hw _ Eg2'H_g2H)).
+         apply conjonction. apply ferm_op. apply Gg2'.
+         apply (fun Hw => egale_ind _ (@invg (mereg H) h) (@avoir (mereg H)) Hw _ (egale_ref _)). 
+         apply ferm_inv, sousg_sousens, Hh. apply (exiter _ h), conjonction.
+         apply Hh. recrire_egale (opg g2' idg). apply droite_id, Gg2'.
+         recrire_egale (opg g2' (opg (invg h) h)). apply f_egale.
+         recrire_egale (@idg H). apply egale_ref. apply gauche_inv, Hh.
+         recrire_egale (opg g2' (@opg (mereg H) (invg h) h)).
+         apply egale_ref. apply assoc_op. apply Gg2'. apply sousg_sousens, ferm_inv, Hh.
+         apply sousg_sousens, Hh. recrire_egale (opg (opg g1' g2') (@invg (mereg H) h)).
+         apply assoc_op. apply Gg1'. apply Gg2'. apply ferm_inv, sousg_sousens, Hh.
+         apply egale_sym, droite_transpo. apply sousg_sousens, Hh. apply Gg.
+         apply ferm_op. apply Gg1'. apply Gg2'. apply egale_sym, Eg1'g2'_gh.
+  ---- intros g [g1'' [g1Hg1'' [g2'' [g2Hg2'' Eg1''g2''_g]]]].
+       destruct (egale_ind _ _ (fun w => w g1'') g1Hg1'' _ (egale_sym Eg1'H_g1H)) as [Gg1'' [h1 [Hh1 Eg1'_g1''h1]]].
+       destruct (egale_ind _ _ (fun w => w g2'') g2Hg2'' _ (egale_sym Eg2'H_g2H)) as [Gg2'' [h2 [Hh2 Eg2'_g2''h2]]].
+       apply (exiter _ )
 
 End Coset.
-
-Definition CosetGaucheRel (G: Groupe) (Hmel: SousGroupeMelange G) :=
-  fun x y => (Hsupp _ Hmel) (Ope G (Inv G x) y).
-
-Lemma CosetGauche_reflexe (G: Groupe) (Hmel: SousGroupeMelange G):
-  forall x: Tsupp G, (Supp G) x -> CosetGaucheRel _ Hmel x x.
-Proof.
-  intros x Gx.
-  unfold CosetGaucheRel.
-  case (Inv_gauche _ _ Gx).
-  apply HFermer_id.
-Qed.
-
-Lemma CosetGauche_symetrie (G: Groupe) (Hmel: SousGroupeMelange G):
-  forall x y: Tsupp G, (Supp G) x -> (Supp G) y -> CosetGaucheRel _ Hmel x y -> CosetGaucheRel _ Hmel y x.
-Proof.
-  unfold CosetGaucheRel.
-  intros x y Gx Gy Hxinvy.
-  case (egsym _ _ _ (InvInv _ _ Gx)).
-  case (OpeInv _ _ _ (Fermer_inv _ _ Gx) Gy).
-  apply HFermer_inv.
-  apply Hxinvy.
-Qed.
-
-Lemma CosetGauche_transitive (G: Groupe) (Hmel: SousGroupeMelange G):
-  forall x y z: Tsupp G, (Supp G) x -> (Supp G) y -> (Supp G) z ->
-  CosetGaucheRel _ Hmel x y -> CosetGaucheRel _ Hmel y z -> CosetGaucheRel _ Hmel x z.
-Proof.
-  unfold CosetGaucheRel.
-  intros x y z Gx Gy Gz Hxinvy Hyinvz.
-  case (egsym _ _ _ (Id_gauche _ _ Gz)).
-  case (egsym _ _ _ (Inv_droite _ _ Gy)).
-  case (egsym _ _ _ (Assoc_ope _ _ _ _ Gy (Fermer_inv _ _ Gy) Gz)).
-  case (Assoc_ope _ _ _ _ (Fermer_inv _ _ Gx) Gy (Fermer_ope _ _ _ (Fermer_inv _ _ Gy) Gz)).
-  apply (HFermer_ope _ _ _ _ Hxinvy Hyinvz).
-Qed.
-
-Definition CosetGaucheRel_est_reldequiv (G: Groupe) (Hmel: SousGroupeMelange G) :=
-  _reldequiv (Tsupp G) (Supp G) (CosetGaucheRel G Hmel)
-  (CosetGauche_reflexe _ _) (CosetGauche_symetrie _ _) (CosetGauche_transitive _ _).
-
-
-
-
-Definition Noyau (G H: Groupe) (f: Tsupp H -> Tsupp G) : Ensemble (Tsupp H) :=
-  fun x => et (Supp H x) (egale _ (Id G) (f x)).
-
-Lemma SousNoyau: forall (G H: Groupe) (f: Tsupp H -> Tsupp G),
-  SousEnsemble _ (Noyau _ _ f) (Supp H).
-Proof.
-  unfold Noyau, SousEnsemble.
-  intros G H f x Hnoy.
-  case Hnoy. intros Hx _.
-  apply Hx.
-Qed.
-
-Lemma NoyauFermer_ope: forall (G H: Groupe) (f: Tsupp H -> Tsupp G),
-  Homomorphisme _ _ f -> forall x y, Noyau _ _ f x -> Noyau _ _ f y -> Noyau _ _ f (Ope _ x y).
-Proof.
-  unfold Noyau.
-  unfold Homomorphisme.
-  intros G H f _Hhom x y Nx Ny.
-  case _Hhom. intros Hcart Hhom.
-  case Nx as [Hx efx], Ny as [Hy efy].
-  case (egsym _ _ _ (Hhom x y Hx Hy)).
-  case efx, efy.
-  case (Id_droite _ _ (Fermer_id _)).
-  apply conjonction.
-  apply (Fermer_ope _ _ _ Hx Hy).
-  apply egreflexion.
-Qed.
-
-Lemma NoyauFermer_inv: forall (G H: Groupe) (f: Tsupp H -> Tsupp G),
-  Homomorphisme _ _ f -> forall x, Noyau _ _ f x -> Noyau _ _ f (Inv _ x).
-Proof.
-  unfold Noyau.
-  intros G H f _Hhom x Nx.
-  case Nx as [Hx Hefx].
-  case _Hhom; intros Hcart Hhom.
-  case (egsym _ _ _ (Hom_preserve_inv _ _ f _Hhom x Hx)).
-  case (egsym _ _ _ (Id_droite _ _ (Fermer_inv _ _ (Hcart x Hx)))).
-  apply conjonction.
-  apply (Fermer_inv _ _ Hx).
-  apply (Transpo_gauche G _ _ _ (Hcart x Hx) (Fermer_id _) (Fermer_id _)).
-  case (Id_droite _ _ (Hcart x Hx)).
-  case Hefx.
-  apply egreflexion.
-Qed.
-
-Lemma NoyauFermer_id: forall (G H: Groupe) (f: Tsupp H -> Tsupp G),
-  Homomorphisme _ _ f -> Noyau _ _ f (Id H).
-Proof.
-  intros G H f _Hhom.
-  case _Hhom.
-  intros Hcart Hhom.
-  unfold Noyau.
-  case (egsym _ _ _ (IdInv H)).
-  case (egsym _ _ _ (Id_gauche H _ (Fermer_inv _ _ (Fermer_id _)))).
-  case (egsym _ _ _ (Hhom _ _ (Fermer_id _) (Fermer_inv _ _ (Fermer_id _)))).
-  case (egsym _ _ _ (Hom_preserve_inv _ _ f _Hhom _ (Fermer_id _))).
-  apply conjonction.
-  apply (Fermer_ope _ _ _ (Fermer_id _) (Fermer_inv _ _ (Fermer_id _))).
-  apply (Inv_droite _ _ (Hcart _ (Fermer_id _))).
-Qed.
-
-Definition NoyauGroupeMelange (G H: Groupe) (f: Tsupp H -> Tsupp G) (Hhom: Homomorphisme _ _ f) :=
-  _SousGroupeMelange H (Noyau _ _ f) (SousNoyau _ _ f) (NoyauFermer_ope _ _ f Hhom) (NoyauFermer_inv _ _ f Hhom) (NoyauFermer_id _ _ f Hhom).
-
-Lemma Noyau_SousGroupeNormal: forall (G H: Groupe) (f: Tsupp H -> Tsupp G) 
-  (Hhom: Homomorphisme _ _ f), SousGroupeNormal _ (NoyauGroupeMelange _ _ f Hhom).
-Proof.
-  unfold SousGroupeNormal.
-  simpl. unfold Noyau.
-  intros G H f _Hhom g h Hg Nh.
-  case Nh; intros Hh Hefh.
-  apply conjonction.
-  apply Fermer_ope.
-  - apply Fermer_ope.
-  -- apply Hg.
-  -- apply Hh.
-  -  apply Fermer_inv. apply Hg.
-  - case _Hhom; intros Hcart Hhom.
-    case (egsym _ _ _ (Hhom _ _ (Fermer_ope _ _ _ Hg Hh) (Fermer_inv _ _ Hg))).
-    case (egsym _ _ _ (Hhom _ _ Hg Hh)).
-    case Hefh.
-    case Id_droite.
-  -- apply Hcart. apply Hg.
-  -- case (egsym _ _ _ (Hom_preserve_inv _ _ f _Hhom _ Hg)).
-     case Inv_droite.
-  --- apply Hcart. apply Hg.
-  --- apply egreflexion.
-Qed.
-
-Definition Image (G H: Groupe) (f: Tsupp H -> Tsupp G): Ensemble (Tsupp G) :=
-  fun x => exists h: Tsupp H, et (Supp H h) (egale _ x (f h)).
-
-Lemma ImageSousEnsemble: forall (G H: Groupe) (f: Tsupp H -> Tsupp G),
-  SousEnsemble _ (Image _ _ f) (Supp G).
-Proof.
-  unfold SousEnsemble.  
-  intros G H f x Imfx.
-  unfold Image in Imfx.
-  destruct Imfx as [h Hegxfh].
-  case Hegxfh as [Hh Hegxfh].
-
-  
-
-Lemma ImageFermer_ope: forall (G H: Groupe) (f: Tsupp H -> Tsupp G) (Hhom: Homomorphisme _ _ f) (x y: Tsupp G),
-  Image _ _ f x -> Image _ _ f y -> Image _ _ f (Ope _ x y).
-Proof.
-  unfold Image.  
-  intros G H f _Hhom x y Imx Imy.
-  destruct Imx as [x' Hegxfx'].
-  destruct Imy as [y' Hegyfy'].
-  exists (Ope _ x' y').
-  case Hegxfx' as [Hx' Hegxfx'].
-  case Hegyfy' as [Hy' Hegyfy'].
-  apply conjonction.
-  apply Fermer_ope.
-  - apply Hx'.
-  - apply Hy'.
-  - case _Hhom. intros Hcart Hhom.
-    case (egsym _ _ _ (Hhom x' y' Hx' Hy')).
-    case Hegxfx', Hegyfy'.
-    apply egreflexion.
-Qed.
-
-Lemma ImageFermer_inv: forall (G H: Groupe) (f: Tsupp H -> Tsupp G) (Hhom: Homomorphisme _ _ f) (x: Tsupp G),
-  Image _ _ f x -> Image _ _ f (Inv _ x).
-Proof.
-  unfold Image.
-  intros G H f _Hhom x Imx.
-  destruct Imx as [x' Hegxfx'].
-  exists (Inv _ x').
-  case Hegxfx' as [Hx' Hegxfx'].
-  apply conjonction.
-  - apply Fermer_inv. apply Hx'.
-  - case _Hhom. intros Hcart Hhom.
-    case (egsym _ _ _ (Hom_preserve_inv _ _ f _Hhom _ Hx')).
-    case Hegxfx'.
-    apply egreflexion.
-Qed.
-
-Lemma ImageFermer_id: forall (G H: Groupe) (f: Tsupp H -> Tsupp G) (Hhom: Homomorphisme _ _ f),
-  Image _ _ f (Id G).
-Proof.
-  intros G H f _Hhom.
-  unfold Image.
-  exists (Id H).
-  apply conjonction.
-  - apply Fermer_id.
-  - case Hom_preserve_id. apply _Hhom. apply egreflexion.
-Qed.
-
-Definition ImageSousGroupeMelange (G H: Groupe) (f: Tsupp H -> Tsupp G) :=
-  _SousGroupeMelange G (Image _ _ f) (sous) (ImageFermer_ope _ _ f Hhom) (ImageFermer_inv _ _ f Hhom) (ImageFermer_id _ _ f Hhom).
-
