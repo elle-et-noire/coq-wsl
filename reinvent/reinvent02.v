@@ -381,6 +381,7 @@ Section GroupeTheorie.
            apply droite_inv, Gx.
   Qed.
 End GroupeTheorie.
+Module GroupeTactics.
   Ltac recrire_egale y :=
     apply (egale_trans(y:=y)).
   Ltac app_f_egale f := apply (f_egale f).
@@ -392,6 +393,12 @@ End GroupeTheorie.
     recrirex_ex x Gx; recrire_egale (opg (opg (invg g) g) x);
     try app_f_egale (fun w => opg w x); try apply gauche_inv, Gg;
     recrire_egale (opg (invg g) (opg g x)); try apply egale_sym, assoc_op; try apply ferm_inv; try apply Gg; try apply Gx.
+  Ltac recrirex_xgginv x Gx g Gg :=
+    recrirex_xe x Gx; recrire_egale (opg x (opg g (invg g)));
+    try app_f_egale (opg x); try apply droite_inv, Gg;
+    recrire_egale (opg (opg x g) (invg g)); try apply assoc_op; try apply ferm_inv; try apply Gg; try apply Gx.
+End GroupeTactics.
+Import GroupeTactics.
 Section GroupeTheorie.
   Context {G:groupeTaper}.
   Lemma gauche_op_inj: forall g x y, avoir G g -> avoir _ x -> avoir _ y ->
@@ -409,6 +416,13 @@ Section GroupeTheorie.
     intros g x y Gg Gx Gy Egx_y.
     recrirex_ginvgx x Gx g Gg.
     apply f_egale, Egx_y.
+  Qed.
+  Lemma droite_transpo: forall g x y, avoir G g -> avoir G x -> avoir G y ->
+    egale (opg x g) y -> egale x (opg y (invg g)).
+  Proof.
+    intros g x y Gg Gx Gy Egx_y.
+    recrirex_xgginv x Gx g Gg.
+    app_f_egale (fun w => opg w (invg g)). apply Egx_y.
   Qed.
   Lemma invinv_ident: forall x, avoir G x -> egale x (invg (invg x)).
   Proof.
@@ -622,18 +636,118 @@ Section ReldeqTheorie.
         rel a b -> rel b c -> rel a c with
     Reldeq.Paquet _ _ (Reldeq.Classe _ _ _ _ _ trans') => trans' end.
   Definition classedeq_de x : Ensemble := fun y => et (supp re y) (rel x y).
-  Lemma egale_classedeq : forall x y, supp re x -> supp re y ->
-    rel x y -> egale (classedeq_de x) (classedeq_de y).
+  Lemma classedeq_avoir_ref : forall x, supp re x -> (classedeq_de x) x.
+  Proof. intros x Rx. apply conjonction. apply Rx. apply rel_ref, Rx. Qed.
+  Lemma ssi_rel_egcdeq : forall x y, supp re x -> supp re y ->
+    ssi (rel x y) (egale (classedeq_de x) (classedeq_de y)).
   Proof.
-    intros x y Rx Ry Rxy. apply egale_ens, conjonction.
-    -- intros z [Rz Rxz]. apply conjonction. apply Rz. apply (rel_trans y x z Ry Rx Rz (rel_sym _ _ Rx Ry Rxy) Rxz).
-    -- intros z [Rz Ryz]. apply conjonction. apply Rz. apply (rel_trans x y z Rx Ry Rz Rxy Ryz).
+    intros x y Rx Ry. apply conjonction.
+    -- intros Rxy. apply egale_ens, conjonction.
+    ---- intros z [Rz Rxz]. apply conjonction. apply Rz. apply (rel_trans y x z Ry Rx Rz (rel_sym _ _ Rx Ry Rxy) Rxz).
+    ---- intros z [Rz Ryz]. apply conjonction. apply Rz. apply (rel_trans x y z Rx Ry Rz Rxy Ryz).
+    -- intros ECxCy. apply rel_sym. apply Ry. apply Rx.
+       apply (et_prj2 (egale_ind _ (classedeq_de x) (fun C => C x) (classedeq_avoir_ref x Rx) (classedeq_de y) ECxCy)).
+  Qed.
+  Lemma cdeqoverlap_rel : forall x y, supp re x -> supp re y -> 
+    remplie (intsec (classedeq_de x) (classedeq_de y)) -> rel x y.
+  Proof.
+    intros x y Rx Ry [z [Cxz Cyz]]. apply (rel_trans x z y).
+    apply Rx. apply (et_prj1 Cxz). apply Ry.
+    apply (et_prj2 Cxz). apply rel_sym. apply Ry. apply (et_prj1 Cyz). apply (et_prj2 Cyz).
   Qed.
   Definition classedeqEnsemble : @Ensemble (@Ensemble re) :=
     fun Cx => remplie (fun y => et (supp re y) (egale (classedeq_de y) Cx)).
   Lemma classedeqEns_avoir_claassedeq : forall x, supp re x -> classedeqEnsemble (classedeq_de x).
   Proof. intros x Rx. apply (exiter _ x). apply conjonction. apply Rx. apply egale_ref. Qed.
 End ReldeqTheorie.
+Section Coset.
+  Context (H:sousgroupeTaper).
+  Definition cosetGaucheRel g g' := remplie (fun h => et (avoir H h) (egale g (@opg (mereg H) g' h))).
+  Definition cosetDroiteRel g g' := remplie (fun h => et (avoir H h) (egale g (@opg (mereg H) h g'))).
+  Lemma cosetGRel_ref : forall g, avoir (mereg H) g -> cosetGaucheRel g g.
+  Proof. 
+    intros g Gg. apply (exiter _ (@idg H)), conjonction. apply ferm_id.
+    recrire_egale (opg g (@idg (mereg H))). apply droite_id, Gg. apply f_egale, egale_ref.
+  Qed.
+  Lemma cosetGRel_sym: forall g g', avoir (mereg H) g -> avoir (mereg H) g' ->
+    cosetGaucheRel g g' -> cosetGaucheRel g' g.
+  Proof.
+    intros g g' Gg Gg' [h [Hh Eg_g'h]]. apply (exiter _ (@invg H h)), conjonction.
+    -- apply ferm_inv, Hh.
+    -- recrire_egale (opg g (@invg (mereg H) h)). apply droite_transpo. apply sousg_sousens, Hh.
+       apply Gg'. apply Gg. apply egale_sym, Eg_g'h. apply egale_ref.
+  Qed.
+  Lemma cosetGRel_trans: forall g1 g2 g3, avoir (mereg H) g1 -> avoir (mereg H) g2 -> avoir (mereg H) g3 ->
+    cosetGaucheRel g1 g2 -> cosetGaucheRel g2 g3 -> cosetGaucheRel g1 g3.
+  Proof.
+    intros g1 g2 g3 Gg1 Gg2 Gg3 [h12 [Hh12 Rg1g2]] [h23 [Hh23 Rg2g3]].
+    apply (exiter _ (@opg H h23 h12)), conjonction.
+    -- apply ferm_op. apply Hh23. apply Hh12.
+    -- recrire_egale (opg g2 h12). apply Rg1g2. recrire_egale (opg (@opg (mereg H) g3 h23) h12).
+       app_f_egale (fun w => opg w h12). apply Rg2g3.
+       apply egale_sym. recrire_egale (opg g3 (@opg (mereg H) h23 h12)).
+       apply egale_ref. apply assoc_op. apply Gg3. apply sousg_sousens, Hh23. apply sousg_sousens, Hh12.
+  Qed.
+  Definition cosetGaucheReldeq := Reldeq.Paquet _ (mereg H) (Reldeq.Classe _ _ cosetGaucheRel
+    cosetGRel_ref cosetGRel_sym cosetGRel_trans).
+  Definition cosetGaucheEnsemble := @classedeqEnsemble cosetGaucheReldeq.
+
+  Lemma cosetDRel_ref : forall g, avoir (mereg H) g -> cosetDroiteRel g g.
+  Proof. 
+    intros g Gg. apply (exiter _ (@idg H)), conjonction. apply ferm_id.
+    recrire_egale (opg (@idg (mereg H)) g). apply gauche_id, Gg. apply f_egale, egale_ref.
+  Qed.
+  Lemma cosetDRel_sym: forall g g', avoir (mereg H) g -> avoir (mereg H) g' ->
+    cosetDroiteRel g g' -> cosetDroiteRel g' g.
+  Proof.
+    intros g g' Gg Gg' [h [Hh Eg_hg']]. apply (exiter _ (@invg H h)), conjonction.
+    -- apply ferm_inv, Hh.
+    -- recrire_egale (opg (@invg (mereg H) h) g). apply gauche_transpo. apply sousg_sousens, Hh.
+       apply Gg'. apply Gg. apply egale_sym, Eg_hg'. apply egale_ref.
+  Qed.
+  Lemma cosetDRel_trans: forall g1 g2 g3, avoir (mereg H) g1 -> avoir (mereg H) g2 -> avoir (mereg H) g3 ->
+    cosetDroiteRel g1 g2 -> cosetDroiteRel g2 g3 -> cosetDroiteRel g1 g3.
+  Proof.
+    intros g1 g2 g3 Gg1 Gg2 Gg3 [h12 [Hh12 Rg1g2]] [h23 [Hh23 Rg2g3]].
+    apply (exiter _ (@opg H h12 h23)), conjonction.
+    -- apply ferm_op. apply Hh12. apply Hh23.
+    -- recrire_egale (opg h12 g2). apply Rg1g2. recrire_egale (@opg (mereg H) h12 (@opg (mereg H) h23 g3)).
+       apply f_egale, Rg2g3. apply egale_sym.
+      recrire_egale (opg (@opg (mereg H) h12 h23) g3).
+       apply egale_ref. apply egale_sym, assoc_op. apply sousg_sousens, Hh12. apply sousg_sousens, Hh23. apply Gg3.
+  Qed.
+  Definition cosetDroiteReldeq := Reldeq.Paquet _ (mereg H) (Reldeq.Classe _ _ cosetDroiteRel
+    cosetDRel_ref cosetDRel_sym cosetDRel_trans).
+  Definition cosetDroiteEnsemble := @classedeqEnsemble cosetDroiteReldeq.
+  
+  Context (H_normal: sousgnormal H).
+  Lemma cosetdesgnormal_gdegale : forall g, avoir (mereg H) g -> egale (@classedeq_de cosetGaucheReldeq g) (@classedeq_de cosetDroiteReldeq g).
+  Proof.
+    intros g Gg. apply egale_ens, conjonction.
+    -- intros g' [Gg' [h [Hh Eg_g'h]]]. apply conjonction. apply Gg'.
+       apply (exiter _ (opg (opg g' h) (invg g'))), conjonction.
+    ---- apply H_normal. apply Hh. apply Gg'.
+    ---- recrire_egale (opg g' h). apply Eg_g'h.
+         assert (forall x, avoir (mereg H) x -> egale x (opg (opg x (invg g')) g')) as Ex_xxinvgg.
+         { intros x Gx. recrire_egale (opg x idg). apply droite_id, Gx. 
+           recrire_egale (opg x (opg (invg g') g')). apply f_egale, gauche_inv, Gg'.
+           apply assoc_op. apply Gx. apply ferm_inv, Gg'. apply Gg'. }
+         apply Ex_xxinvgg. apply ferm_op. apply Gg'. apply sousg_sousens, Hh.
+    -- intros g' [Gg' [h [Hh Eg_hg']]]. apply conjonction. apply Gg'.
+       apply (exiter _ (opg (opg (invg g') h) g')), conjonction.
+    ---- apply (egale_ind _ (invg (invg g')) (fun w => avoir H (opg (opg (invg g') h) w))).
+         apply H_normal. apply Hh. apply ferm_inv, Gg'. apply egale_sym, invinv_ident, Gg'.
+    ---- recrire_egale (@opg (mereg H) h g'). apply Eg_hg'.
+         apply egale_sym. recrire_egale (opg g' (opg (invg g') (@opg (mereg H) h g'))).
+         apply f_egale, egale_sym, assoc_op. apply ferm_inv, Gg'. apply sousg_sousens, Hh. apply Gg'.
+         recrire_egale (opg (opg g' (invg g')) (@opg (mereg H) h g')).
+         apply assoc_op. apply Gg'. apply ferm_inv, Gg'. apply ferm_op. apply sousg_sousens, Hh. apply Gg'.
+         recrire_egale (opg (@idg (mereg H)) (@opg (mereg H) h g')). app_f_egale (fun w => opg w (@opg (mereg H) h g')).
+         apply egale_sym, droite_inv, Gg'.
+         apply egale_sym, gauche_id, ferm_op. apply sousg_sousens, Hh. apply Gg'.
+    Qed.
+
+End Coset.
 
 Definition CosetGaucheRel (G: Groupe) (Hmel: SousGroupeMelange G) :=
   fun x y => (Hsupp _ Hmel) (Ope G (Inv G x) y).
