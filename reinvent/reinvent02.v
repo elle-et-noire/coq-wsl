@@ -731,6 +731,21 @@ Section Coset.
          apply assoc_op. apply Gx. apply ferm_inv, Gg. apply Gg. }
        apply Ex_xxinvgg, ferm_op. apply Gg. apply sousg_sousens, Hh.
   Qed.
+  Lemma sgnormal_dg_egale : forall g, avoir (mereg H) g -> forall h, avoir H h -> remplie (fun h' => et (avoir H h') (egale (@opg (mereg H) h g) (opg g h'))).
+  Proof.
+    intros g Gg h Hh. apply (exiter _ (opg (opg (invg g) h) g)), conjonction.
+    -- apply (fun Hw => egale_ind _ (invg (invg g)) (fun w => avoir H (opg (opg (invg g) h) w)) Hw). apply H_normal.
+       apply Hh. apply ferm_inv, Gg. apply egale_sym, invinv_ident, Gg.
+    -- assert (forall x, avoir (mereg H) x -> egale x (opg g (opg (invg g) x))) as Ex_ginvgx.
+       { intros x Gx. recrire_egale (opg idg x). apply gauche_id, Gx. 
+         recrire_egale (opg (opg g (invg g)) x). app_f_egale (fun w => opg w x). apply droite_inv, Gg.
+         apply egale_sym, assoc_op. apply Gg. apply ferm_inv, Gg. apply Gx. }
+       recrire_egale (opg g (opg (invg g) (opg h g))).
+       apply Ex_ginvgx. apply (fun Hw => egale_ind _ (@opg (mereg H) h g) (fun w => avoir (mereg H) w) Hw).
+       apply ferm_op. apply sousg_sousens, Hh. apply Gg. apply egale_ref.
+       apply f_egale. recrire_egale (opg (invg g) (@opg (mereg H) h g)).
+       apply egale_ref. apply assoc_op. apply ferm_inv, Gg. apply sousg_sousens, Hh. apply Gg.
+  Qed.
   Lemma cosetdesgnormal_classedegd_egale : forall g, avoir (mereg H) g ->
     egale (@classedeq_de cosetGaucheReldeq g) (@classedeq_de cosetDroiteReldeq g).
   Proof.
@@ -766,6 +781,10 @@ Section Coset.
   Definition cosetop (g1H g2H: @Ensemble (mereg H)) : Ensemble := 
     fun g => remplie (fun g1' => et (g1H g1') (remplie 
       (fun g2' => et (g2H g2') (egale (@opg (mereg H) g1' g2') g)))).
+  (* avoir H (opg g1' g) と g1H g1' から avoir G g を復元できない assoc_op を使うには G g が必要なので。 *)
+  Definition cosetinv (g1H: @Ensemble (mereg H)) : Ensemble :=
+    fun g => et (avoir (mereg H) g) (remplie (fun g1' => et (g1H g1') (avoir H (opg g1' g)))).
+  Definition cosetid := @classedeq_de cosetGaucheReldeq (@idg (mereg H)).
   Lemma coset_ferm_op : forall g1H g2H, cosetGaucheEnsemble g1H ->
     cosetGaucheEnsemble g2H -> cosetGaucheEnsemble (cosetop g1H g2H).
   Proof.
@@ -789,9 +808,85 @@ Section Coset.
          apply assoc_op. apply Gg1'. apply Gg2'. apply ferm_inv, sousg_sousens, Hh.
          apply egale_sym, droite_transpo. apply sousg_sousens, Hh. apply Gg.
          apply ferm_op. apply Gg1'. apply Gg2'. apply egale_sym, Eg1'g2'_gh.
-  ---- intros g [g1'' [g1Hg1'' [g2'' [g2Hg2'' Eg1''g2''_g]]]].
-       destruct (egale_ind _ _ (fun w => w g1'') g1Hg1'' _ (egale_sym Eg1'H_g1H)) as [Gg1'' [h1 [Hh1 Eg1'_g1''h1]]].
-       destruct (egale_ind _ _ (fun w => w g2'') g2Hg2'' _ (egale_sym Eg2'H_g2H)) as [Gg2'' [h2 [Hh2 Eg2'_g2''h2]]].
-       apply (exiter _ )
-
+    ---- intros g [g1'' [g1Hg1'' [g2'' [g2Hg2'' Eg1''g2''_g]]]].
+         destruct (egale_ind _ _ (fun w => w g1'') g1Hg1'' _ (egale_sym Eg1'H_g1H)) as [Gg1'' [h1 [Hh1 Eg1'_g1''h1]]].
+         destruct (egale_ind _ _ (fun w => w g2'') g2Hg2'' _ (egale_sym Eg2'H_g2H)) as [Gg2'' [h2 [Hh2 Eg2'_g2''h2]]].
+         destruct (sgnormal_dg_egale g2' Gg2' _ Hh1) as [h2' [Hh2' Einvh1g2'_g2'h2']].
+         apply conjonction. case Eg1''g2''_g. apply ferm_op. apply Gg1''. apply Gg2''.
+         apply (exiter _ (opg h2 h2')), conjonction.
+         apply ferm_op. apply Hh2. apply Hh2'.
+         case Eg1''g2''_g. recrire_egale (opg (opg g1'' (opg g2'' h2)) h2').
+         case Eg2'_g2''h2. recrire_egale (opg g1'' (opg g2' h2')).
+         case Einvh1g2'_g2'h2'. recrire_egale (opg (opg g1'' h1) g2').
+         case Eg1'_g1''h1. apply egale_ref. apply egale_sym, assoc_op.
+         apply Gg1''. apply sousg_sousens, Hh1. apply Gg2'.
+         apply assoc_op. apply Gg1''. apply Gg2'. apply sousg_sousens, Hh2'.
+         recrire_egale (opg (opg (opg g1'' g2'') h2) h2').
+         app_f_egale (fun w => opg w h2'). recrire_egale (opg g1'' (@opg (mereg H) g2'' h2)).
+         apply egale_ref. apply assoc_op. apply Gg1''. apply Gg2''. apply sousg_sousens, Hh2.
+         apply egale_sym. recrire_egale (opg (opg g1'' g2'') (@opg (mereg H) h2 h2')).
+         apply egale_ref. apply assoc_op. apply ferm_op. apply Gg1''. apply Gg2''.
+         apply sousg_sousens, Hh2. apply sousg_sousens, Hh2'.
+  Qed.
+  Lemma cosetid_H : egale cosetid H.
+  Proof. 
+    apply egale_ens, conjonction; intros h. 
+     -- intros [Gh [h' [Hh' Ee_hh']]]. 
+        assert (egale h (opg idg (@invg H h'))) as Eh_einvgh'.
+        { recrire_egale (opg idg (@invg (mereg H) h')).
+          apply droite_transpo. apply sousg_sousens, Hh'. 
+          apply Gh. apply ferm_id. apply egale_sym, Ee_hh'.
+          apply egale_ref. }
+        apply (fun Hw => egale_ind _ _ (fun w => avoir H w) Hw _ (egale_sym Eh_einvgh')).
+        apply ferm_op. apply ferm_id. apply ferm_inv, Hh'.
+     -- intros Hh. apply conjonction. apply sousg_sousens, Hh.
+        apply (exiter _ (@invg H h)), conjonction. apply ferm_inv, Hh.
+        recrire_egale (@idg H). apply egale_ref. recrire_egale (@opg H h (@invg H h)). apply droite_inv, Hh.
+        apply egale_ref.
+  Qed.
+  Lemma coset_ferm_inv : forall g1H, 
+    cosetGaucheEnsemble g1H -> cosetGaucheEnsemble (cosetinv g1H).
+  Proof.
+    intros g1H [g1' [Gg1' Eg1'Hg1H]]. apply (exiter _ (invg g1')), conjonction.
+     -- apply ferm_inv, Gg1'.
+     -- case Eg1'Hg1H. apply egale_ens, conjonction.
+     ---- intros g [Gg [h [Hh Einvg1'_gh]]]. apply conjonction. apply Gg. apply (exiter _ (invg g)), conjonction.
+     ------ apply conjonction. apply ferm_inv, Gg. 
+            destruct (sgnormal_dg_egale _ (ferm_inv _ Gg) (invg h) (ferm_inv _ Hh)) as [h' [Hh' Eihig_igh']].
+            apply (exiter _ h'), conjonction. apply Hh'. case Eihig_igh'.
+            recrire_egale (invg (opg g h)). case Einvg1'_gh. apply invinv_ident, Gg1'.
+            recrire_egale (opg (@invg (mereg H) h) (invg g)). apply invop_opinvinv.
+            apply Gg. apply sousg_sousens, Hh. apply egale_ref.
+     ------ apply (egale_ind _ _ (avoir H) ferm_id _ (gauche_inv _ Gg)).
+     ---- intros g [Gg [g' [[Gg' [h [Hh Eg1'_g'h]]] Hg'g]]]. apply conjonction. 
+          apply Gg. destruct (sgnormal_dg_egale _ Gg _ (ferm_inv _ Hh)) as [h' [Hh' Eihg_gh']].
+          apply (exiter _ (opg h' (@invg H (opg g' g)))), conjonction.
+          apply ferm_op. apply Hh'. apply ferm_inv, Hg'g.
+          recrire_egale (opg (opg g h') (invg (opg g' g))).
+          case Eihg_gh'. recrire_egale (opg (opg (invg h) g) (opg (invg g) (invg g'))).
+          recrire_egale (opg (invg h) (invg g')). recrire_egale (invg (opg g' h)).
+          apply f_egale, Eg1'_g'h. recrire_egale (opg (@invg (mereg H) h) (invg g')).
+          apply invop_opinvinv. apply Gg'. apply sousg_sousens, Hh. apply egale_ref.
+          recrire_egale (opg (opg (@invg (mereg H) h) idg) (invg g')). 
+          app_f_egale (fun w => opg w (invg g')). apply droite_id.
+          apply ferm_inv, sousg_sousens, Hh.
+          recrire_egale (opg (opg (invg h) (opg g (invg g))) (invg g')).
+          app_f_egale (fun w => opg (opg (invg h) w) (invg g')). recrire_egale (@idg (mereg H)).
+          apply egale_ref. apply droite_inv, Gg.
+          recrire_egale (opg (opg (opg (invg h) g) (invg g)) (invg g')).
+          app_f_egale (fun w => opg w (invg g')). recrire_egale (opg (@invg (mereg H) h) (opg g (invg g))).
+          apply egale_ref. recrire_egale (opg (opg (@invg (mereg H) h) g) (invg g)). apply assoc_op.
+          apply ferm_inv, sousg_sousens, Hh. apply Gg. apply ferm_inv, Gg.
+          apply egale_ref. apply egale_sym. recrire_egale (opg (opg (@invg (mereg H) h) g) (opg (invg g) (invg g'))).
+          apply egale_ref. recrire_egale (opg (opg (opg (@invg (mereg H) h) g) (invg g)) (invg g')).
+          apply assoc_op. apply ferm_op. apply ferm_inv, sousg_sousens, Hh.
+          apply Gg. apply ferm_inv, Gg. apply ferm_inv, Gg'.
+          apply egale_ref. apply f_egale. apply egale_sym.
+          recrire_egale (@invg (mereg H) (opg g' g)). apply egale_ref.
+          apply invop_opinvinv. apply Gg'. apply Gg.
+          apply egale_sym. recrire_egale (opg g (@opg (mereg H) h' (@invg (mereg H) (opg g' g)))).
+          apply egale_ref. recrire_egale (opg (opg g h') (@invg (mereg H) (opg g' g))).
+          apply assoc_op. apply Gg. apply sousg_sousens, Hh'. apply ferm_inv, sousg_sousens, Hg'g.
+          apply egale_ref.
+  Qed.
 End Coset.
