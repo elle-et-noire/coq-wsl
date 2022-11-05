@@ -931,16 +931,25 @@ Section Coset.
     cosetop cosetinv cosetid coset_ferm_op coset_ferm_inv
     coset_ferm_id coset_assoc_op coset_droite_id coset_gauche_inv coset_droite_inv).
 
-  Definition pi : mereg H -> cosetGroupe := @cdeqde coset_g.
+  Context (pi : mereg H -> cosetGroupe := @cdeqde coset_g).
   Lemma pi_carto : reinvent02.carto (mereg H) cosetGroupe pi.
   Proof. intros g Gg. apply classedeqEns_avoir_claassedeq, Gg. Qed.
   Lemma pi_hom : forall g1 g2, avoir (mereg H) g1 -> avoir _ g2 -> egale (pi (opg g1 g2)) (opg (pi g1) (pi g2)).
   Proof. intros g1 g2 Gg1 Gg2. apply egale_sym, coset_analog_op. apply Gg1. apply Gg2. Qed.
-  Definition natprj := Homomorphisme.Paquet _ _ (Homomorphisme.Classe 
+  Definition prjnat := Homomorphisme.Paquet _ _ (Homomorphisme.Classe 
     _ _ pi pi_carto pi_hom).
 End Coset.
 Section Coset.
 Section TheoremDisomorph.
   Context (ht:homTaper) (N := @noyauSG ht) (G := @dom ht) (H := @codom ht)
-    (phi := @fonc ht) (G_N := cosetGroupe N noyauSG_normal).
+    (phi := @fonc ht) (G_N := cosetGroupe N noyauSG_normal)
+    (pn := prjnat N noyauSG_normal) (pi := @fonc pn).
+  Lemma psi_wd : forall (g gn:G), avoir G g -> (@cdeqde (coset_g N) g) gn -> egale (phi g) (phi gn).
+  Proof.
+    intros g gn Gg [Ggn [n [Nn E]]]. case (egale_sym E). rec_egale (opg (phi gn) (phi n)).
+    apply hom. apply Ggn. apply Nn. rec_egale (opg (phi gn) idg). apply f_egale.
+    apply egale_sym, (et_prj2 Nn). apply egale_sym, droite_id, (@carto ht), Ggn.
+  Qed.
+    
+  Definition psi gH := forall g, gH g -> f 
   
