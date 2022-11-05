@@ -33,11 +33,8 @@ Proof.
   move=> X Y Xis. by apply.
 Qed.
 
-Section uouo.
-  Variable T: Type.
-  Variable a: T.
-End uouo.
-
-Section uouo.
-  Variable b: T.
-End uouo.
+Lemma HA2: forall (A B: Prop), (A -> B) -> ((A -> ~B) -> ~A).
+Proof.
+  intros A B AB AnotB Ais.
+  absurd B; tauto.
+Qed.

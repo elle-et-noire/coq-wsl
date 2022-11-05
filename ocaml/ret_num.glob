@@ -1,0 +1,8 @@
+DIGEST 65c592bcd2c60582d272854229f8dcdf
+Fret_num
+R8:17 Coq.extraction.Extraction <> <> lib
+R35:49 Coq.extraction.ExtrOcamlNatInt <> <> lib
+def 63:69 <> ret_num
+R74:76 Coq.Init.Datatypes <> nat ind
+binder 72:72 <> n:1
+R82:82 ret_num <> n:1 var

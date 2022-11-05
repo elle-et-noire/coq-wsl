@@ -37,8 +37,6 @@ Section Logique.
   Section PremierOrdre.
     Inductive remplie {T:Type} (P: T -> Prop) : Prop :=
       exister : forall x, P x -> remplie P.
-    Inductive posis {T:Type} (P: T -> Prop) : Type :=
-      etre : forall x, P x -> posis P.
     Context {T:Prop} {P: T -> Prop}.
     Definition ex_prj1 (H: remplie P):=
       match H with exister _ a _ => a end.
@@ -283,43 +281,83 @@ Section EgNaturelle.
 End EgNaturelle.
 Section Ensemble.
   Context {T:Type}.
-  Definition Ensemble := T -> Prop.
-  Definition videEnsemble : Ensemble := fun _ => Faux.
-  Definition mereEnsemble : Ensemble := fun _ => Vraie.
-  Definition sous (B A:Ensemble) := forall x, B x -> A x.
-  Definition syndicat (A B:Ensemble) : Ensemble :=
-    fun x => ou (A x) (B x).
-  Definition intsec (A B:Ensemble) : Ensemble :=
-    fun x => et (A x) (B x).
-  Definition compl (A:Ensemble) : Ensemble :=
-    fun x => nepas (A x).
-  Definition seul x : Ensemble := egale x.
-  Axiom egale_ens : forall A B, et (sous A B) (sous B A) -> egale A B.
+  Definition ensem : Type := T -> Prop.
+  Definition ont (e:ensem) x := e x.
+  Inductive pos : Type :=
+    etre : forall (e:ensem) x, e x -> pos.
+  Definition elem p : T := match p with
+    etre _ x _ => x end.
+  Coercion elem : pos >-> T.
 End Ensemble.
+Check elem.
+Definition elem' (T:Type) (p:@pos T) := elem p.
+Coercion elem' : pos >-> T.
+Section uo.
+Print Coercions.
+Variable T:Type.
+Variable p : @pos T.
+Variable f: T -> T.
+Check f (elem p).
+  Definition avoir A := match A return sorte A -> Prop with
+    wrap _ e => match e with pos a => a end end.
+  Context {T:Type}.
+  Definition videens := @pos T (fun _ => Faux).
+  Definition mereens := @pos T (fun _ => Vraie).
+  Definition seulens (x:T) := pos (egale x).
+  Definition syndens (e1 e2:@ensem T) := pos (fun x => ou (ont e1 x) (ont e2 x)).
+  Definition complens (e:@ensem T) := pos (fun x => nepas (ont e x)).
+  Definition intsecens (e1 e2:@ensem T) := pos (fun x => et (ont e1 x) (ont e2 x)).
+  Definition moinsens e1 e2 := intsecens e1 (complens e2).
+  Definition sous (e1 e2:@ensem T) := forall x:.
+  Inductive sous {P Q: T -> Prop} 
+
+  Axiom egale_cond : forall A B, et (sous A B) (sous B A) -> egale A B.
+End Ensemble.
+
+Section gue.
+Definition m := fun _:naturelle => Vraie.
+Definition gue := pos m.
+Definition p : gue -> naturelle := @pos_prj1 _ m.
+Coercion p : gue >-> naturelle.
+Print Coercions.
+Variable uouo: gue.
+Check (ajouter uouo uouo).
+Check (ajouter (pos_prj1 uouo) (pos_prj1 uouo)).
+Check (uouo: naturelle).
+End gue.
+
 Section Cartographie.
-  Context {T1 T2:Type} (A:@Ensemble T1) (B:@Ensemble T2) (f:T1 -> T2).
-  Definition image : Ensemble := fun y => remplie (fun x => et (A x) (egale y (f x))).
-  Definition retier : Ensemble := fun x => B (f x).
-  Definition carto := forall x, A x -> B (f x).
-  Definition preimage := posis (fun x => et (A x) (B (f x))).
+  Context {A B: Type} (f: A -> B).
+  Definition image := pos (fun y => remplie (fun x => egale y (f x))).
+  Definition preimage := pos (fun x => remplie (fun y => egale y (f x))).
 End Cartographie.
 Section Cartographie.
-  Context {T1 T2:Type} {A:@Ensemble T1} {B:@Ensemble T2} {f: T1 -> T2} (Hf := carto A B f).
-  Definition inj (_:Hf) := forall x1 x2, A x1 -> A x2 -> egale (f x1) (f x2) -> egale x1 x2.
-  Definition surj (_:Hf) := forall y, B y -> remplie (fun x => egale y (f x)).
-  Definition bij (c:Hf) := et (inj c) (surj c).
-  Definition iminv (_:Hf) {g: T2 -> T1} (_: carto B A g) :=
-    et (forall a, A a -> egale a (g (f a))) (forall b, B b -> egale b (f (g b))).
-  Definition remp_iminv (c:Hf) := remplie (fun g => remplie (fun (Hg: carto B A g) => iminv c Hg)).
-  Axiom bij_remp_iminv : forall c, bij c -> remp_iminv c.
-  Lemma ssi_bij_remp_iminv : forall c, ssi (bij c) (remp_iminv c).
+  Context {A B:Type} (f: A -> B).
+  Definition inj :=
+    forall x1 x2, egale (f x1) (f x2) -> egale x1 x2.
+  Definition surj :=
+    forall y, remplie (fun x => egale y (f x)).
+  Definition bij := et inj surj.
+  Definition iminv_g (g: B -> A) := forall a, egale a (g (f a)).
+  Definition iminv_d (g: B -> A) := forall b, egale b (f (g b)).
+  Definition iminv (g: B -> A) := et (iminv_g g) (iminv_d g).
+  Axiom surj_remp_iminv_d : surj -> remplie iminv_d.
+  Axiom inj_remp_iminv_g : inj -> remplie iminv_g.
+  Axiom bij_remp_iminv : bij -> remplie iminv.
+  Lemma remp_iminv_d_surj : remplie iminv_d -> surj.
+  Proof. intros [g g_inv] y; apply (exister _ (g y)), g_inv. Qed.
+  Lemma remp_iminv_g_inj : remplie iminv_g -> inj.
+  Proof. intros [g g_inv] x1 x2 E. case (egale_sym (g_inv x1)), (egale_sym (g_inv x2)). apply f_egale, E. Qed.
+  Lemma ssi_bij_carinv : ssi bij (remplie iminv).
   Proof.
-    intros c. apply conjonction. apply bij_remp_iminv.
-    intros [g [Hg [Hig Hid]]]. apply conjonction.
-    intros x1 x2 Ax1 Ax2 E. case (egale_sym (Hig _ Ax1)), (egale_sym (Hig _ Ax2)).
-    apply f_egale, E. intros y By. apply (exister _ (g y)), Hid, By.
+    apply conjonction. apply  
+     -- intros [Hinj Hsurj]. destruct (surj_remp_iminv_d Hsurj) as [g Hd].
+        apply (exister _ g), conjonction.  apply inj_remp_iminv_g, Hinj. apply surj_remp_iminv_d, Hsurj.
+    intros [Hg Hd]. apply conjonction. apply remp_iminv_g_inj, Hg. apply remp_iminv_d_surj, Hd.
   Qed.
 End Cartographie.
+
+
 Module Groupe.
   Section ClasseDef.
     Record classe_de {T:Type} := Classe {
@@ -504,24 +542,15 @@ Section HomomorphismeTheorie.
     -- apply egale_sym, droite_id, ferm_inv, carto, Hx.
   Qed.
   Definition isomorph := remplie (fun (psi: @Homomorphisme.classe_de codom dom) =>
-    (iminv (@carto phi))  (Homomorphisme.carto psi)).
-  Lemma isomorph_bij : ssi isomorph (bij (@carto phi)).
+    et (forall h, egale h ((Homomorphisme.fonc psi) (f h))) (forall g, egale g (f ((Homomorphisme.fonc psi) g)))).
+  Lemma isomorph_bij : ssi isomorph (biject (@carto phi)).
   Proof.
     apply conjonction.
-     -- intros [psi Himinv]. apply (et_prj2 (ssi_bij_remp_iminv _)). 
-        apply (exister _ (Homomorphisme.fonc psi)), (exister _ (Homomorphisme.carto psi)), Himinv.
-     -- intros Hbij. destruct (bij_remp_iminv _ Hbij) as [g [Hg_carto Hg_inv]].
-        destruct Hbij as [Hinj Hsurj].
-        assert (forall x y, avoir codom x -> avoir codom y -> egale (g (opg x y)) (opg (g x) (g y))) as Hg_hom.
-        { intros x y Gx Gy. apply Hinj. apply Hg_carto, ferm_op. apply Gx. apply Gy.
-          apply ferm_op; apply Hg_carto. apply Gx. apply Gy.
-          rec_egale (opg (f (g x)) (f (g y))). case (et_prj2 Hg_inv).
-          apply ferm_op. apply Gx. apply Gy. case (et_prj2 Hg_inv).
-          apply Gx. case (et_prj2 Hg_inv). apply Gy. apply egale_ref.
-          apply egale_sym, hom; apply Hg_carto. apply Gx. apply Gy. }
-        pose (Homomorphisme.Classe codom dom g Hg_carto Hg_hom) as psi.
-        apply (exister _ psi). apply Hg_inv.
-  Qed.
+     -- intros [psi [gfid fgid]]. pose (Homomorphisme.fonc psi) as g. apply conjonction.
+        intros x y Efxfy. case (egale_sym (gfid x)), (egale_sym (gfid y)).
+        apply f_egale. apply Efxfy.
+        intros y Gy. apply (exister _ (g y)). apply fgid.
+     -- intros [Hinj Hsuj]. 
 End HomomorphismeTheorie.
 Module SousGroupe.
   Section ClasseDef.
@@ -930,17 +959,4 @@ Section Coset.
   Definition cosetGroupe := Groupe.Paquet _ (Groupe.Classe _ cosetEns_g
     cosetop cosetinv cosetid coset_ferm_op coset_ferm_inv
     coset_ferm_id coset_assoc_op coset_droite_id coset_gauche_inv coset_droite_inv).
-
-  Definition pi : mereg H -> cosetGroupe := @cdeqde coset_g.
-  Lemma pi_carto : reinvent02.carto (mereg H) cosetGroupe pi.
-  Proof. intros g Gg. apply classedeqEns_avoir_claassedeq, Gg. Qed.
-  Lemma pi_hom : forall g1 g2, avoir (mereg H) g1 -> avoir _ g2 -> egale (pi (opg g1 g2)) (opg (pi g1) (pi g2)).
-  Proof. intros g1 g2 Gg1 Gg2. apply egale_sym, coset_analog_op. apply Gg1. apply Gg2. Qed.
-  Definition natprj := Homomorphisme.Paquet _ _ (Homomorphisme.Classe 
-    _ _ pi pi_carto pi_hom).
 End Coset.
-Section Coset.
-Section TheoremDisomorph.
-  Context (ht:homTaper) (N := @noyauSG ht) (G := @dom ht) (H := @codom ht)
-    (phi := @fonc ht) (G_N := cosetGroupe N noyauSG_normal).
-  

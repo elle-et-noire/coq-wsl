@@ -1,0 +1,264 @@
+DIGEST d3fe4828469bfab596ecb2ae5364f615
+Fquicksort
+R15:18 Coq.Lists.List <> <> lib
+R36:39 Coq.Bool.Bool <> <> lib
+R57:61 Coq.Arith.Arith <> <> lib
+R73:82 Coq.extraction.Extraction <> <> lib
+R100:114 Coq.extraction.ExtrOcamlNatInt <> <> lib
+def 129:138 <> filter_lte
+R144:146 Coq.Init.Datatypes <> nat ind
+binder 141:141 <> a:1
+binder 149:152 <> list:2
+R157:162 Coq.Lists.List <> filter def
+R182:185 quicksort <> list:2 var
+binder 169:169 <> n:3
+R174:178 Coq.Arith.PeanoNat <> ::nat_scope:x_'<=?'_x not
+R173:173 quicksort <> n:3 var
+R179:179 quicksort <> a:1 var
+def 199:207 <> filter_gt
+R213:215 Coq.Init.Datatypes <> nat ind
+binder 210:210 <> a:4
+binder 218:221 <> list:5
+R226:231 Coq.Lists.List <> filter def
+R257:260 quicksort <> list:5 var
+binder 238:238 <> n:6
+R242:245 Coq.Init.Datatypes <> negb def
+R248:252 Coq.Arith.PeanoNat <> ::nat_scope:x_'<=?'_x not
+R247:247 quicksort <> n:6 var
+R253:253 quicksort <> a:4 var
+def 273:281 <> quicksort
+R287:290 Coq.Init.Datatypes <> list ind
+R292:294 Coq.Init.Datatypes <> nat ind
+binder 284:284 <> l:7
+R310:310 quicksort <> l:7 var
+R323:325 Coq.Init.Datatypes <> nil constr
+R330:332 Coq.Init.Datatypes <> nil constr
+R341:344 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R366:374 quicksort <> quicksort:8 def
+binder 354:361 <> sorted_t:10
+R422:445 Coq.Init.Datatypes <> ::list_scope:x_'++'_x not
+R401:410 quicksort <> filter_lte def
+R414:421 quicksort <> sorted_t:10 var
+R447:450 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R451:459 quicksort <> filter_gt def
+R463:470 quicksort <> sorted_t:10 var
+R490:498 quicksort <> quicksort def
+R501:503 Coq.Init.Datatypes <> nil constr
+R515:523 quicksort <> quicksort def
+R527:528 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R530:531 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R533:534 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R536:537 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R539:540 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R542:543 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R545:546 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R548:549 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R550:552 Coq.Init.Datatypes <> nil constr
+def 566:571 <> length
+R577:580 Coq.Init.Datatypes <> list ind
+R582:584 Coq.Init.Datatypes <> nat ind
+binder 574:574 <> l:11
+R589:591 Coq.Init.Datatypes <> nat ind
+R606:606 quicksort <> l:11 var
+R619:621 Coq.Init.Datatypes <> nil constr
+R635:638 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R639:640 Coq.Lists.List <> tl def
+R646:649 Coq.Init.Peano <> ::nat_scope:x_'+'_x not
+R661:661 Coq.Init.Peano <> ::nat_scope:x_'+'_x not
+R650:655 quicksort <> length:12 def
+prf 681:699 <> lengthIsCommutative
+R715:718 Coq.Init.Datatypes <> list ind
+R720:722 Coq.Init.Datatypes <> nat ind
+binder 709:709 <> l:14
+binder 711:711 <> m:15
+R739:741 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R725:730 quicksort <> length def
+R733:736 Coq.Init.Datatypes <> ::list_scope:x_'++'_x not
+R732:732 quicksort <> l:14 var
+R737:737 quicksort <> m:15 var
+R742:747 quicksort <> length def
+R750:753 Coq.Init.Datatypes <> ::list_scope:x_'++'_x not
+R749:749 quicksort <> m:15 var
+R754:754 quicksort <> l:14 var
+R817:825 Coq.Lists.List <> app_nil_r thm
+R817:825 Coq.Lists.List <> app_nil_r thm
+R817:825 Coq.Lists.List <> app_nil_r thm
+prf 989:1008 <> lengthIsDistributive
+R1023:1026 Coq.Init.Datatypes <> list ind
+R1028:1030 Coq.Init.Datatypes <> nat ind
+binder 1018:1018 <> l:16
+binder 1020:1020 <> j:17
+R1049:1051 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R1034:1039 quicksort <> length def
+R1043:1046 Coq.Init.Datatypes <> ::list_scope:x_'++'_x not
+R1042:1042 quicksort <> l:16 var
+R1047:1047 quicksort <> j:17 var
+R1060:1062 Coq.Init.Peano <> ::nat_scope:x_'+'_x not
+R1052:1057 quicksort <> length def
+R1059:1059 quicksort <> l:16 var
+R1063:1068 quicksort <> length def
+R1070:1070 quicksort <> j:17 var
+R1120:1128 Coq.Lists.List <> app_nil_r thm
+R1120:1128 Coq.Lists.List <> app_nil_r thm
+R1120:1128 Coq.Lists.List <> app_nil_r thm
+R1159:1177 quicksort <> lengthIsCommutative thm
+R1159:1177 quicksort <> lengthIsCommutative thm
+R1159:1177 quicksort <> lengthIsCommutative thm
+R1227:1232 quicksort <> length def
+R1241:1246 quicksort <> length def
+R1203:1216 Coq.Arith.PeanoNat Nat add_succ_r thm
+R1227:1232 quicksort <> length def
+R1241:1246 quicksort <> length def
+R1203:1216 Coq.Arith.PeanoNat Nat add_succ_r thm
+R1227:1232 quicksort <> length def
+R1241:1246 quicksort <> length def
+R1203:1216 Coq.Arith.PeanoNat Nat add_succ_r thm
+R1264:1282 quicksort <> lengthIsCommutative thm
+R1264:1282 quicksort <> lengthIsCommutative thm
+R1264:1282 quicksort <> lengthIsCommutative thm
+prf 1332:1348 <> twoFilterLengthEq
+binder 1358:1358 <> n:18
+binder 1360:1360 <> l:19
+R1409:1411 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R1385:1387 Coq.Init.Peano <> ::nat_scope:x_'+'_x not
+R1363:1368 quicksort <> length def
+R1370:1379 quicksort <> filter_lte def
+R1381:1381 quicksort <> n:18 var
+R1383:1383 quicksort <> l:19 var
+R1388:1393 quicksort <> length def
+R1395:1403 quicksort <> filter_gt def
+R1405:1405 quicksort <> n:18 var
+R1407:1407 quicksort <> l:19 var
+R1412:1417 quicksort <> length def
+R1419:1419 quicksort <> l:19 var
+R1498:1507 quicksort <> filter_lte def
+R1557:1560 Coq.Init.Logic <> ::type_scope:x_'\/'_x not
+R1550:1552 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R1532:1534 Coq.Init.Datatypes <> nat ind
+binder 1527:1528 <> n0:20
+R1541:1545 Coq.Arith.PeanoNat <> ::nat_scope:x_'<=?'_x not
+R1539:1540 quicksort <> n0:20 var
+R1553:1556 Coq.Init.Datatypes <> true constr
+R1595:1597 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R1571:1573 Coq.Init.Datatypes <> nat ind
+binder 1566:1567 <> n0:21
+R1578:1581 Coq.Init.Datatypes <> negb def
+R1585:1589 Coq.Arith.PeanoNat <> ::nat_scope:x_'<=?'_x not
+R1583:1584 quicksort <> n0:21 var
+R1598:1601 Coq.Init.Datatypes <> true constr
+R1557:1560 Coq.Init.Logic <> ::type_scope:x_'\/'_x not
+R1550:1552 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R1532:1534 Coq.Init.Datatypes <> nat ind
+binder 1527:1528 <> n0:22
+R1541:1545 Coq.Arith.PeanoNat <> ::nat_scope:x_'<=?'_x not
+R1539:1540 quicksort <> n0:22 var
+R1553:1556 Coq.Init.Datatypes <> true constr
+R1595:1597 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R1571:1573 Coq.Init.Datatypes <> nat ind
+binder 1566:1567 <> n0:23
+R1578:1581 Coq.Init.Datatypes <> negb def
+R1585:1589 Coq.Arith.PeanoNat <> ::nat_scope:x_'<=?'_x not
+R1583:1584 quicksort <> n0:23 var
+R1598:1601 Coq.Init.Datatypes <> true constr
+R1616:1620 Coq.Arith.PeanoNat <> ::nat_scope:x_'<=?'_x not
+R1616:1620 Coq.Arith.PeanoNat <> ::nat_scope:x_'<=?'_x not
+R1758:1760 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R1744:1753 quicksort <> filter_lte def
+R1761:1766 Coq.Lists.List <> filter def
+R1778:1780 Coq.Init.Datatypes <> nat ind
+binder 1773:1774 <> n0:24
+R1787:1791 Coq.Arith.PeanoNat <> ::nat_scope:x_'<=?'_x not
+R1785:1786 quicksort <> n0:24 var
+R1758:1760 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R1744:1753 quicksort <> filter_lte def
+R1761:1766 Coq.Lists.List <> filter def
+R1778:1780 Coq.Init.Datatypes <> nat ind
+binder 1773:1774 <> n0:25
+R1787:1791 Coq.Arith.PeanoNat <> ::nat_scope:x_'<=?'_x not
+R1785:1786 quicksort <> n0:25 var
+R1810:1819 quicksort <> filter_lte def
+R1921:1923 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R1902:1911 quicksort <> filter_lte def
+R1917:1918 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R1924:1929 Coq.Lists.List <> filter def
+R1960:1961 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R1941:1943 Coq.Init.Datatypes <> nat ind
+binder 1936:1937 <> n0:26
+R1950:1954 Coq.Arith.PeanoNat <> ::nat_scope:x_'<=?'_x not
+R1948:1949 quicksort <> n0:26 var
+R1921:1923 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R1902:1911 quicksort <> filter_lte def
+R1917:1918 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R1924:1929 Coq.Lists.List <> filter def
+R1960:1961 Coq.Init.Datatypes <> ::list_scope:x_'::'_x not
+R1941:1943 Coq.Init.Datatypes <> nat ind
+binder 1936:1937 <> n0:27
+R1950:1954 Coq.Arith.PeanoNat <> ::nat_scope:x_'<=?'_x not
+R1948:1949 quicksort <> n0:27 var
+R1978:1987 quicksort <> filter_lte def
+R2062:2062 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R2070:2073 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R2064:2068 Coq.Arith.PeanoNat <> ::nat_scope:x_'<=?'_x not
+R2074:2078 Coq.Init.Datatypes <> false constr
+R2062:2062 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R2070:2073 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R2064:2068 Coq.Arith.PeanoNat <> ::nat_scope:x_'<=?'_x not
+R2074:2078 Coq.Init.Datatypes <> false constr
+R2124:2128 Coq.Arith.PeanoNat <> ::nat_scope:x_'<=?'_x not
+R2097:2111 Coq.Bool.Bool <> negb_involutive thm
+R2124:2128 Coq.Arith.PeanoNat <> ::nat_scope:x_'<=?'_x not
+R2097:2111 Coq.Bool.Bool <> negb_involutive thm
+R2124:2128 Coq.Arith.PeanoNat <> ::nat_scope:x_'<=?'_x not
+R2097:2111 Coq.Bool.Bool <> negb_involutive thm
+R2228:2233 quicksort <> length def
+R2235:2244 quicksort <> filter_lte def
+R2257:2262 quicksort <> length def
+R2265:2273 quicksort <> filter_gt def
+R2204:2217 Coq.Arith.PeanoNat Nat add_succ_r thm
+R2228:2233 quicksort <> length def
+R2235:2244 quicksort <> filter_lte def
+R2257:2262 quicksort <> length def
+R2265:2273 quicksort <> filter_gt def
+R2204:2217 Coq.Arith.PeanoNat Nat add_succ_r thm
+R2228:2233 quicksort <> length def
+R2235:2244 quicksort <> filter_lte def
+R2257:2262 quicksort <> length def
+R2265:2273 quicksort <> filter_gt def
+R2204:2217 Coq.Arith.PeanoNat Nat add_succ_r thm
+prf 2330:2348 <> sortLengthUnchanged
+R2366:2369 Coq.Init.Datatypes <> list ind
+R2371:2373 Coq.Init.Datatypes <> nat ind
+binder 2363:2363 <> l:28
+R2389:2391 Coq.Init.Logic <> ::type_scope:x_'='_x not
+R2381:2386 quicksort <> length def
+R2388:2388 quicksort <> l:28 var
+R2392:2397 quicksort <> length def
+R2400:2408 quicksort <> quicksort def
+R2410:2410 quicksort <> l:28 var
+R2506:2525 quicksort <> lengthIsDistributive thm
+R2506:2525 quicksort <> lengthIsDistributive thm
+R2506:2525 quicksort <> lengthIsDistributive thm
+R2583:2588 quicksort <> length def
+R2590:2599 quicksort <> filter_lte def
+R2604:2612 quicksort <> quicksort def
+R2632:2637 quicksort <> length def
+R2640:2648 quicksort <> filter_gt def
+R2653:2661 quicksort <> quicksort def
+R2551:2564 Coq.Arith.PeanoNat Nat add_succ_r thm
+R2583:2588 quicksort <> length def
+R2590:2599 quicksort <> filter_lte def
+R2604:2612 quicksort <> quicksort def
+R2632:2637 quicksort <> length def
+R2640:2648 quicksort <> filter_gt def
+R2653:2661 quicksort <> quicksort def
+R2551:2564 Coq.Arith.PeanoNat Nat add_succ_r thm
+R2583:2588 quicksort <> length def
+R2590:2599 quicksort <> filter_lte def
+R2604:2612 quicksort <> quicksort def
+R2632:2637 quicksort <> length def
+R2640:2648 quicksort <> filter_gt def
+R2653:2661 quicksort <> quicksort def
+R2551:2564 Coq.Arith.PeanoNat Nat add_succ_r thm
+R2682:2698 quicksort <> twoFilterLengthEq thm
+R2682:2698 quicksort <> twoFilterLengthEq thm
+R2682:2698 quicksort <> twoFilterLengthEq thm

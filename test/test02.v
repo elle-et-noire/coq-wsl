@@ -42,3 +42,5 @@ Check eq_refl 1.
 
 Goal 1 = 1.
 apply eq_refl.
+
+Print Empty_set.
