@@ -14,8 +14,15 @@ Section GeneralLemmas.
     apply/eqP. rewrite eqn_leq. apply /andP; apply conj.
     apply Hle. apply Nlt.
   Qed.
+
+  Lemma perm_top_bottom : forall {A:Type} (a:A) (l:list A),
+    Permutation (a :: l) (l ++ [a]).
+  Proof.
+    move=> A a l. move:a. induction l. done.
+    move=> a0. rewrite -app_comm_cons -IHl. apply perm_swap.
+  Qed.
   
-  Lemma assoc_app_cons : forall A (l1:list A) n l2, 
+  Lemma assoc_app_cons : forall {A} (l1:list A) n l2, 
   l1 ++ n :: l2 = (l1 ++ [n]) ++ l2.
   Proof. induction l1; by [|move=>n l2; rewrite -3!app_comm_cons IHl1]. Qed.
 End GeneralLemmas.
@@ -49,7 +56,12 @@ Section Slide.
         match slide i t with (i', t') => (i', h :: t') end
     end.
 
-  (* Check ({(a, l): nat * list nat | sorted (a :: l)}).
+  (* Program Definition slide i (l:{l|sorted l})
+    : {(a, l): nat * list nat | sorted (a :: l)} :=
+    slide_kernel i l.
+  Obligation 1.
+    unfold slide_kernel.
+  Check ({(a, l): nat * list nat | sorted (a :: l)}).
   Program Fixpoint slide (i:nat) (l: {l:list nat|sorted l}) {measure (length l)}
     : {(a, l): nat * list nat | sorted (a :: l)} :=
   match l with
@@ -64,13 +76,19 @@ Section Slide.
   Next Obligation. by apply sorted_tail in H. Qed.
   Next Obligation. by apply sorted_tail in H. Qed.
   Next Obligation.
-    rewrite /=. case Hlt: (i < h). compute.
-    Print slide_func_obligation_2. rewrite indep_prod /=.
-     Check (@sval).
+    rewrite /=. case Hlt: (i < h).
+    Eval compute in ((@sval) _ _ (exist _ nil sorted_nil)).
+    Check slide_func_obligation_2.
+    pose ((@sval) _ _
+    (slide0 h
+       (exist _ t (slide_func_obligation_2
+             (exist _ (h :: t) H) slide0 h t Logic.eq_refl)) 
+        (le_n (length t).+1))) as al.
+    assert (let (a, l) := (let (h', t') :=
+      al in (h', i :: t')) in sorted (a :: l)).
+    rewrite 2!indep_prod /=. *)
 
-  Check (slide 1 nil). *)
-
-  Section SlideSort.
+  Section Sort.
     Lemma comm_slide_ind_head : forall i n l,
       slide i (n :: l) = slide n (i :: l).
     Proof.
@@ -94,7 +112,7 @@ Section Slide.
     Lemma slide_hold_sortedlist : forall a l, sorted (a :: l) ->
       a :: l = (let (a', l') := slide a l in (l' ++ [a'])).
     Proof.
-      move=>a l. move: a. induction l; move=> /= a0 S. done.
+      move=> a l. move: a. induction l; move=> /= a0 S. done.
       rewrite 3!indep_prod /=. case H: (a0 < a) => /=.
       - apply f_equal. inversion S.
         by rewrite (IHl _ H4) indep_prod.
@@ -156,8 +174,9 @@ Section Slide.
           apply IHl. done.
           by rewrite comm_slide_ind_head (leq_simpl_fstslide Hc3).
     Qed.
-  End SlideSort.
-  Section SlidePerm.
+  End Sort.
+
+  Section Perm.
     Lemma perm_slide : forall a l,
       Permutation (a :: l) (let (h, t) := slide a l in (t ++ [h])).
     Proof.
@@ -172,30 +191,101 @@ Section Slide.
         apply (perm_trans(l':= a :: a0 :: n :: l)); 
         try apply perm_swap; apply perm_skip, IHl_a0.
     Qed.
+  End Perm.
 End Slide.
 
 Section Sort.
+  Section Kernel.
+    Variables l1 l2: list nat.
   Definition slidefb l1 h t :=
     match slide h l1 with (i, l1') =>
       match slide i t with (i', l2') => (l1' ++ [i'], l2') end
     end.
 
-  Program Fixpoint sort_kernel (l1: {l | sorted l}) l2
-      {measure (length l2)} : {l | sorted l} * list nat :=
+  Program Definition slidefb_coat (l1: {l|sorted l}) h t
+    : {(l1', l2'): list nat * list nat | 
+          sorted l1 /\ Permutation (l1 ++ h :: t) (l1' ++ l2')}
+    := slidefb l1 h t.
+  Obligation 1.
+    rewrite indep_prod. apply conj. apply H.
+    move:(perm_slide h l1) (perm_slide (fst (slide h l1)) t).
+    rewrite /slidefb 4!indep_prod /=.
+    pose (fst (slide h l1)) as i. pose (snd (slide h l1)) as l1'.
+    fold i l1'. pose (fst (slide i t)) as i'. pose (snd (slide i t)) as l2'.
+    fold i' l2'. move=> Hp1 Hp2.
+    rewrite -app_assoc /= (perm_top_bottom i' l2') -Hp2.
+    rewrite (assoc_app_cons l1' i t) -Hp1 (perm_top_bottom h l1) -app_assoc /=.
+    apply Permutation_refl.
+  Qed.
+
+  Program Fixpoint sort_kernel (l1: {l | sorted l}) l2 {measure (length l2)}
+    : {(l1', l2') : list nat * list nat | sorted l1' /\ Permutation (l1 ++ l2) (l1' ++ l2')} :=
     match l2 with
     | [] => (l1, [])
-    | h :: t => match slidefb l1 h t with
-      (l1s', l2') => sort_kernel l1s' l2' end
+    | h :: t => match slidefb_coat l1 h t with
+      (l1', l2') => sort_kernel l1' l2' end
     end.
-  Obligation 1.
+  Next Obligation.
     move: (sorted_slide_snoc_geqind h l1 (fst (slide (fst (slide h l1)) t)) H).
     rewrite /slidefb 2!indep_prod in Heq_anonymous. inversion Heq_anonymous.
     rewrite indep_prod. apply. apply index_leq_fstslide.
   Qed.
-  Obligation 2.
+  Next Obligation.
     rewrite /slidefb 2!indep_prod in Heq_anonymous. inversion Heq_anonymous.
     by rewrite -slide_hold_length.
   Qed.
+  Next Obligation.
+  pose (sort_kernel_func_obligation_2
+    (exist _ l1 H) 
+    (h :: t) sort_kernel h t Logic.eq_refl l1' l2' Heq_anonymous) as Sl1'.
+  pose (sort_kernel_func_obligation_3
+    (exist _ l1 H) 
+    (h :: t) sort_kernel h t Logic.eq_refl l1' l2' Heq_anonymous) as Hlt.
+  (* pose ((@sval) _ _ (sort_kernel (exist _ _ Sl1') l2' Hlt)) as l1l2. *)
+  pose (sort_kernel (exist _ l1' Sl1') l2' Hlt) as l1sl2.
+  (* Check (l1sl2 : { (l1'0, l2'0) : list nat * list nat |
+    sorted l1'0 /\
+    Permutation (l1' ++ l2') (l1'0 ++ l2'0)}). *)
+  pose ((@sval) _
+    (fun anonymous : list nat * list nat =>
+    let (l1'0, l2'0) := anonymous in
+    sorted l1'0 /\ Permutation (l1' ++ l2') (l1'0 ++ l2'0))
+    l1sl2) as l1l2.
+  fold Sl1' Hlt l1sl2 l1l2.
+
+  rewrite indep_prod. apply conj.
+  move: (proj2_sig l1sl2). rewrite /= !indep_prod /= => Sl1.
+  apply Sl1.
+  move: (proj2_sig l1sl2). rewrite /= !indep_prod /= => S_P.
+  rewrite -(proj2 S_P). case Heq_anonymous.
+
+  Check slidefb_coat_obligation_1.
+  apply slidefb_coat_obligation_1.
+  move:(perm_slide h l1) (perm_slide (fst (slide h l1)) t).
+    rewrite /slidefb 4!indep_prod /=.
+    pose (fst (slide h l1)) as i. pose (snd (slide h l1)) as l1'.
+    fold i l1'. pose (fst (slide i t)) as i'. pose (snd (slide i t)) as l2'.
+    fold i' l2'. move=> Hp1 Hp2.
+    rewrite -app_assoc /= (perm_top_bottom i' l2') -Hp2.
+    rewrite (assoc_app_cons l1' i t) -Hp1 (perm_top_bottom h l1) -app_assoc /=.
+    apply Permutation_refl.
+
+  
+  
+
+  
+    pose (sort_kernel_func_obligation_2
+    (exist _ l1 H) 
+    (h :: t) sort_kernel h t Logic.eq_refl l1' l2' Heq_anonymous) as Sl1'.
+    pose (sort_kernel_func_obligation_3
+    (exist _ l1 H) 
+    (h :: t) sort_kernel h t Logic.eq_refl l1' l2' Heq_anonymous) as Hlt.
+    pose ((@sval) _ _ (sort_kernel (exist _ _ Sl1') l2' Hlt)) as l1l2.
+    
+    assert (let (l1'0, l2'0) := l1l2 in
+      sorted l1'0 /\ Permutation (l1 ++ h :: t) (l1'0 ++ l2'0)).
+    rewrite indep_prod. apply conj.
+
 
   Definition sort (l:list nat) := (proj1_sig (fst (sort_kernel (exist _ nil sorted_nil) l))).
   
