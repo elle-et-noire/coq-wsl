@@ -196,28 +196,49 @@ End Slide.
 
 Section Sort.
   Section Kernel.
-    Variables l1 l2: list nat.
-  Definition slidefb l1 h t :=
-    match slide h l1 with (i, l1') =>
-      match slide i t with (i', l2') => (l1' ++ [i'], l2') end
-    end.
+    Variables lst1 lst2: list nat.
+    Definition sppair := {(_l1, _l2): list nat * list nat |
+      sorted _l1 /\ Permutation (lst1 ++ lst2) (_l1 ++ _l2)}.
+    Lemma sorted_fst_sppair : forall {sp:sppair}, sorted (fst (proj1_sig sp)).
+    Proof. move=> sp. destruct sp. destruct x. destruct y. apply s. Qed.
+    Lemma perm_sppair_app : forall {sp:sppair}, 
+      Permutation (lst1 ++ lst2) (fst (proj1_sig sp) ++ snd (proj1_sig sp)).
+    Proof. move=> sp. destruct sp. destruct x. destruct y. apply p. Qed.
 
-  Program Definition slidefb_coat (l1: {l|sorted l}) h t
-    : {(l1', l2'): list nat * list nat | 
-          sorted l1 /\ Permutation (l1 ++ h :: t) (l1' ++ l2')}
-    := slidefb l1 h t.
-  Obligation 1.
-    rewrite indep_prod. apply conj. apply H.
-    move:(perm_slide h l1) (perm_slide (fst (slide h l1)) t).
-    rewrite /slidefb 4!indep_prod /=.
-    pose (fst (slide h l1)) as i. pose (snd (slide h l1)) as l1'.
-    fold i l1'. pose (fst (slide i t)) as i'. pose (snd (slide i t)) as l2'.
-    fold i' l2'. move=> Hp1 Hp2.
-    rewrite -app_assoc /= (perm_top_bottom i' l2') -Hp2.
-    rewrite (assoc_app_cons l1' i t) -Hp1 (perm_top_bottom h l1) -app_assoc /=.
-    apply Permutation_refl.
-  Qed.
+    Definition slidefb l1 h t :=
+      match slide h l1 with (i, l1') =>
+        match slide i t with (i', l2') => (l1' ++ [i'], l2') end
+      end.
 
+    Program Definition slidefb_coat (l1ht:sppair) : sppair :=
+      match l1ht with (l1, l2) => 
+        match l2 with 
+        | h :: t => slidefb l1 h t
+        | [] => (l1, l2)
+        end
+      end.
+    Obligation 1.
+      assert (l1 = fst (proj1_sig l1ht)) as El1. { by rewrite -Heq_l1ht. } 
+      rewrite /slidefb 3!indep_prod /=. apply conj.
+      - assert (sorted l1) as H. { rewrite El1. apply sorted_fst_sppair. }
+        move: (sorted_slide_snoc_geqind h l1 (fst (slide (fst (slide h l1)) t)) H).
+        rewrite indep_prod. apply. apply index_leq_fstslide.
+      - move:(perm_slide h l1) (perm_slide (fst (slide h l1)) t).
+        rewrite 2!indep_prod.
+        pose (fst (slide h l1)) as i. pose (snd (slide h l1)) as l1'.
+        fold i l1'. pose (fst (slide i t)) as i'. pose (snd (slide i t)) as l2'.
+        fold i' l2'. move=> Hp1 Hp2.
+        rewrite -app_assoc /= (perm_top_bottom i' l2') -Hp2.
+        rewrite (assoc_app_cons l1' i t) -Hp1 (perm_top_bottom h l1) -app_assoc /=.
+        assert (h :: t = snd (proj1_sig l1ht)) as Eht. { by rewrite -Heq_l1ht. }
+        rewrite Eht El1. apply perm_sppair_app.
+    Qed.
+    Obligation 2.
+      assert (l1 = fst (proj1_sig l1ht)) as El1. { by rewrite -Heq_l1ht. } 
+      apply conj. rewrite El1. apply sorted_fst_sppair.
+      assert ([] = snd (proj1_sig l1ht)) as Enil. { by rewrite -Heq_l1ht. } 
+      rewrite El1 Enil. apply perm_sppair_app.
+    Qed.
   Program Fixpoint sort_kernel (l1: {l | sorted l}) l2 {measure (length l2)}
     : {(l1', l2') : list nat * list nat | sorted l1' /\ Permutation (l1 ++ l2) (l1' ++ l2')} :=
     match l2 with
