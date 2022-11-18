@@ -204,11 +204,15 @@ Section Sort.
     Lemma perm_sppair_app : forall {sp:sppair}, 
       Permutation (lst1 ++ lst2) (fst (proj1_sig sp) ++ snd (proj1_sig sp)).
     Proof. move=> sp. destruct sp. destruct x. destruct y. apply p. Qed.
+    Definition l2_length (sp:sppair) := length (snd (proj1_sig sp)).
 
     Definition slidefb l1 h t :=
       match slide h l1 with (i, l1') =>
         match slide i t with (i', l2') => (l1' ++ [i'], l2') end
       end.
+    Lemma slidefb_shorten_l2 : forall l1 h t,
+      length (snd (slidefb l1 h t)) = length t.
+    Proof. move=> l1 h t. by rewrite /slidefb 2!indep_prod /= -slide_hold_length. Qed.
 
     Program Definition slidefb_coat (l1ht:sppair) : sppair :=
       match l1ht with (l1, l2) => 
@@ -239,23 +243,40 @@ Section Sort.
       assert ([] = snd (proj1_sig l1ht)) as Enil. { by rewrite -Heq_l1ht. } 
       rewrite El1 Enil. apply perm_sppair_app.
     Qed.
-  Program Fixpoint sort_kernel (l1: {l | sorted l}) l2 {measure (length l2)}
-    : {(l1', l2') : list nat * list nat | sorted l1' /\ Permutation (l1 ++ l2) (l1' ++ l2')} :=
-    match l2 with
-    | [] => (l1, [])
-    | h :: t => match slidefb_coat l1 h t with
-      (l1', l2') => sort_kernel l1' l2' end
-    end.
-  Next Obligation.
-    move: (sorted_slide_snoc_geqind h l1 (fst (slide (fst (slide h l1)) t)) H).
-    rewrite /slidefb 2!indep_prod in Heq_anonymous. inversion Heq_anonymous.
-    rewrite indep_prod. apply. apply index_leq_fstslide.
-  Qed.
-  Next Obligation.
-    rewrite /slidefb 2!indep_prod in Heq_anonymous. inversion Heq_anonymous.
-    by rewrite -slide_hold_length.
-  Qed.
-  Next Obligation.
+
+    Program Fixpoint sort_kernel (l1l2:sppair) {measure (l2_length l1l2)} : sppair := 
+      match l1l2 with (l1, l2) => 
+        match l2 with
+        | [] => slidefb_coat l1l2
+        | h :: t => sort_kernel (slidefb_coat l1l2)
+        end
+      end.
+    Next Obligation.
+      (* rewrite /slidefb_coat /slidefb /l2_length /=. *)
+      pose (proj1_sig l1l2) as l1l2_val.
+      assert (l1 = fst l1l2_val) as El1. { by rewrite /l1l2_val -Heq_l1l2. }
+      assert (h :: t = snd l1l2_val) as El2. { by rewrite /l1l2_val -Heq_l1l2. }
+      assert (proj1_sig (slidefb_coat l1l2) = slidefb l1 h t).
+      fold l1l2_val in Heq_l1l2.
+      { rewrite /slidefb_coat /=. fold l1l2_val. 
+        rewrite /slidefb 2!indep_prod. rewrite   compute. El1 El2.  done. }
+      rewrite /l2_length -El2 /=.
+      rewrite -(slidefb_shorten_l2 l1 h t) /=.
+      inversion Heq_l1l2.
+      rewrite -slide_hold_length.
+      assert (l1 = fst (proj1_sig l1l2)) as El1. { by rewrite -Heq_l1l2. }
+      assert ([] = snd (proj1_sig l1l2)) as Enil. { by rewrite -Heq_l1l2. }
+      apply conj
+      rewrite El1 Enil. 
+      move: (sorted_slide_snoc_geqind h l1 (fst (slide (fst (slide h l1)) t)) H).
+      rewrite /slidefb 2!indep_prod in Heq_anonymous. inversion Heq_anonymous.
+      rewrite indep_prod. apply. apply index_leq_fstslide.
+    Qed.
+    Next Obligation.
+      rewrite /slidefb 2!indep_prod in Heq_anonymous. inversion Heq_anonymous.
+      by rewrite -slide_hold_length.
+    Qed.
+    Next Obligation.
   pose (sort_kernel_func_obligation_2
     (exist _ l1 H) 
     (h :: t) sort_kernel h t Logic.eq_refl l1' l2' Heq_anonymous) as Sl1'.
