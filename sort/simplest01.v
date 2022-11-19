@@ -1,5 +1,7 @@
 Require Import Arith List Program Permutation.
 Import ListNotations.
+Require Extraction.
+Require Import ExtrOcamlNatInt.
 From mathcomp Require Import ssreflect ssrnat ssrbool eqtype.
 
 
@@ -23,7 +25,7 @@ Section GeneralLemmas.
   Qed.
   
   Lemma assoc_app_cons : forall {A} (l1:list A) n l2, 
-  l1 ++ n :: l2 = (l1 ++ [n]) ++ l2.
+    l1 ++ n :: l2 = (l1 ++ [n]) ++ l2.
   Proof. induction l1; by [|move=>n l2; rewrite -3!app_comm_cons IHl1]. Qed.
 End GeneralLemmas.
 
@@ -162,7 +164,7 @@ Section Slide.
   End Perm.
 End Slide.
 
-Module Sort.
+Module NaiveSort.
   Section Kernel.
     Context {lst1 lst2: list nat}.
     Definition SPL n _l1 _l2 := sorted _l1 /\ Permutation (lst1 ++ lst2) (_l1 ++ _l2) /\ length _l2 = n.
@@ -252,7 +254,6 @@ Module Sort.
     Definition SPL_nill := @SPL nil l.
     Lemma l_splpair : SPL_nill n nil l.
     Proof. apply conj. apply sorted_nil. apply conj. apply Permutation_refl. done. Qed.
-
     Definition nill : splpair n := (exist (fun ll => match ll with (l1, l2) =>
       SPL_nill n l1 l2 end) (nil, l) l_splpair).
     Definition sort := proj1_sig (sort_kernel nill).
@@ -260,7 +261,16 @@ Module Sort.
     Proof. move: (proj2_sig (sort_kernel nill)); apply. Qed.
   End Wrap.
 
-  Goal sort [3; 1; 4; 1; 5; 9; 2; 6; 5; 3; 5]
-    = [1; 1; 2; 3; 3; 4; 5; 5; 5; 6; 9].
-  Proof. by compute. Qed.
-End Sort.
+  Module Exports.
+    Notation naivesort := sort.
+    Notation naivesort_correct := is_sortalgo.
+  End Exports.
+End NaiveSort.
+Import NaiveSort.Exports.
+
+
+Goal naivesort [3; 1; 4; 1; 5; 9; 2; 6; 5; 3; 5]
+  = [1; 1; 2; 3; 3; 4; 5; 5; 5; 6; 9].
+Proof. by compute. Qed.
+
+Extraction "naivesort.ml" naivesort.

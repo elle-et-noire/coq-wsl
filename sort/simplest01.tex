@@ -1,0 +1,538 @@
+\documentclass[12pt]{report}
+\usepackage[]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{fullpage}
+\usepackage{coqdoc}
+\usepackage{amsmath,amssymb}
+\usepackage{url}
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% This file has been automatically generated with the command
+%% coqdoc --latex simplest01.v 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\coqlibrary{simplest01}{Library }{simplest01}
+
+\begin{coqdoccode}
+\coqdocnoindent
+\coqdockw{Require} \coqdockw{Import} \coqexternalref{}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Arith.Arith}{\coqdoclibrary{Arith}} \coqexternalref{}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdoclibrary{List}} \coqexternalref{}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Program.Program}{\coqdoclibrary{Program}} \coqexternalref{}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Sorting.Permutation}{\coqdoclibrary{Permutation}}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Import} \coqexternalref{ListNotations}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdocmodule{ListNotations}}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Require} \coqexternalref{}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.extraction.Extraction}{\coqdoclibrary{Extraction}}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Require} \coqdockw{Import} \coqexternalref{}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.extraction.ExtrOcamlNatInt}{\coqdoclibrary{ExtrOcamlNatInt}}.\coqdoceol
+\coqdocnoindent
+\coqdockw{From} \coqdocvar{mathcomp} \coqdockw{Require} \coqdockw{Import} \coqdoclibrary{ssreflect} \coqdoclibrary{ssrnat} \coqdoclibrary{ssrbool} \coqdoclibrary{eqtype}.\coqdoceol
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Section} \coqdef{simplest01.GeneralLemmas}{GeneralLemmas}{\coqdocsection{GeneralLemmas}}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdef{simplest01.indep prod}{indep\_prod}{\coqdoclemma{indep\_prod}} : \coqdockw{\ensuremath{\forall}} (\coqdef{simplest01.A:1}{A}{\coqdocbinder{A}} \coqdef{simplest01.B:2}{B}{\coqdocbinder{B}} \coqdef{simplest01.C:3}{C}{\coqdocbinder{C}}:\coqdockw{Type}) (\coqdef{simplest01.f:4}{f}{\coqdocbinder{f}}:\coqref{simplest01.A:1}{\coqdocvariable{A}} \coqexternalref{::type scope:x '->' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{\ensuremath{\rightarrow}}} \coqref{simplest01.B:2}{\coqdocvariable{B}} \coqexternalref{::type scope:x '->' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{\ensuremath{\rightarrow}}} \coqref{simplest01.C:3}{\coqdocvariable{C}}) (\coqdef{simplest01.ab:5}{ab}{\coqdocbinder{ab}}:\coqref{simplest01.A:1}{\coqdocvariable{A}}\coqexternalref{::type scope:x '*' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{\ensuremath{\times}}}\coqref{simplest01.B:2}{\coqdocvariable{B}}),\coqdoceol
+\coqdocindent{2.00em}
+\coqexternalref{::type scope:x '=' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{(}}\coqdockw{let} (\coqdef{simplest01.a:6}{a}{\coqdocbinder{a}}, \coqdef{simplest01.b:7}{b}{\coqdocbinder{b}}) := \coqref{simplest01.ab:5}{\coqdocvariable{ab}} \coqdoctac{in} (\coqref{simplest01.f:4}{\coqdocvariable{f}} \coqref{simplest01.a:6}{\coqdocvariable{a}} \coqref{simplest01.b:7}{\coqdocvariable{b}})\coqexternalref{::type scope:x '=' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{)}} \coqexternalref{::type scope:x '=' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{=}} \coqref{simplest01.f:4}{\coqdocvariable{f}} (\coqexternalref{fst}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{fst}} \coqref{simplest01.ab:5}{\coqdocvariable{ab}}) (\coqexternalref{snd}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{snd}} \coqref{simplest01.ab:5}{\coqdocvariable{ab}}).\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Proof}. \coqdoctac{intuition}. \coqdockw{Qed}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdef{simplest01.leq lt}{leq\_lt}{\coqdoclemma{leq\_lt}} : \coqdockw{\ensuremath{\forall}} \{\coqdef{simplest01.n:8}{n}{\coqdocbinder{n}} \coqdef{simplest01.m:9}{m}{\coqdocbinder{m}}\}, \coqexternalref{::type scope:x '=' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{(}}\coqref{simplest01.n:8}{\coqdocvariable{n}} \coqdocnotation{<} \coqref{simplest01.m:9}{\coqdocvariable{m}}\coqexternalref{::type scope:x '=' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{)}} \coqexternalref{::type scope:x '=' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{=}} \coqexternalref{false}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocconstructor{false}} \coqexternalref{::type scope:x '->' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{\ensuremath{\rightarrow}}} \coqref{simplest01.n:8}{\coqdocvariable{n}} \coqdocnotation{\ensuremath{\le}} \coqref{simplest01.m:9}{\coqdocvariable{m}} \coqexternalref{::type scope:x '->' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{\ensuremath{\rightarrow}}} \coqref{simplest01.n:8}{\coqdocvariable{n}} \coqexternalref{::type scope:x '=' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{=}} \coqref{simplest01.m:9}{\coqdocvariable{m}}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Proof}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdoctac{move}\ensuremath{\Rightarrow} \coqdocvar{n} \coqdocvar{m}. \coqdoctac{rewrite} \coqdoclemma{ltnNge}. \coqdoctac{move}/\coqdoclemma{eqP}/\coqdoclemma{eqP} \ensuremath{\Rightarrow} \coqdocvar{Nlt} \coqdocvar{Hle}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdoctac{apply}/\coqdoclemma{eqP}. \coqdoctac{rewrite} \coqdoclemma{eqn\_leq}. \coqdoctac{apply} /\coqexternalref{andP}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.ssr.ssrbool}{\coqdoclemma{andP}}; \coqdoctac{apply} \coqexternalref{conj}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocconstructor{conj}}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdoctac{apply} \coqdocvar{Hle}. \coqdoctac{apply} \coqdocvar{Nlt}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Qed}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdef{simplest01.perm top bottom}{perm\_top\_bottom}{\coqdoclemma{perm\_top\_bottom}} : \coqdockw{\ensuremath{\forall}} \{\coqdef{simplest01.A:10}{A}{\coqdocbinder{A}}:\coqdockw{Type}\} (\coqdef{simplest01.a:11}{a}{\coqdocbinder{a}}:\coqref{simplest01.A:10}{\coqdocvariable{A}}) (\coqdef{simplest01.l:12}{l}{\coqdocbinder{l}}:\coqexternalref{list}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocinductive{list}} \coqref{simplest01.A:10}{\coqdocvariable{A}}),\coqdoceol
+\coqdocindent{2.00em}
+\coqexternalref{Permutation}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Sorting.Permutation}{\coqdocinductive{Permutation}} (\coqref{simplest01.a:11}{\coqdocvariable{a}} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqref{simplest01.l:12}{\coqdocvariable{l}}) (\coqref{simplest01.l:12}{\coqdocvariable{l}} \coqexternalref{::list scope:x '++' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{++}} \coqexternalref{ListNotations.::list scope:'[' x ']'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdocnotation{[}}\coqref{simplest01.a:11}{\coqdocvariable{a}}\coqexternalref{ListNotations.::list scope:'[' x ']'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdocnotation{]}}).\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Proof}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdoctac{move}\ensuremath{\Rightarrow} \coqdocvar{A} \coqdocvar{a} \coqdocvar{l}. \coqdoctac{move}:\coqdocvar{a}. \coqdoctac{induction} \coqdocvar{l}. \coqdocvar{done}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdoctac{move}\ensuremath{\Rightarrow} \coqdocvar{a0}. \coqdoctac{rewrite} -\coqexternalref{app comm cons}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdoclemma{app\_comm\_cons}} -\coqdocvar{IHl}. \coqdoctac{apply} \coqexternalref{perm swap}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Sorting.Permutation}{\coqdocconstructor{perm\_swap}}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Qed}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdef{simplest01.assoc app cons}{assoc\_app\_cons}{\coqdoclemma{assoc\_app\_cons}} : \coqdockw{\ensuremath{\forall}} \{\coqdef{simplest01.A:13}{A}{\coqdocbinder{A}}\} (\coqdef{simplest01.l1:14}{l1}{\coqdocbinder{l1}}:\coqexternalref{list}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocinductive{list}} \coqref{simplest01.A:13}{\coqdocvariable{A}}) \coqdef{simplest01.n:15}{n}{\coqdocbinder{n}} \coqdef{simplest01.l2:16}{l2}{\coqdocbinder{l2}}, \coqdoceol
+\coqdocindent{2.00em}
+\coqref{simplest01.l1:14}{\coqdocvariable{l1}} \coqexternalref{::list scope:x '++' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{++}} \coqref{simplest01.n:15}{\coqdocvariable{n}} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqref{simplest01.l2:16}{\coqdocvariable{l2}} \coqexternalref{::type scope:x '=' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{=}} \coqexternalref{::list scope:x '++' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{(}}\coqref{simplest01.l1:14}{\coqdocvariable{l1}} \coqexternalref{::list scope:x '++' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{++}} \coqexternalref{ListNotations.::list scope:'[' x ']'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdocnotation{[}}\coqref{simplest01.n:15}{\coqdocvariable{n}}\coqexternalref{ListNotations.::list scope:'[' x ']'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdocnotation{]}}\coqexternalref{::list scope:x '++' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{)}} \coqexternalref{::list scope:x '++' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{++}} \coqref{simplest01.l2:16}{\coqdocvariable{l2}}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Proof}. \coqdoctac{induction} \coqdocvar{l1}; \coqdoctac{by} [|\coqdoctac{move}\ensuremath{\Rightarrow}\coqdocvar{n} \coqdocvar{l2}; \coqdoctac{rewrite} -3!\coqexternalref{app comm cons}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdoclemma{app\_comm\_cons}} \coqdocvar{IHl1}]. \coqdockw{Qed}.\coqdoceol
+\coqdocnoindent
+\coqdockw{End} \coqref{simplest01.GeneralLemmas}{\coqdocsection{GeneralLemmas}}.\coqdoceol
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Section} \coqdef{simplest01.Sorted}{Sorted}{\coqdocsection{Sorted}}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Inductive} \coqdef{simplest01.sorted}{sorted}{\coqdocinductive{sorted}} : \coqexternalref{list}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocinductive{list}} \coqexternalref{nat}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocinductive{nat}} \coqexternalref{::type scope:x '->' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{\ensuremath{\rightarrow}}} \coqdockw{Prop} :=\coqdoceol
+\coqdocindent{1.00em}
+\ensuremath{|} \coqdef{simplest01.sorted nil}{sorted\_nil}{\coqdocconstructor{sorted\_nil}} : \coqref{simplest01.sorted:17}{\coqdocinductive{sorted}} \coqexternalref{ListNotations.::list scope:'[' ']'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdocnotation{[]}}\coqdoceol
+\coqdocindent{1.00em}
+\ensuremath{|} \coqdef{simplest01.sorted 1}{sorted\_1}{\coqdocconstructor{sorted\_1}} : \coqdockw{\ensuremath{\forall}} \coqdef{simplest01.x:19}{x}{\coqdocbinder{x}}, \coqref{simplest01.sorted:17}{\coqdocinductive{sorted}} \coqexternalref{ListNotations.::list scope:'[' x ']'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdocnotation{[}}\coqref{simplest01.x:19}{\coqdocvariable{x}}\coqexternalref{ListNotations.::list scope:'[' x ']'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdocnotation{]}}\coqdoceol
+\coqdocindent{1.00em}
+\ensuremath{|} \coqdef{simplest01.sorted cons}{sorted\_cons}{\coqdocconstructor{sorted\_cons}} : \coqdockw{\ensuremath{\forall}} \{\coqdef{simplest01.x:20}{x}{\coqdocbinder{x}} \coqdef{simplest01.y:21}{y}{\coqdocbinder{y}} \coqdef{simplest01.l:22}{l}{\coqdocbinder{l}}\},\coqdoceol
+\coqdocindent{3.00em}
+\coqref{simplest01.x:20}{\coqdocvariable{x}} \coqdocnotation{\ensuremath{\le}} \coqref{simplest01.y:21}{\coqdocvariable{y}} \coqexternalref{::type scope:x '->' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{\ensuremath{\rightarrow}}} \coqref{simplest01.sorted:17}{\coqdocinductive{sorted}} (\coqref{simplest01.y:21}{\coqdocvariable{y}} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqref{simplest01.l:22}{\coqdocvariable{l}}) \coqexternalref{::type scope:x '->' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{\ensuremath{\rightarrow}}} \coqref{simplest01.sorted:17}{\coqdocinductive{sorted}} (\coqref{simplest01.x:20}{\coqdocvariable{x}} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqref{simplest01.y:21}{\coqdocvariable{y}} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqref{simplest01.l:22}{\coqdocvariable{l}}).\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdef{simplest01.sorted tail}{sorted\_tail}{\coqdoclemma{sorted\_tail}} : \coqdockw{\ensuremath{\forall}} \{\coqdef{simplest01.h:23}{h}{\coqdocbinder{h}} \coqdef{simplest01.t:24}{t}{\coqdocbinder{t}}\}, \coqref{simplest01.sorted}{\coqdocinductive{sorted}} (\coqref{simplest01.h:23}{\coqdocvariable{h}} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqref{simplest01.t:24}{\coqdocvariable{t}}) \coqexternalref{::type scope:x '->' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{\ensuremath{\rightarrow}}} \coqref{simplest01.sorted}{\coqdocinductive{sorted}} \coqref{simplest01.t:24}{\coqdocvariable{t}}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Proof}. \coqdoctac{move}\ensuremath{\Rightarrow} \coqdocvar{h} [|\coqdocvar{i} \coqdocvar{l}] \coqdocvar{S}. \coqdoctac{apply} \coqref{simplest01.sorted nil}{\coqdocconstructor{sorted\_nil}}. \coqdoctac{inversion} \coqdocvar{S}. \coqdoctac{apply} \coqdocvar{H3}. \coqdockw{Qed}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Lemma} \coqdef{simplest01.sorted 1 3toend}{sorted\_1\_3toend}{\coqdoclemma{sorted\_1\_3toend}} : \coqdockw{\ensuremath{\forall}} \{\coqdef{simplest01.a:25}{a}{\coqdocbinder{a}} \coqdef{simplest01.h:26}{h}{\coqdocbinder{h}} \coqdef{simplest01.t:27}{t}{\coqdocbinder{t}}\}, \coqdoceol
+\coqdocindent{2.00em}
+\coqref{simplest01.sorted}{\coqdocinductive{sorted}} (\coqref{simplest01.a:25}{\coqdocvariable{a}} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqref{simplest01.h:26}{\coqdocvariable{h}} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqref{simplest01.t:27}{\coqdocvariable{t}}) \coqexternalref{::type scope:x '->' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{\ensuremath{\rightarrow}}} \coqref{simplest01.sorted}{\coqdocinductive{sorted}} (\coqref{simplest01.a:25}{\coqdocvariable{a}} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqref{simplest01.t:27}{\coqdocvariable{t}}).\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Proof}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdoctac{move}\ensuremath{\Rightarrow} \coqdocvar{a} \coqdocvar{h} [|\coqdocvar{h2} \coqdocvar{t'}] \coqdocvar{S}. \coqdoctac{apply} \coqref{simplest01.sorted 1}{\coqdocconstructor{sorted\_1}}. \coqdoctac{inversion} \coqdocvar{S}. \coqdoctac{inversion} \coqdocvar{H3}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdoctac{apply} (\coqref{simplest01.sorted cons}{\coqdocconstructor{sorted\_cons}} (\coqdoclemma{leq\_trans} \coqdocvar{H1} \coqdocvar{H6}) \coqdocvar{H8}).\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Qed}.\coqdoceol
+\coqdocnoindent
+\coqdockw{End} \coqref{simplest01.Sorted}{\coqdocsection{Sorted}}.\coqdoceol
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Section} \coqdef{simplest01.Slide}{Slide}{\coqdocsection{Slide}}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Fixpoint} \coqdef{simplest01.slide}{slide}{\coqdocdefinition{slide}} (\coqdef{simplest01.i:28}{i}{\coqdocbinder{i}}:\coqexternalref{nat}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocinductive{nat}}) (\coqdef{simplest01.l:29}{l}{\coqdocbinder{l}}:\coqexternalref{list}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocinductive{list}} \coqexternalref{nat}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocinductive{nat}}) :=\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{match} \coqref{simplest01.l:29}{\coqdocvariable{l}} \coqdockw{with}\coqdoceol
+\coqdocindent{2.00em}
+\ensuremath{|} \coqexternalref{ListNotations.::list scope:'[' ']'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdocnotation{[]}} \ensuremath{\Rightarrow} \coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{(}}\coqref{simplest01.i:28}{\coqdocvariable{i}}\coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{,}} \coqexternalref{ListNotations.::list scope:'[' ']'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdocnotation{[]}}\coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{)}}\coqdoceol
+\coqdocindent{2.00em}
+\ensuremath{|} \coqdocvar{h} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqdocvar{t} \ensuremath{\Rightarrow} \coqdoceol
+\coqdocindent{3.00em}
+\coqexternalref{::boolean if scope:'if' x 'then' x 'else' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.ssr.ssreflect}{\coqdocnotation{if}} \coqref{simplest01.i:28}{\coqdocvariable{i}} \coqdocnotation{<} \coqdocvar{h} \coqexternalref{::boolean if scope:'if' x 'then' x 'else' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.ssr.ssreflect}{\coqdocnotation{then}} \coqdoceol
+\coqdocindent{4.00em}
+\coqdockw{match} \coqref{simplest01.slide:30}{\coqdocdefinition{slide}} \coqdocvar{h} \coqdocvar{t} \coqdockw{with} \coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{(}}\coqdocvar{h'}\coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{,}} \coqdocvar{t'}\coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{)}} \ensuremath{\Rightarrow} \coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{(}}\coqdocvar{h'}\coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{,}} \coqref{simplest01.i:28}{\coqdocvariable{i}} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqdocvar{t'}\coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{)}} \coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\coqexternalref{::boolean if scope:'if' x 'then' x 'else' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.ssr.ssreflect}{\coqdocnotation{else}} \coqdoceol
+\coqdocindent{4.00em}
+\coqdockw{match} \coqref{simplest01.slide:30}{\coqdocdefinition{slide}} \coqref{simplest01.i:28}{\coqdocvariable{i}} \coqdocvar{t} \coqdockw{with} \coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{(}}\coqdocvar{i'}\coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{,}} \coqdocvar{t'}\coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{)}} \ensuremath{\Rightarrow} \coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{(}}\coqdocvar{i'}\coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{,}} \coqdocvar{h} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqdocvar{t'}\coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{)}} \coqdockw{end}\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{end}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Section} \coqdef{simplest01.Slide.Sort}{Sort}{\coqdocsection{Sort}}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Lemma} \coqdef{simplest01.comm slide ind head}{comm\_slide\_ind\_head}{\coqdoclemma{comm\_slide\_ind\_head}} : \coqdockw{\ensuremath{\forall}} \coqdef{simplest01.i:32}{i}{\coqdocbinder{i}} \coqdef{simplest01.n:33}{n}{\coqdocbinder{n}} \coqdef{simplest01.l:34}{l}{\coqdocbinder{l}},\coqdoceol
+\coqdocindent{3.00em}
+\coqref{simplest01.slide}{\coqdocdefinition{slide}} \coqref{simplest01.i:32}{\coqdocvariable{i}} (\coqref{simplest01.n:33}{\coqdocvariable{n}} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqref{simplest01.l:34}{\coqdocvariable{l}}) \coqexternalref{::type scope:x '=' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{=}} \coqref{simplest01.slide}{\coqdocdefinition{slide}} \coqref{simplest01.n:33}{\coqdocvariable{n}} (\coqref{simplest01.i:32}{\coqdocvariable{i}} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqref{simplest01.l:34}{\coqdocvariable{l}}).\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Proof}.\coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{move}\ensuremath{\Rightarrow} \coqdocvar{i} \coqdocvar{n} \coqdocvar{l}. \coqdoctac{rewrite} /= 2!\coqref{simplest01.indep prod}{\coqdoclemma{indep\_prod}} /=.\coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{case} \coqdocvar{H}: (\coqdocvar{i} \coqdocnotation{<} \coqdocvar{n}); \coqdoctac{case} \coqdocvar{H2}: (\coqdocvar{n} \coqdocnotation{<} \coqdocvar{i}).\coqdoceol
+\coqdocindent{3.00em}
+- \coqdoctac{pose} (\coqdoclemma{ltn\_geF} \coqdocvar{H}). \coqdoctac{apply} \coqdoclemma{ltnW} \coqdoctac{in} \coqdocvar{H2}. \coqdoctac{by} \coqdoctac{rewrite} \coqdocvar{e} \coqdoctac{in} \coqdocvar{H2}.\coqdoceol
+\coqdocindent{3.00em}
+- \coqdocvar{done}.\coqdoceol
+\coqdocindent{3.00em}
+- \coqdocvar{done}.\coqdoceol
+\coqdocindent{3.00em}
+- \coqdoctac{rewrite} \coqdoclemma{ltnNge} \coqdoctac{in} \coqdocvar{H2}. \coqdoctac{move}:\coqdocvar{H2}. \coqdoctac{move}/\coqdoclemma{eqP}/\coqdoclemma{eqP} \ensuremath{\Rightarrow} \coqdocvar{H2}.\coqdoceol
+\coqdocindent{4.00em}
+\coqdoctac{by} \coqdoctac{case} (\coqref{simplest01.leq lt}{\coqdoclemma{leq\_lt}} \coqdocvar{H} \coqdocvar{H2}).\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Qed}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{2.00em}
+\coqdockw{Lemma} \coqdef{simplest01.slide hold length}{slide\_hold\_length}{\coqdoclemma{slide\_hold\_length}} : \coqdockw{\ensuremath{\forall}} \coqdef{simplest01.i:35}{i}{\coqdocbinder{i}} \coqdef{simplest01.l:36}{l}{\coqdocbinder{l}}, \coqdoceol
+\coqdocindent{3.00em}
+\coqexternalref{length}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{length}} \coqref{simplest01.l:36}{\coqdocvariable{l}} \coqexternalref{::type scope:x '=' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{=}} \coqexternalref{length}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{length}} (\coqexternalref{snd}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{snd}} (\coqref{simplest01.slide}{\coqdocdefinition{slide}} \coqref{simplest01.i:35}{\coqdocvariable{i}} \coqref{simplest01.l:36}{\coqdocvariable{l}})).\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Proof}.\coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{move}\ensuremath{\Rightarrow} \coqdocvar{i} \coqdocvar{l}. \coqdoctac{move}:\coqdocvar{i}. \coqdoctac{induction} \coqdocvar{l}. \coqdocvar{done}.\coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{move}\ensuremath{\Rightarrow} \coqdocvar{i}. \coqdoctac{rewrite} /= 2!\coqref{simplest01.indep prod}{\coqdoclemma{indep\_prod}}.\coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{case} \coqdocvar{H} : (\coqdocvar{i} \coqdocnotation{<} \coqdocvar{a}) \ensuremath{\Rightarrow} /=; \coqdoctac{apply} \coqexternalref{f equal}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdoclemma{f\_equal}}, \coqdocvar{IHl}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Qed}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{2.00em}
+\coqdockw{Lemma} \coqdef{simplest01.slide hold sortedlist}{slide\_hold\_sortedlist}{\coqdoclemma{slide\_hold\_sortedlist}} : \coqdockw{\ensuremath{\forall}} \coqdef{simplest01.a:37}{a}{\coqdocbinder{a}} \coqdef{simplest01.l:38}{l}{\coqdocbinder{l}}, \coqref{simplest01.sorted}{\coqdocinductive{sorted}} (\coqref{simplest01.a:37}{\coqdocvariable{a}} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqref{simplest01.l:38}{\coqdocvariable{l}}) \coqexternalref{::type scope:x '->' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{\ensuremath{\rightarrow}}}\coqdoceol
+\coqdocindent{3.00em}
+\coqref{simplest01.a:37}{\coqdocvariable{a}} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqref{simplest01.l:38}{\coqdocvariable{l}} \coqexternalref{::type scope:x '=' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{=}} \coqexternalref{::type scope:x '=' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{(}}\coqdockw{let} (\coqdef{simplest01.a':39}{a'}{\coqdocbinder{a'}}, \coqdef{simplest01.l':40}{l'}{\coqdocbinder{l'}}) := \coqref{simplest01.slide}{\coqdocdefinition{slide}} \coqref{simplest01.a:37}{\coqdocvariable{a}} \coqref{simplest01.l:38}{\coqdocvariable{l}} \coqdoctac{in} (\coqref{simplest01.l':40}{\coqdocvariable{l'}} \coqexternalref{::list scope:x '++' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{++}} \coqexternalref{ListNotations.::list scope:'[' x ']'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdocnotation{[}}\coqref{simplest01.a':39}{\coqdocvariable{a'}}\coqexternalref{ListNotations.::list scope:'[' x ']'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdocnotation{]}})\coqexternalref{::type scope:x '=' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{)}}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Proof}.\coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{move}\ensuremath{\Rightarrow} \coqdocvar{a} \coqdocvar{l}. \coqdoctac{move}: \coqdocvar{a}. \coqdoctac{induction} \coqdocvar{l}; \coqdoctac{move}\ensuremath{\Rightarrow} /= \coqdocvar{a0} \coqdocvar{S}. \coqdocvar{done}.\coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{rewrite} 3!\coqref{simplest01.indep prod}{\coqdoclemma{indep\_prod}} /=. \coqdoctac{case} \coqdocvar{H}: (\coqdocvar{a0} \coqdocnotation{<} \coqdocvar{a}) \ensuremath{\Rightarrow} /=.\coqdoceol
+\coqdocindent{3.00em}
+- \coqdoctac{apply} \coqexternalref{f equal}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdoclemma{f\_equal}}. \coqdoctac{inversion} \coqdocvar{S}.\coqdoceol
+\coqdocindent{4.00em}
+\coqdoctac{by} \coqdoctac{rewrite} (\coqdocvar{IHl} \coqdocvar{\_} \coqdocvar{H4}) \coqref{simplest01.indep prod}{\coqdoclemma{indep\_prod}}.\coqdoceol
+\coqdocindent{3.00em}
+- \coqdoctac{inversion} \coqdocvar{S}. \coqdoctac{case} (\coqref{simplest01.leq lt}{\coqdoclemma{leq\_lt}} \coqdocvar{H} \coqdocvar{H2}). \coqdoctac{apply} \coqexternalref{f equal}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdoclemma{f\_equal}}.\coqdoceol
+\coqdocindent{4.00em}
+\coqdoctac{rewrite} \coqdocvar{IHl}. \coqdoctac{by} \coqdoctac{rewrite} \coqref{simplest01.indep prod}{\coqdoclemma{indep\_prod}}.\coqdoceol
+\coqdocindent{4.00em}
+\coqdoctac{apply} (\coqref{simplest01.sorted 1 3toend}{\coqdoclemma{sorted\_1\_3toend}} \coqdocvar{S}).\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Qed}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{2.00em}
+\coqdockw{Lemma} \coqdef{simplest01.index leq fstslide}{index\_leq\_fstslide}{\coqdoclemma{index\_leq\_fstslide}} : \coqdockw{\ensuremath{\forall}} \coqdef{simplest01.i:41}{i}{\coqdocbinder{i}} \coqdef{simplest01.l:42}{l}{\coqdocbinder{l}}, \coqref{simplest01.i:41}{\coqdocvariable{i}} \coqdocnotation{\ensuremath{\le}} \coqexternalref{fst}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{fst}} (\coqref{simplest01.slide}{\coqdocdefinition{slide}} \coqref{simplest01.i:41}{\coqdocvariable{i}} \coqref{simplest01.l:42}{\coqdocvariable{l}}).\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Proof}.\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{fix} \coqdocvar{index\_leq\_fstslide} 2.\coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{move} \ensuremath{\Rightarrow} \coqdocvar{i} [|\coqdocvar{h} \coqdocvar{t}] \ensuremath{\Rightarrow} /=. \coqdocvar{done}.\coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{case} \coqdocvar{H}: (\coqdocvar{i} \coqdocnotation{<} \coqdocvar{h}); \coqdoctac{rewrite} \coqref{simplest01.indep prod}{\coqdoclemma{indep\_prod}} /=.\coqdoceol
+\coqdocindent{3.00em}
+- \coqdoctac{apply} (\coqdoclemma{leq\_trans} (\coqdocvar{n} := \coqdocvar{h})). \coqdoctac{apply} \coqdoclemma{ltnW}, \coqdocvar{H}. \coqdoctac{apply} \coqdocvar{index\_leq\_fstslide}.\coqdoceol
+\coqdocindent{3.00em}
+- \coqdoctac{apply} \coqdocvar{index\_leq\_fstslide}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Qed}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{2.00em}
+\coqdockw{Lemma} \coqdef{simplest01.leq simpl fstslide}{leq\_simpl\_fstslide}{\coqdoclemma{leq\_simpl\_fstslide}} : \coqdockw{\ensuremath{\forall}} \{\coqdef{simplest01.a:43}{a}{\coqdocbinder{a}} \coqdef{simplest01.n:44}{n}{\coqdocbinder{n}} \coqdef{simplest01.l:45}{l}{\coqdocbinder{l}}\}, \coqref{simplest01.a:43}{\coqdocvariable{a}} \coqdocnotation{\ensuremath{\le}} \coqref{simplest01.n:44}{\coqdocvariable{n}} \coqexternalref{::type scope:x '->' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{\ensuremath{\rightarrow}}}\coqdoceol
+\coqdocindent{3.00em}
+\coqexternalref{fst}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{fst}} (\coqref{simplest01.slide}{\coqdocdefinition{slide}} \coqref{simplest01.a:43}{\coqdocvariable{a}} (\coqref{simplest01.n:44}{\coqdocvariable{n}} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqref{simplest01.l:45}{\coqdocvariable{l}})) \coqexternalref{::type scope:x '=' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{=}} \coqexternalref{fst}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{fst}} (\coqref{simplest01.slide}{\coqdocdefinition{slide}} \coqref{simplest01.n:44}{\coqdocvariable{n}} \coqref{simplest01.l:45}{\coqdocvariable{l}}).\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Proof}.\coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{move}\ensuremath{\Rightarrow} \coqdocvar{a} \coqdocvar{n} \coqdocvar{l} \coqdocvar{Hle} \ensuremath{\Rightarrow} /=. \coqdoctac{case} \coqdocvar{H}: (\coqdocvar{a} \coqdocnotation{<} \coqdocvar{n}); \coqdoctac{rewrite} \coqref{simplest01.indep prod}{\coqdoclemma{indep\_prod}} /=.\coqdoceol
+\coqdocindent{3.00em}
+\coqdocvar{done}. \coqdoctac{by} \coqdoctac{case} (\coqref{simplest01.leq lt}{\coqdoclemma{leq\_lt}} \coqdocvar{H} \coqdocvar{Hle}).\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Qed}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{2.00em}
+\coqdockw{Lemma} \coqdef{simplest01.leq simpl sndslide}{leq\_simpl\_sndslide}{\coqdoclemma{leq\_simpl\_sndslide}} : \coqdockw{\ensuremath{\forall}} \{\coqdef{simplest01.a:46}{a}{\coqdocbinder{a}} \coqdef{simplest01.n:47}{n}{\coqdocbinder{n}} \coqdef{simplest01.l:48}{l}{\coqdocbinder{l}}\}, \coqref{simplest01.a:46}{\coqdocvariable{a}} \coqdocnotation{\ensuremath{\le}} \coqref{simplest01.n:47}{\coqdocvariable{n}} \coqexternalref{::type scope:x '->' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{\ensuremath{\rightarrow}}}\coqdoceol
+\coqdocindent{3.00em}
+\coqexternalref{snd}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{snd}} (\coqref{simplest01.slide}{\coqdocdefinition{slide}} \coqref{simplest01.a:46}{\coqdocvariable{a}} (\coqref{simplest01.n:47}{\coqdocvariable{n}} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqref{simplest01.l:48}{\coqdocvariable{l}})) \coqexternalref{::type scope:x '=' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{=}} \coqref{simplest01.a:46}{\coqdocvariable{a}} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqexternalref{snd}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{snd}} (\coqref{simplest01.slide}{\coqdocdefinition{slide}} \coqref{simplest01.n:47}{\coqdocvariable{n}} \coqref{simplest01.l:48}{\coqdocvariable{l}}).\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Proof}.\coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{move}\ensuremath{\Rightarrow} \coqdocvar{a} \coqdocvar{n} \coqdocvar{l} \coqdocvar{Hle} \ensuremath{\Rightarrow} /=. \coqdoctac{case} \coqdocvar{H}: (\coqdocvar{a} \coqdocnotation{<} \coqdocvar{n}); \coqdoctac{rewrite} \coqref{simplest01.indep prod}{\coqdoclemma{indep\_prod}} /=.\coqdoceol
+\coqdocindent{3.00em}
+\coqdocvar{done}. \coqdoctac{by} \coqdoctac{case} (\coqref{simplest01.leq lt}{\coqdoclemma{leq\_lt}} \coqdocvar{H} \coqdocvar{Hle}).\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Qed}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{2.00em}
+\coqdockw{Lemma} \coqdef{simplest01.sorted slide snoc geqind}{sorted\_slide\_snoc\_geqind}{\coqdoclemma{sorted\_slide\_snoc\_geqind}} : \coqdockw{\ensuremath{\forall}} \coqdef{simplest01.i:49}{i}{\coqdocbinder{i}} \coqdef{simplest01.l:50}{l}{\coqdocbinder{l}} \coqdef{simplest01.j:51}{j}{\coqdocbinder{j}}, \coqref{simplest01.sorted}{\coqdocinductive{sorted}} \coqref{simplest01.l:50}{\coqdocvariable{l}} \coqexternalref{::type scope:x '->' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{\ensuremath{\rightarrow}}}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{let} (\coqdef{simplest01.i':52}{i'}{\coqdocbinder{i'}}, \coqdef{simplest01.l':53}{l'}{\coqdocbinder{l'}}) := \coqref{simplest01.slide}{\coqdocdefinition{slide}} \coqref{simplest01.i:49}{\coqdocvariable{i}} \coqref{simplest01.l:50}{\coqdocvariable{l}} \coqdoctac{in} (\coqref{simplest01.i':52}{\coqdocvariable{i'}} \coqdocnotation{\ensuremath{\le}} \coqref{simplest01.j:51}{\coqdocvariable{j}} \coqexternalref{::type scope:x '->' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{\ensuremath{\rightarrow}}} \coqref{simplest01.sorted}{\coqdocinductive{sorted}} (\coqref{simplest01.l':53}{\coqdocvariable{l'}} \coqexternalref{::list scope:x '++' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{++}} \coqexternalref{ListNotations.::list scope:'[' x ']'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdocnotation{[}}\coqref{simplest01.j:51}{\coqdocvariable{j}}\coqexternalref{ListNotations.::list scope:'[' x ']'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdocnotation{]}})).\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Proof}.\coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{move}\ensuremath{\Rightarrow} \coqdocvar{i} \coqdocvar{l} \coqdocvar{j}. \coqdoctac{rewrite} \coqref{simplest01.indep prod}{\coqdoclemma{indep\_prod}}. \coqdoctac{move}: \coqdocvar{l} \coqdocvar{i} \coqdocvar{j}. \coqdoctac{induction} \coqdocvar{l}.\coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{move}\ensuremath{\Rightarrow} \coqdocvar{i} \coqdocvar{j} \coqdocvar{S} \coqdocvar{Hle}; \coqdoctac{apply} \coqref{simplest01.sorted 1}{\coqdocconstructor{sorted\_1}}.\coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{move}\ensuremath{\Rightarrow} \coqdocvar{i} \coqdocvar{j} \coqdocvar{S} /=. \coqdoctac{rewrite} 2! \coqref{simplest01.indep prod}{\coqdoclemma{indep\_prod}}.\coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{destruct} \coqdocvar{l}; \coqdoctac{rewrite} /=.\coqdoceol
+\coqdocindent{3.00em}
+- \coqdoctac{case} \coqdocvar{H}: (\coqdocvar{i} \coqdocnotation{<} \coqdocvar{a}) \ensuremath{\Rightarrow} /= \coqdocvar{Hle}; \coqdoctac{apply} \coqref{simplest01.sorted cons}{\coqdocconstructor{sorted\_cons}}; \coqdoctac{try} \coqdoctac{apply} \coqref{simplest01.sorted 1}{\coqdocconstructor{sorted\_1}}.\coqdoceol
+\coqdocindent{4.00em}
+- \coqdoctac{apply} (\coqdoclemma{leq\_trans}(\coqdocvar{n}:=\coqdocvar{a})). \coqdoctac{apply} \coqdoclemma{ltnW}, \coqdocvar{H}. \coqdoctac{apply} \coqdocvar{Hle}.\coqdoceol
+\coqdocindent{4.00em}
+- \coqdoctac{apply} (\coqdoclemma{leq\_trans}(\coqdocvar{n}:=\coqdocvar{i})). \coqdoctac{move}:\coqdocvar{H}. \coqdoctac{rewrite} \coqdoclemma{ltnNge}.\coqdoceol
+\coqdocindent{5.00em}
+\coqdoctac{by} \coqdoctac{move}/\coqdoclemma{eqP}/\coqdoclemma{eqP}. \coqdoctac{apply} \coqdocvar{Hle}.\coqdoceol
+\coqdocindent{3.00em}
+- \coqdoctac{inversion} \coqdocvar{S}. \coqdoctac{case} \coqdocvar{Hc}: (\coqdocvar{i} \coqdocnotation{<} \coqdocvar{a}); [\coqdoctac{case} \coqdocvar{Hc2}: (\coqdocvar{a} \coqdocnotation{<} \coqdocvar{n}) \ensuremath{|} \coqdoctac{case} \coqdocvar{Hc2}: (\coqdocvar{i} \coqdocnotation{<} \coqdocvar{n})]; \coqdoceol
+\coqdocindent{4.00em}
+\coqdoctac{rewrite} \coqref{simplest01.indep prod}{\coqdoclemma{indep\_prod}} /= \ensuremath{\Rightarrow} \coqdocvar{Hle}.\coqdoceol
+\coqdocindent{4.00em}
+- \coqdoctac{apply} \coqref{simplest01.sorted cons}{\coqdocconstructor{sorted\_cons}}. \coqdoctac{apply} \coqdoclemma{ltnW}, \coqdocvar{Hc}.\coqdoceol
+\coqdocindent{5.00em}
+\coqdoctac{rewrite} \coqexternalref{app comm cons}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdoclemma{app\_comm\_cons}} -(\coqref{simplest01.leq simpl sndslide}{\coqdoclemma{leq\_simpl\_sndslide}} \coqdocvar{H1}).\coqdoceol
+\coqdocindent{5.00em}
+\coqdoctac{apply} \coqdocvar{IHl}. \coqdocvar{done}. \coqdoctac{by} \coqdoctac{rewrite} (\coqref{simplest01.leq simpl fstslide}{\coqdoclemma{leq\_simpl\_fstslide}} \coqdocvar{H1}).\coqdoceol
+\coqdocindent{4.00em}
+- \coqdoctac{move}:\coqdocvar{IHl} \coqdocvar{H3}. \coqdoctac{case} (\coqref{simplest01.leq lt}{\coqdoclemma{leq\_lt}} \coqdocvar{Hc2} \coqdocvar{H1}) \ensuremath{\Rightarrow} \coqdocvar{IHl} \coqdocvar{H3}.\coqdoceol
+\coqdocindent{5.00em}
+\coqdoctac{apply} \coqref{simplest01.sorted cons}{\coqdocconstructor{sorted\_cons}}. \coqdoctac{apply} \coqdoclemma{ltnW}, \coqdocvar{Hc}.\coqdoceol
+\coqdocindent{5.00em}
+\coqdoctac{rewrite} \coqexternalref{app comm cons}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdoclemma{app\_comm\_cons}} -(\coqref{simplest01.leq simpl sndslide}{\coqdoclemma{leq\_simpl\_sndslide}} (\coqdoclemma{leqnn} \coqdocvar{\_})).\coqdoceol
+\coqdocindent{5.00em}
+\coqdoctac{apply} \coqdocvar{IHl}. \coqdocvar{done}. \coqdoctac{by} \coqdoctac{rewrite} (\coqref{simplest01.leq simpl fstslide}{\coqdoclemma{leq\_simpl\_fstslide}} (\coqdoclemma{leqnn} \coqdocvar{\_})).\coqdoceol
+\coqdocindent{4.00em}
+- \coqdoctac{apply} \coqref{simplest01.sorted cons}{\coqdocconstructor{sorted\_cons}}. \coqdoctac{move}:\coqdocvar{Hc}. \coqdoctac{rewrite} \coqdoclemma{ltnNge}. \coqdoctac{by} \coqdoctac{move}/\coqdoclemma{eqP}/\coqdoclemma{eqP}.\coqdoceol
+\coqdocindent{5.00em}
+\coqdoctac{rewrite} \coqexternalref{app comm cons}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdoclemma{app\_comm\_cons}} -(\coqref{simplest01.leq simpl sndslide}{\coqdoclemma{leq\_simpl\_sndslide}} (\coqdoclemma{ltnW} \coqdocvar{Hc2})).\coqdoceol
+\coqdocindent{5.00em}
+\coqdoctac{apply} \coqdocvar{IHl}. \coqdocvar{done}.\coqdoceol
+\coqdocindent{5.00em}
+\coqdoctac{by} \coqdoctac{rewrite} (\coqref{simplest01.leq simpl fstslide}{\coqdoclemma{leq\_simpl\_fstslide}} (\coqdoclemma{ltnW} \coqdocvar{Hc2})).\coqdoceol
+\coqdocindent{4.00em}
+- \coqdoctac{apply} \coqref{simplest01.sorted cons}{\coqdocconstructor{sorted\_cons}}. \coqdoctac{apply} \coqdocvar{H1}. \coqdoctac{assert} (\coqdocvar{n} \coqdocnotation{\ensuremath{\le}} \coqdocvar{i}) \coqdockw{as} \coqdocvar{Hc3}.\coqdoceol
+\coqdocindent{5.00em}
+\{ \coqdoctac{move}:\coqdocvar{Hc2}. \coqdoctac{rewrite} \coqdoclemma{ltnNge}. \coqdoctac{by} \coqdoctac{move}/\coqdoclemma{eqP}/\coqdoclemma{eqP}. \}\coqdoceol
+\coqdocindent{5.00em}
+\coqdoctac{rewrite} \coqexternalref{app comm cons}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdoclemma{app\_comm\_cons}} -(\coqref{simplest01.leq simpl sndslide}{\coqdoclemma{leq\_simpl\_sndslide}} \coqdocvar{Hc3}) \coqref{simplest01.comm slide ind head}{\coqdoclemma{comm\_slide\_ind\_head}}.\coqdoceol
+\coqdocindent{5.00em}
+\coqdoctac{apply} \coqdocvar{IHl}. \coqdocvar{done}.\coqdoceol
+\coqdocindent{5.00em}
+\coqdoctac{by} \coqdoctac{rewrite} \coqref{simplest01.comm slide ind head}{\coqdoclemma{comm\_slide\_ind\_head}} (\coqref{simplest01.leq simpl fstslide}{\coqdoclemma{leq\_simpl\_fstslide}} \coqdocvar{Hc3}).\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Qed}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{End} \coqref{simplest01.Slide.Sort}{\coqdocsection{Sort}}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Section} \coqdef{simplest01.Slide.Perm}{Perm}{\coqdocsection{Perm}}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Lemma} \coqdef{simplest01.perm slide}{perm\_slide}{\coqdoclemma{perm\_slide}} : \coqdockw{\ensuremath{\forall}} \coqdef{simplest01.a:54}{a}{\coqdocbinder{a}} \coqdef{simplest01.l:55}{l}{\coqdocbinder{l}},\coqdoceol
+\coqdocindent{3.00em}
+\coqexternalref{Permutation}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Sorting.Permutation}{\coqdocinductive{Permutation}} (\coqref{simplest01.a:54}{\coqdocvariable{a}} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqref{simplest01.l:55}{\coqdocvariable{l}}) (\coqdockw{let} (\coqdef{simplest01.h:56}{h}{\coqdocbinder{h}}, \coqdef{simplest01.t:57}{t}{\coqdocbinder{t}}) := \coqref{simplest01.slide}{\coqdocdefinition{slide}} \coqref{simplest01.a:54}{\coqdocvariable{a}} \coqref{simplest01.l:55}{\coqdocvariable{l}} \coqdoctac{in} (\coqref{simplest01.t:57}{\coqdocvariable{t}} \coqexternalref{::list scope:x '++' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{++}} \coqexternalref{ListNotations.::list scope:'[' x ']'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdocnotation{[}}\coqref{simplest01.h:56}{\coqdocvariable{h}}\coqexternalref{ListNotations.::list scope:'[' x ']'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdocnotation{]}})).\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Proof}.\coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{move}\ensuremath{\Rightarrow} \coqdocvar{a} \coqdocvar{l}. \coqdoctac{move}:\coqdocvar{a}. \coqdoctac{induction} \coqdocvar{l}. \coqdocvar{done}.\coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{move}\ensuremath{\Rightarrow} \coqdocvar{a0}. \coqdoctac{destruct} \coqdocvar{l}; \coqdoctac{rewrite} /=; \coqdoctac{case} \coqdocvar{H}: (\coqdocvar{a0} \coqdocnotation{<} \coqdocvar{a}) \ensuremath{\Rightarrow} /=.\coqdoceol
+\coqdocindent{3.00em}
+- \coqdoctac{apply} \coqexternalref{perm skip}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Sorting.Permutation}{\coqdocconstructor{perm\_skip}}, \coqexternalref{perm skip}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Sorting.Permutation}{\coqdocconstructor{perm\_skip}}, \coqexternalref{perm nil}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Sorting.Permutation}{\coqdocconstructor{perm\_nil}}.\coqdoceol
+\coqdocindent{3.00em}
+- \coqdoctac{apply} \coqexternalref{perm swap}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Sorting.Permutation}{\coqdocconstructor{perm\_swap}}.\coqdoceol
+\coqdocindent{3.00em}
+- \coqdoctac{move}:(\coqdocvar{IHl} \coqdocvar{a}). \coqdoctac{rewrite} /= 5!\coqref{simplest01.indep prod}{\coqdoclemma{indep\_prod}}.\coqdoceol
+\coqdocindent{4.00em}
+\coqdoctac{case} \coqdocvar{H2}: (\coqdocvar{a} \coqdocnotation{<} \coqdocvar{n}) \ensuremath{\Rightarrow} /= \coqdocvar{IHl\_a}; \coqdoctac{apply} \coqexternalref{perm skip}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Sorting.Permutation}{\coqdocconstructor{perm\_skip}}, \coqdocvar{IHl\_a}.\coqdoceol
+\coqdocindent{3.00em}
+- \coqdoctac{move}:(\coqdocvar{IHl} \coqdocvar{a0}). \coqdoctac{rewrite} /= 5!\coqref{simplest01.indep prod}{\coqdoclemma{indep\_prod}}.\coqdoceol
+\coqdocindent{4.00em}
+\coqdoctac{case} \coqdocvar{H2}: (\coqdocvar{a0} \coqdocnotation{<} \coqdocvar{n}) \ensuremath{\Rightarrow} /= \coqdocvar{IHl\_a0}; \coqdoceol
+\coqdocindent{4.00em}
+\coqdoctac{apply} (\coqexternalref{perm trans}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Sorting.Permutation}{\coqdocconstructor{perm\_trans}}(\coqdocvar{l'}:= \coqdocvar{a} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqdocvar{a0} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqdocvar{n} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqdocvar{l})); \coqdoceol
+\coqdocindent{4.00em}
+\coqdoctac{try} \coqdoctac{apply} \coqexternalref{perm swap}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Sorting.Permutation}{\coqdocconstructor{perm\_swap}}; \coqdoctac{apply} \coqexternalref{perm skip}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Sorting.Permutation}{\coqdocconstructor{perm\_skip}}, \coqdocvar{IHl\_a0}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Qed}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{End} \coqref{simplest01.Slide.Perm}{\coqdocsection{Perm}}.\coqdoceol
+\coqdocnoindent
+\coqdockw{End} \coqref{simplest01.Slide}{\coqdocsection{Slide}}.\coqdoceol
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Module} \coqdef{simplest01.NaiveSort}{NaiveSort}{\coqdocmodule{NaiveSort}}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{Section} \coqdef{simplest01.NaiveSort.Kernel}{Kernel}{\coqdocsection{Kernel}}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Context} \{\coqdef{simplest01.lst1:58}{lst1}{\coqdocbinder{lst1}} \coqdef{simplest01.lst2:59}{lst2}{\coqdocbinder{lst2}}: \coqexternalref{list}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocinductive{list}} \coqexternalref{nat}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocinductive{nat}}\}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Definition} \coqdef{simplest01.NaiveSort.SPL}{SPL}{\coqdocdefinition{SPL}} \coqdef{simplest01.n:60}{n}{\coqdocbinder{n}} \coqdef{simplest01. l1:61}{\_l1}{\coqdocbinder{\_l1}} \coqdef{simplest01. l2:62}{\_l2}{\coqdocbinder{\_l2}} := \coqref{simplest01.sorted}{\coqdocinductive{sorted}} \coqref{simplest01. l1:61}{\coqdocvariable{\_l1}} \coqexternalref{::type scope:x '/x5C' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{\ensuremath{\land}}} \coqexternalref{Permutation}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Sorting.Permutation}{\coqdocinductive{Permutation}} (\coqref{simplest01.NaiveSort.Kernel.lst1}{\coqdocvariable{lst1}} \coqexternalref{::list scope:x '++' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{++}} \coqref{simplest01.NaiveSort.Kernel.lst2}{\coqdocvariable{lst2}}) (\coqref{simplest01. l1:61}{\coqdocvariable{\_l1}} \coqexternalref{::list scope:x '++' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{++}} \coqref{simplest01. l2:62}{\coqdocvariable{\_l2}}) \coqexternalref{::type scope:x '/x5C' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{\ensuremath{\land}}} \coqexternalref{length}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{length}} \coqref{simplest01. l2:62}{\coqdocvariable{\_l2}} \coqexternalref{::type scope:x '=' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{=}} \coqref{simplest01.n:60}{\coqdocvariable{n}}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Definition} \coqdef{simplest01.NaiveSort.splpair}{splpair}{\coqdocdefinition{splpair}} \coqdef{simplest01.n:63}{n}{\coqdocbinder{n}} := \coqexternalref{::type scope:'x7B' '(' x ',' x ')' ':' x '|' x 'x7D'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Program.Utils}{\coqdocnotation{\{(}}\coqdef{simplest01. l1:64}{\_l1}{\coqdocbinder{\_l1}}\coqexternalref{::type scope:'x7B' '(' x ',' x ')' ':' x '|' x 'x7D'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Program.Utils}{\coqdocnotation{,}} \coqdef{simplest01. l2:65}{\_l2}{\coqdocbinder{\_l2}}\coqexternalref{::type scope:'x7B' '(' x ',' x ')' ':' x '|' x 'x7D'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Program.Utils}{\coqdocnotation{):}} \coqexternalref{list}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocinductive{list}} \coqexternalref{nat}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocinductive{nat}} \coqexternalref{::type scope:x '*' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{\ensuremath{\times}}} \coqexternalref{list}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocinductive{list}} \coqexternalref{nat}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocinductive{nat}} \coqexternalref{::type scope:'x7B' '(' x ',' x ')' ':' x '|' x 'x7D'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Program.Utils}{\coqdocnotation{\ensuremath{|}}} \coqref{simplest01.NaiveSort.SPL}{\coqdocdefinition{SPL}} \coqref{simplest01.n:63}{\coqdocvariable{n}} \coqref{simplest01. l1:64}{\coqdocvariable{\_l1}} \coqref{simplest01. l2:65}{\coqdocvariable{\_l2}}\coqexternalref{::type scope:'x7B' '(' x ',' x ')' ':' x '|' x 'x7D'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Program.Utils}{\coqdocnotation{\}}}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Definition} \coqdef{simplest01.NaiveSort.sppair}{sppair}{\coqdocdefinition{sppair}} := \coqexternalref{::type scope:'x7B' '(' x ',' x ')' ':' x '|' x 'x7D'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Program.Utils}{\coqdocnotation{\{(}}\coqdef{simplest01. l1:66}{\_l1}{\coqdocbinder{\_l1}}\coqexternalref{::type scope:'x7B' '(' x ',' x ')' ':' x '|' x 'x7D'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Program.Utils}{\coqdocnotation{,}} \coqdef{simplest01. l2:67}{\_l2}{\coqdocbinder{\_l2}}\coqexternalref{::type scope:'x7B' '(' x ',' x ')' ':' x '|' x 'x7D'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Program.Utils}{\coqdocnotation{):}} \coqexternalref{list}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocinductive{list}} \coqexternalref{nat}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocinductive{nat}} \coqexternalref{::type scope:x '*' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{\ensuremath{\times}}} \coqexternalref{list}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocinductive{list}} \coqexternalref{nat}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocinductive{nat}} \coqexternalref{::type scope:'x7B' '(' x ',' x ')' ':' x '|' x 'x7D'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Program.Utils}{\coqdocnotation{\ensuremath{|}}}\coqdoceol
+\coqdocindent{3.00em}
+\coqref{simplest01.sorted}{\coqdocinductive{sorted}} \coqref{simplest01. l1:66}{\coqdocvariable{\_l1}} \coqexternalref{::type scope:x '/x5C' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{\ensuremath{\land}}} \coqexternalref{Permutation}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Sorting.Permutation}{\coqdocinductive{Permutation}} (\coqref{simplest01.NaiveSort.Kernel.lst1}{\coqdocvariable{lst1}} \coqexternalref{::list scope:x '++' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{++}} \coqref{simplest01.NaiveSort.Kernel.lst2}{\coqdocvariable{lst2}}) (\coqref{simplest01. l1:66}{\coqdocvariable{\_l1}} \coqexternalref{::list scope:x '++' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{++}} \coqref{simplest01. l2:67}{\coqdocvariable{\_l2}})\coqexternalref{::type scope:'x7B' '(' x ',' x ')' ':' x '|' x 'x7D'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Program.Utils}{\coqdocnotation{\}}}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Definition} \coqdef{simplest01.NaiveSort.spsingle}{spsingle}{\coqdocdefinition{spsingle}} := \coqexternalref{::type scope:'x7B' x ':' x '|' x 'x7D'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Specif}{\coqdocnotation{\{}}\coqdef{simplest01. l:68}{\_l}{\coqdocbinder{\_l}}\coqexternalref{::type scope:'x7B' x ':' x '|' x 'x7D'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Specif}{\coqdocnotation{:}} \coqexternalref{list}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocinductive{list}} \coqexternalref{nat}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocinductive{nat}} \coqexternalref{::type scope:'x7B' x ':' x '|' x 'x7D'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Specif}{\coqdocnotation{\ensuremath{|}}}\coqdoceol
+\coqdocindent{3.00em}
+\coqref{simplest01.sorted}{\coqdocinductive{sorted}} \coqref{simplest01. l:68}{\coqdocvariable{\_l}} \coqexternalref{::type scope:x '/x5C' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{\ensuremath{\land}}} \coqexternalref{Permutation}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Sorting.Permutation}{\coqdocinductive{Permutation}} (\coqref{simplest01.NaiveSort.Kernel.lst1}{\coqdocvariable{lst1}} \coqexternalref{::list scope:x '++' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{++}} \coqref{simplest01.NaiveSort.Kernel.lst2}{\coqdocvariable{lst2}}) \coqref{simplest01. l:68}{\coqdocvariable{\_l}}\coqexternalref{::type scope:'x7B' x ':' x '|' x 'x7D'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Specif}{\coqdocnotation{\}}}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Lemma} \coqdef{simplest01.NaiveSort.sorted fst sppair}{sorted\_fst\_sppair}{\coqdoclemma{sorted\_fst\_sppair}} : \coqdockw{\ensuremath{\forall}} \{\coqdef{simplest01.n:69}{n}{\coqdocbinder{n}}\} \{\coqdef{simplest01.sp:70}{sp}{\coqdocbinder{sp}}:\coqref{simplest01.NaiveSort.splpair}{\coqdocdefinition{splpair}} \coqref{simplest01.n:69}{\coqdocvariable{n}}\}, \coqref{simplest01.sorted}{\coqdocinductive{sorted}} (\coqexternalref{fst}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{fst}} (\coqexternalref{proj1 sig}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Specif}{\coqdocdefinition{proj1\_sig}} \coqref{simplest01.sp:70}{\coqdocvariable{sp}})).\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Proof}. \coqdoctac{move}\ensuremath{\Rightarrow} \coqdocvar{n} \coqdocvar{sp}. \coqdoctac{destruct} \coqdocvar{sp}. \coqdoctac{destruct} \coqdocvar{x}. \coqdoctac{destruct} \coqdocvar{y}. \coqdoctac{apply} \coqdocvar{s}. \coqdockw{Qed}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Lemma} \coqdef{simplest01.NaiveSort.perm sppair app}{perm\_sppair\_app}{\coqdoclemma{perm\_sppair\_app}} : \coqdockw{\ensuremath{\forall}} \{\coqdef{simplest01.n:71}{n}{\coqdocbinder{n}}\} \{\coqdef{simplest01.sp:72}{sp}{\coqdocbinder{sp}}:\coqref{simplest01.NaiveSort.splpair}{\coqdocdefinition{splpair}} \coqref{simplest01.n:71}{\coqdocvariable{n}}\}, \coqdoceol
+\coqdocindent{3.00em}
+\coqexternalref{Permutation}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Sorting.Permutation}{\coqdocinductive{Permutation}} (\coqref{simplest01.NaiveSort.Kernel.lst1}{\coqdocvariable{lst1}} \coqexternalref{::list scope:x '++' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{++}} \coqref{simplest01.NaiveSort.Kernel.lst2}{\coqdocvariable{lst2}}) (\coqexternalref{fst}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{fst}} (\coqexternalref{proj1 sig}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Specif}{\coqdocdefinition{proj1\_sig}} \coqref{simplest01.sp:72}{\coqdocvariable{sp}}) \coqexternalref{::list scope:x '++' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{++}} \coqexternalref{snd}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{snd}} (\coqexternalref{proj1 sig}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Specif}{\coqdocdefinition{proj1\_sig}} \coqref{simplest01.sp:72}{\coqdocvariable{sp}})).\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Proof}. \coqdoctac{move}\ensuremath{\Rightarrow} \coqdocvar{n} \coqdocvar{sp}. \coqdoctac{destruct} \coqdocvar{sp}. \coqdoctac{destruct} \coqdocvar{x}. \coqdoctac{destruct} \coqdocvar{y} \coqdockw{as} [\coqdocvar{s} [\coqdocvar{p} \coqdocvar{a}]]. \coqdoctac{apply} \coqdocvar{p}. \coqdockw{Qed}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Lemma} \coqdef{simplest01.NaiveSort.length l2 n}{length\_l2\_n}{\coqdoclemma{length\_l2\_n}} : \coqdockw{\ensuremath{\forall}} \{\coqdef{simplest01.n:73}{n}{\coqdocbinder{n}}\} \{\coqdef{simplest01.sp:74}{sp}{\coqdocbinder{sp}}:\coqref{simplest01.NaiveSort.splpair}{\coqdocdefinition{splpair}} \coqref{simplest01.n:73}{\coqdocvariable{n}}\},\coqdoceol
+\coqdocindent{3.00em}
+\coqexternalref{length}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{length}} (\coqexternalref{snd}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{snd}} (\coqexternalref{proj1 sig}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Specif}{\coqdocdefinition{proj1\_sig}} \coqref{simplest01.sp:74}{\coqdocvariable{sp}})) \coqexternalref{::type scope:x '=' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{=}} \coqref{simplest01.n:73}{\coqdocvariable{n}}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Proof}. \coqdoctac{move}\ensuremath{\Rightarrow} \coqdocvar{n} \coqdocvar{sp}. \coqdoctac{destruct} \coqdocvar{sp}. \coqdoctac{destruct} \coqdocvar{x}. \coqdoctac{destruct} \coqdocvar{y} \coqdockw{as} [\coqdocvar{s} [\coqdocvar{p} \coqdocvar{a}]]. \coqdoctac{apply} \coqdocvar{a}. \coqdockw{Qed}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Definition} \coqdef{simplest01.NaiveSort.l2 length}{l2\_length}{\coqdocdefinition{l2\_length}} \{\coqdef{simplest01.n:75}{n}{\coqdocbinder{n}}\} (\coqdef{simplest01.sp:76}{sp}{\coqdocbinder{sp}}:\coqref{simplest01.NaiveSort.splpair}{\coqdocdefinition{splpair}} \coqref{simplest01.n:75}{\coqdocvariable{n}}) := \coqref{simplest01.n:75}{\coqdocvariable{n}}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{2.00em}
+\coqdockw{Definition} \coqdef{simplest01.NaiveSort.slidefb}{slidefb}{\coqdocdefinition{slidefb}} \coqdef{simplest01.l1:77}{l1}{\coqdocbinder{l1}} \coqdef{simplest01.h:78}{h}{\coqdocbinder{h}} \coqdef{simplest01.t:79}{t}{\coqdocbinder{t}} :=\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{match} \coqref{simplest01.slide}{\coqdocdefinition{slide}} \coqref{simplest01.h:78}{\coqdocvariable{h}} \coqref{simplest01.l1:77}{\coqdocvariable{l1}} \coqdockw{with} \coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{(}}\coqdocvar{i}\coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{,}} \coqdocvar{l1'}\coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{)}} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{4.00em}
+\coqdockw{match} \coqref{simplest01.slide}{\coqdocdefinition{slide}} \coqdocvar{i} \coqref{simplest01.t:79}{\coqdocvariable{t}} \coqdockw{with} \coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{(}}\coqdocvar{i'}\coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{,}} \coqdocvar{l2'}\coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{)}} \ensuremath{\Rightarrow} \coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{(}}\coqdocvar{l1'} \coqexternalref{::list scope:x '++' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{++}} \coqexternalref{ListNotations.::list scope:'[' x ']'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdocnotation{[}}\coqdocvar{i'}\coqexternalref{ListNotations.::list scope:'[' x ']'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdocnotation{]}}\coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{,}} \coqdocvar{l2'}\coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{)}} \coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{end}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Lemma} \coqdef{simplest01.NaiveSort.slidefb shorten l2}{slidefb\_shorten\_l2}{\coqdoclemma{slidefb\_shorten\_l2}} : \coqdockw{\ensuremath{\forall}} \coqdef{simplest01.l1:80}{l1}{\coqdocbinder{l1}} \coqdef{simplest01.h:81}{h}{\coqdocbinder{h}} \coqdef{simplest01.t:82}{t}{\coqdocbinder{t}},\coqdoceol
+\coqdocindent{3.00em}
+\coqexternalref{length}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{length}} (\coqexternalref{snd}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{snd}} (\coqref{simplest01.NaiveSort.slidefb}{\coqdocdefinition{slidefb}} \coqref{simplest01.l1:80}{\coqdocvariable{l1}} \coqref{simplest01.h:81}{\coqdocvariable{h}} \coqref{simplest01.t:82}{\coqdocvariable{t}})) \coqexternalref{::type scope:x '=' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{=}} \coqexternalref{length}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{length}} \coqref{simplest01.t:82}{\coqdocvariable{t}}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Proof}. \coqdoctac{move}\ensuremath{\Rightarrow} \coqdocvar{l1} \coqdocvar{h} \coqdocvar{t}. \coqdoctac{by} \coqdoctac{rewrite} /\coqref{simplest01.NaiveSort.slidefb}{\coqdocdefinition{slidefb}} 2!\coqref{simplest01.indep prod}{\coqdoclemma{indep\_prod}} /= -\coqref{simplest01.slide hold length}{\coqdoclemma{slide\_hold\_length}}. \coqdockw{Qed}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{2.00em}
+\coqdockw{Program Definition} \coqdef{simplest01.NaiveSort.slidefb coat}{slidefb\_coat}{\coqdocdefinition{slidefb\_coat}} \{\coqdef{simplest01.n:83}{n}{\coqdocbinder{n}}\} (\coqdef{simplest01.l1ht:84}{l1ht}{\coqdocbinder{l1ht}}:\coqref{simplest01.NaiveSort.splpair}{\coqdocdefinition{splpair}} \coqref{simplest01.n:83}{\coqdocvariable{n}}) : \coqref{simplest01.NaiveSort.splpair}{\coqdocdefinition{splpair}} (\coqref{simplest01.n:83}{\coqdocvariable{n}} \coqdocnotation{-} 1) :=\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{match} \coqref{simplest01.l1ht:84}{\coqdocvariable{l1ht}} \coqdockw{with} \coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{(}}\coqdocvar{l1}\coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{,}} \coqdocvar{l2}\coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{)}} \ensuremath{\Rightarrow} \coqdoceol
+\coqdocindent{4.00em}
+\coqdockw{match} \coqdocvar{l2} \coqdockw{with} \coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{|} \coqdocvar{h} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqdocvar{t} \ensuremath{\Rightarrow} \coqref{simplest01.NaiveSort.slidefb}{\coqdocdefinition{slidefb}} \coqdocvar{l1} \coqdocvar{h} \coqdocvar{t}\coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{|} \coqexternalref{ListNotations.::list scope:'[' ']'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdocnotation{[]}} \ensuremath{\Rightarrow} \coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{(}}\coqdocvar{l1}\coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{,}} \coqdocvar{l2}\coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{)}}\coqdoceol
+\coqdocindent{4.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{end}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Obligation} 1.\coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{assert} (\coqdocvar{l1} \coqexternalref{::type scope:x '=' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{=}} \coqexternalref{fst}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{fst}} (\coqexternalref{proj1 sig}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Specif}{\coqdocdefinition{proj1\_sig}} \coqdocvar{l1ht})) \coqdockw{as} \coqdocvar{El1}. \{ \coqdoctac{by} \coqdoctac{rewrite} -\coqdocvar{Heq\_l1ht}. \}\coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{assert} (\coqdocvar{h} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqdocvar{t} \coqexternalref{::type scope:x '=' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{=}} \coqexternalref{snd}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{snd}} (\coqexternalref{proj1 sig}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Specif}{\coqdocdefinition{proj1\_sig}} \coqdocvar{l1ht})) \coqdockw{as} \coqdocvar{Eht}. \{ \coqdoctac{by} \coqdoctac{rewrite} -\coqdocvar{Heq\_l1ht}. \}\coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{rewrite} /\coqref{simplest01.NaiveSort.slidefb}{\coqdocdefinition{slidefb}} 3!\coqref{simplest01.indep prod}{\coqdoclemma{indep\_prod}} /=. \coqdoctac{apply} \coqexternalref{conj}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocconstructor{conj}}; \coqdoctac{try} \coqdoctac{apply} \coqexternalref{conj}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocconstructor{conj}}.\coqdoceol
+\coqdocindent{3.00em}
+- \coqdoctac{assert} (\coqref{simplest01.sorted}{\coqdocinductive{sorted}} \coqdocvar{l1}) \coqdockw{as} \coqdocvar{H}. \{ \coqdoctac{rewrite} \coqdocvar{El1}. \coqdoctac{apply} \coqref{simplest01.NaiveSort.sorted fst sppair}{\coqdoclemma{sorted\_fst\_sppair}}. \}\coqdoceol
+\coqdocindent{4.00em}
+\coqdoctac{move}: (\coqref{simplest01.sorted slide snoc geqind}{\coqdoclemma{sorted\_slide\_snoc\_geqind}} \coqdocvar{h} \coqdocvar{l1} (\coqexternalref{fst}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{fst}} (\coqref{simplest01.slide}{\coqdocdefinition{slide}} (\coqexternalref{fst}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{fst}} (\coqref{simplest01.slide}{\coqdocdefinition{slide}} \coqdocvar{h} \coqdocvar{l1})) \coqdocvar{t})) \coqdocvar{H}).\coqdoceol
+\coqdocindent{4.00em}
+\coqdoctac{rewrite} \coqref{simplest01.indep prod}{\coqdoclemma{indep\_prod}}. \coqdoctac{apply}. \coqdoctac{apply} \coqref{simplest01.index leq fstslide}{\coqdoclemma{index\_leq\_fstslide}}.\coqdoceol
+\coqdocindent{3.00em}
+- \coqdoctac{move}:(\coqref{simplest01.perm slide}{\coqdoclemma{perm\_slide}} \coqdocvar{h} \coqdocvar{l1}) (\coqref{simplest01.perm slide}{\coqdoclemma{perm\_slide}} (\coqexternalref{fst}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{fst}} (\coqref{simplest01.slide}{\coqdocdefinition{slide}} \coqdocvar{h} \coqdocvar{l1})) \coqdocvar{t}).\coqdoceol
+\coqdocindent{4.00em}
+\coqdoctac{rewrite} 2!\coqref{simplest01.indep prod}{\coqdoclemma{indep\_prod}}.\coqdoceol
+\coqdocindent{4.00em}
+\coqdoctac{pose} (\coqexternalref{fst}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{fst}} (\coqref{simplest01.slide}{\coqdocdefinition{slide}} \coqdocvar{h} \coqdocvar{l1})) \coqdockw{as} \coqdocvar{i}. \coqdoctac{pose} (\coqexternalref{snd}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{snd}} (\coqref{simplest01.slide}{\coqdocdefinition{slide}} \coqdocvar{h} \coqdocvar{l1})) \coqdockw{as} \coqdocvar{l1'}.\coqdoceol
+\coqdocindent{4.00em}
+\coqdoctac{fold} \coqdocvar{i} \coqdocvar{l1'}. \coqdoctac{pose} (\coqexternalref{fst}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{fst}} (\coqref{simplest01.slide}{\coqdocdefinition{slide}} \coqdocvar{i} \coqdocvar{t})) \coqdockw{as} \coqdocvar{i'}. \coqdoctac{pose} (\coqexternalref{snd}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{snd}} (\coqref{simplest01.slide}{\coqdocdefinition{slide}} \coqdocvar{i} \coqdocvar{t})) \coqdockw{as} \coqdocvar{l2'}.\coqdoceol
+\coqdocindent{4.00em}
+\coqdoctac{fold} \coqdocvar{i'} \coqdocvar{l2'}. \coqdoctac{move}\ensuremath{\Rightarrow} \coqdocvar{Hp1} \coqdocvar{Hp2}.\coqdoceol
+\coqdocindent{4.00em}
+\coqdoctac{rewrite} -\coqexternalref{app assoc}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdoclemma{app\_assoc}} /= (\coqref{simplest01.perm top bottom}{\coqdoclemma{perm\_top\_bottom}} \coqdocvar{i'} \coqdocvar{l2'}) -\coqdocvar{Hp2}.\coqdoceol
+\coqdocindent{4.00em}
+\coqdoctac{rewrite} (\coqref{simplest01.assoc app cons}{\coqdoclemma{assoc\_app\_cons}} \coqdocvar{l1'} \coqdocvar{i} \coqdocvar{t}) -\coqdocvar{Hp1} (\coqref{simplest01.perm top bottom}{\coqdoclemma{perm\_top\_bottom}} \coqdocvar{h} \coqdocvar{l1}) -\coqexternalref{app assoc}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdoclemma{app\_assoc}} /=.\coqdoceol
+\coqdocindent{4.00em}
+\coqdoctac{rewrite} \coqdocvar{Eht} \coqdocvar{El1}. \coqdoctac{apply} \coqref{simplest01.NaiveSort.perm sppair app}{\coqdoclemma{perm\_sppair\_app}}.\coqdoceol
+\coqdocindent{3.00em}
+- \coqdoctac{rewrite} -\coqref{simplest01.slide hold length}{\coqdoclemma{slide\_hold\_length}}.\coqdoceol
+\coqdocindent{4.00em}
+\coqdoctac{assert} (\coqexternalref{length}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{length}} (\coqdocvar{h} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqdocvar{t}) \coqexternalref{::type scope:x '=' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{=}} \coqdocvar{n}) \coqdockw{as} \coqdocvar{Elen}. \{ \coqdoctac{rewrite} \coqdocvar{Eht}. \coqdoctac{apply} \coqref{simplest01.NaiveSort.length l2 n}{\coqdoclemma{length\_l2\_n}}. \}\coqdoceol
+\coqdocindent{4.00em}
+\coqdoctac{rewrite} /= \coqdoctac{in} \coqdocvar{Elen}. \coqdoctac{rewrite} -\coqdocvar{Elen}. \coqdoctac{by} \coqdoctac{rewrite} \coqdoclemma{subn1} /=.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Qed}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Obligation} 2.\coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{assert} (\coqdocvar{l1} \coqexternalref{::type scope:x '=' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{=}} \coqexternalref{fst}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{fst}} (\coqexternalref{proj1 sig}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Specif}{\coqdocdefinition{proj1\_sig}} \coqdocvar{l1ht})) \coqdockw{as} \coqdocvar{El1}. \{ \coqdoctac{by} \coqdoctac{rewrite} -\coqdocvar{Heq\_l1ht}. \} \coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{assert} (\coqexternalref{ListNotations.::list scope:'[' ']'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdocnotation{[]}} \coqexternalref{::type scope:x '=' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{=}} \coqexternalref{snd}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{snd}} (\coqexternalref{proj1 sig}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Specif}{\coqdocdefinition{proj1\_sig}} \coqdocvar{l1ht})) \coqdockw{as} \coqdocvar{Enil}. \{ \coqdoctac{by} \coqdoctac{rewrite} -\coqdocvar{Heq\_l1ht}. \} \coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{apply} \coqexternalref{conj}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocconstructor{conj}}; \coqdoctac{try} \coqdoctac{apply} \coqexternalref{conj}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocconstructor{conj}}.\coqdoceol
+\coqdocindent{3.00em}
+- \coqdoctac{rewrite} \coqdocvar{El1}. \coqdoctac{apply} \coqref{simplest01.NaiveSort.sorted fst sppair}{\coqdoclemma{sorted\_fst\_sppair}}.\coqdoceol
+\coqdocindent{3.00em}
+- \coqdoctac{rewrite} \coqdocvar{El1} \coqdocvar{Enil}. \coqdoctac{apply} \coqref{simplest01.NaiveSort.perm sppair app}{\coqdoclemma{perm\_sppair\_app}}.\coqdoceol
+\coqdocindent{3.00em}
+- \coqdoctac{move}:(\coqref{simplest01.NaiveSort.length l2 n}{\coqdoclemma{length\_l2\_n}}(\coqdocvar{sp}:=\coqdocvar{l1ht})). \coqdoctac{rewrite} -\coqdocvar{Enil} /= \ensuremath{\Rightarrow} \coqdocvar{L0}.\coqdoceol
+\coqdocindent{4.00em}
+\coqdoctac{by} \coqdoctac{rewrite} -\coqdocvar{L0}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Qed}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{2.00em}
+\coqdockw{Program Fixpoint} \coqdef{simplest01.NaiveSort.sort kernel}{sort\_kernel}{\coqdocdefinition{sort\_kernel}} \{\coqdef{simplest01.n:87}{n}{\coqdocbinder{n}}\} (\coqdef{simplest01.l1l2:88}{l1l2}{\coqdocbinder{l1l2}}:\coqref{simplest01.NaiveSort.splpair}{\coqdocdefinition{splpair}} \coqref{simplest01.n:87}{\coqdocvariable{n}}) \{\coqdockw{measure} \coqdocvar{n}\} : \coqref{simplest01.NaiveSort.spsingle}{\coqdocdefinition{spsingle}} := \coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{match} \coqdocvar{l1l2} \coqdockw{with} \coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{(}}\coqdocvar{l1}\coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{,}} \coqdocvar{l2}\coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{)}} \ensuremath{\Rightarrow} \coqdoceol
+\coqdocindent{4.00em}
+\coqdockw{match} \coqdocvar{l2} \coqdockw{with}\coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{|} \coqexternalref{ListNotations.::list scope:'[' ']'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdocnotation{[]}} \ensuremath{\Rightarrow} \coqexternalref{fst}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{fst}} (\coqref{simplest01.NaiveSort.slidefb coat}{\coqdocdefinition{slidefb\_coat}} \coqdocvar{l1l2})\coqdoceol
+\coqdocindent{4.00em}
+\ensuremath{|} \coqdocvar{h} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqdocvar{t} \ensuremath{\Rightarrow} \coqref{simplest01.sort kernel:89}{\coqdocdefinition{sort\_kernel}} (\coqref{simplest01.NaiveSort.slidefb coat}{\coqdocdefinition{slidefb\_coat}} \coqdocvar{l1l2})\coqdoceol
+\coqdocindent{4.00em}
+\coqdockw{end}\coqdoceol
+\coqdocindent{3.00em}
+\coqdockw{end}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Obligation} 2.\coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{assert} (\coqdocvar{h} \coqexternalref{::list scope:x '::' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{::}} \coqdocvar{t} \coqexternalref{::type scope:x '=' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{=}} \coqexternalref{snd}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{snd}} (\coqexternalref{proj1 sig}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Specif}{\coqdocdefinition{proj1\_sig}} \coqdocvar{l1l2})) \coqdockw{as} \coqdocvar{Eht}. \{ \coqdoctac{by} \coqdoctac{rewrite} -\coqdocvar{Heq\_l1l2}. \} \coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{move}:(\coqref{simplest01.NaiveSort.length l2 n}{\coqdoclemma{length\_l2\_n}}(\coqdocvar{sp}:=\coqdocvar{l1l2})). \coqdoctac{rewrite} -\coqdocvar{Eht} /= \ensuremath{\Rightarrow} \coqdocvar{L1}.\coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{by} \coqdoctac{rewrite} -\coqdocvar{L1} \coqdoclemma{subn1} /=.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Qed}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Obligation} 1.\coqdoceol
+\coqdocindent{3.00em}
+\coqdoctac{destruct} \coqdocvar{l1l2}. \coqdoctac{destruct} \coqdocvar{x}. \coqdoctac{destruct} \coqdocvar{l0}.\coqdoceol
+\coqdocindent{3.00em}
+- \coqdoctac{rewrite} /=. \coqdoctac{destruct} \coqdocvar{y}. \coqdoctac{destruct} \coqdocvar{a}. \coqdoctac{apply} \coqexternalref{conj}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocconstructor{conj}}.\coqdoceol
+\coqdocindent{4.00em}
+\coqdoctac{apply} \coqdocvar{s}. \coqdoctac{apply} (\coqexternalref{perm trans}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Sorting.Permutation}{\coqdocconstructor{perm\_trans}}(\coqdocvar{l'} := \coqdocvar{l} \coqexternalref{::list scope:x '++' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{++}} \coqexternalref{ListNotations.::list scope:'[' ']'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdocnotation{[]}})). \coqdoctac{apply} \coqdocvar{p}.\coqdoceol
+\coqdocindent{4.00em}
+\coqdoctac{rewrite} \coqexternalref{app nil r}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdoclemma{app\_nil\_r}}. \coqdoctac{apply} \coqexternalref{Permutation refl}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Sorting.Permutation}{\coqdoclemma{Permutation\_refl}}.\coqdoceol
+\coqdocindent{3.00em}
+- \coqdoctac{rewrite} /= \coqdoctac{in} \coqdocvar{Heq\_l1l2}. \coqdoctac{inversion} \coqdocvar{Heq\_l1l2}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Qed}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{End} \coqref{simplest01.NaiveSort.Kernel}{\coqdocsection{Kernel}}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Section} \coqdef{simplest01.NaiveSort.Wrap}{Wrap}{\coqdocsection{Wrap}}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Context} (\coqdef{simplest01.l:92}{l}{\coqdocbinder{l}}:\coqexternalref{list}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocinductive{list}} \coqexternalref{nat}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocinductive{nat}}).\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Definition} \coqdef{simplest01.NaiveSort.n}{n}{\coqdocdefinition{n}} := \coqexternalref{length}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocdefinition{length}} \coqref{simplest01.NaiveSort.Wrap.l}{\coqdocvariable{l}}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Definition} \coqdef{simplest01.NaiveSort.SPL nill}{SPL\_nill}{\coqdocdefinition{SPL\_nill}} := @\coqref{simplest01.NaiveSort.SPL}{\coqdocdefinition{SPL}} \coqexternalref{nil}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocconstructor{nil}} \coqref{simplest01.NaiveSort.Wrap.l}{\coqdocvariable{l}}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Lemma} \coqdef{simplest01.NaiveSort.l splpair}{l\_splpair}{\coqdoclemma{l\_splpair}} : \coqref{simplest01.NaiveSort.SPL nill}{\coqdocdefinition{SPL\_nill}} \coqref{simplest01.NaiveSort.n}{\coqdocdefinition{n}} \coqexternalref{nil}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocconstructor{nil}} \coqref{simplest01.NaiveSort.Wrap.l}{\coqdocvariable{l}}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Proof}. \coqdoctac{apply} \coqexternalref{conj}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocconstructor{conj}}. \coqdoctac{apply} \coqref{simplest01.sorted nil}{\coqdocconstructor{sorted\_nil}}. \coqdoctac{apply} \coqexternalref{conj}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocconstructor{conj}}. \coqdoctac{apply} \coqexternalref{Permutation refl}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Sorting.Permutation}{\coqdoclemma{Permutation\_refl}}. \coqdocvar{done}. \coqdockw{Qed}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Definition} \coqdef{simplest01.NaiveSort.nill}{nill}{\coqdocdefinition{nill}} : \coqref{simplest01.NaiveSort.splpair}{\coqdocdefinition{splpair}} \coqref{simplest01.NaiveSort.n}{\coqdocdefinition{n}} := (\coqexternalref{exist}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Specif}{\coqdocconstructor{exist}} (\coqdockw{fun} \coqdef{simplest01.ll:93}{ll}{\coqdocbinder{ll}} \ensuremath{\Rightarrow} \coqdockw{match} \coqref{simplest01.ll:93}{\coqdocvariable{ll}} \coqdockw{with} \coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{(}}\coqdocvar{l1}\coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{,}} \coqdocvar{l2}\coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{)}} \ensuremath{\Rightarrow}\coqdoceol
+\coqdocindent{3.00em}
+\coqref{simplest01.NaiveSort.SPL nill}{\coqdocdefinition{SPL\_nill}} \coqref{simplest01.NaiveSort.n}{\coqdocdefinition{n}} \coqdocvar{l1} \coqdocvar{l2} \coqdockw{end}) \coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{(}}\coqexternalref{nil}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocconstructor{nil}}\coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{,}} \coqref{simplest01.NaiveSort.Wrap.l}{\coqdocvariable{l}}\coqexternalref{::core scope:'(' x ',' x ',' '..' ',' x ')'}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Datatypes}{\coqdocnotation{)}} \coqref{simplest01.NaiveSort.l splpair}{\coqdoclemma{l\_splpair}}).\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Definition} \coqdef{simplest01.NaiveSort.sort}{sort}{\coqdocdefinition{sort}} := \coqexternalref{proj1 sig}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Specif}{\coqdocdefinition{proj1\_sig}} (\coqref{simplest01.NaiveSort.sort kernel}{\coqdocdefinition{sort\_kernel}} \coqref{simplest01.NaiveSort.nill}{\coqdocdefinition{nill}}).\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Lemma} \coqdef{simplest01.NaiveSort.is sortalgo}{is\_sortalgo}{\coqdoclemma{is\_sortalgo}} : \coqref{simplest01.sorted}{\coqdocinductive{sorted}} \coqref{simplest01.NaiveSort.sort}{\coqdocdefinition{sort}} \coqexternalref{::type scope:x '/x5C' x}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Logic}{\coqdocnotation{\ensuremath{\land}}} \coqexternalref{Permutation}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Sorting.Permutation}{\coqdocinductive{Permutation}} \coqref{simplest01.NaiveSort.Wrap.l}{\coqdocvariable{l}} \coqref{simplest01.NaiveSort.sort}{\coqdocdefinition{sort}}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Proof}. \coqdoctac{move}: (\coqexternalref{proj2 sig}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Init.Specif}{\coqdocdefinition{proj2\_sig}} (\coqref{simplest01.NaiveSort.sort kernel}{\coqdocdefinition{sort\_kernel}} \coqref{simplest01.NaiveSort.nill}{\coqdocdefinition{nill}})); \coqdoctac{apply}. \coqdockw{Qed}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{End} \coqref{simplest01.NaiveSort.Wrap}{\coqdocsection{Wrap}}.\coqdoceol
+\coqdocemptyline
+\coqdocindent{1.00em}
+\coqdockw{Module} \coqdef{simplest01.NaiveSort.Exports}{Exports}{\coqdocmodule{Exports}}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Notation} \coqdef{simplest01.NaiveSort.Exports.naivesort}{naivesort}{\coqdocabbreviation{naivesort}} := \coqref{simplest01.NaiveSort.sort}{\coqdocdefinition{sort}}.\coqdoceol
+\coqdocindent{2.00em}
+\coqdockw{Notation} \coqdef{simplest01.NaiveSort.Exports.naivesort correct}{naivesort\_correct}{\coqdocabbreviation{naivesort\_correct}} := \coqref{simplest01.NaiveSort.is sortalgo}{\coqdoclemma{is\_sortalgo}}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{End} \coqref{simplest01.NaiveSort.Exports}{\coqdocmodule{Exports}}.\coqdoceol
+\coqdocnoindent
+\coqdockw{End} \coqref{simplest01.NaiveSort}{\coqdocmodule{NaiveSort}}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Import} \coqref{simplest01.NaiveSort.Exports}{\coqdocmodule{NaiveSort.Exports}}.\coqdoceol
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Goal} \coqdef{simplest01.Unnamed thm}{naivesort}{\coqdocdefinition{naivesort}} \coqdef{simplest01.Unnamed thm}{[3;}{\coqdocdefinition{[3;}} \coqdef{simplest01.Unnamed thm}{1;}{\coqdocdefinition{1;}} \coqdef{simplest01.Unnamed thm}{4;}{\coqdocdefinition{4;}} \coqdef{simplest01.Unnamed thm}{1;}{\coqdocdefinition{1;}} \coqdef{simplest01.Unnamed thm}{5;}{\coqdocdefinition{5;}} \coqdef{simplest01.Unnamed thm}{9;}{\coqdocdefinition{9;}} \coqdef{simplest01.Unnamed thm}{2;}{\coqdocdefinition{2;}} \coqdef{simplest01.Unnamed thm}{6;}{\coqdocdefinition{6;}} \coqdef{simplest01.Unnamed thm}{5;}{\coqdocdefinition{5;}} \coqdef{simplest01.Unnamed thm}{3;}{\coqdocdefinition{3;}} \coqdef{simplest01.Unnamed thm}{5]}{\coqdocdefinition{5]}}\coqdoceol
+\coqdocindent{1.00em}
+\coqdef{simplest01.Unnamed thm}{=}{\coqdocdefinition{=}} \coqdef{simplest01.Unnamed thm}{[1;}{\coqdocdefinition{[1;}} \coqdef{simplest01.Unnamed thm}{1;}{\coqdocdefinition{1;}} \coqdef{simplest01.Unnamed thm}{2;}{\coqdocdefinition{2;}} \coqdef{simplest01.Unnamed thm}{3;}{\coqdocdefinition{3;}} \coqdef{simplest01.Unnamed thm}{3;}{\coqdocdefinition{3;}} \coqdef{simplest01.Unnamed thm}{4;}{\coqdocdefinition{4;}} \coqdef{simplest01.Unnamed thm}{5;}{\coqdocdefinition{5;}} \coqdef{simplest01.Unnamed thm}{5;}{\coqdocdefinition{5;}} \coqdef{simplest01.Unnamed thm}{5;}{\coqdocdefinition{5;}} \coqdef{simplest01.Unnamed thm}{6;}{\coqdocdefinition{6;}} \coqdef{simplest01.Unnamed thm}{9]}{\coqdocdefinition{9]}}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Proof}. \coqdoctac{by} \coqdoctac{compute}. \coqdockw{Qed}.\coqdoceol
+\end{coqdoccode}
+\end{document}
