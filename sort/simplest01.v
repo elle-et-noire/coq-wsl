@@ -169,6 +169,8 @@ Module Sort.
     Definition splpair n := {(_l1, _l2): list nat * list nat | SPL n _l1 _l2}.
     Definition sppair := {(_l1, _l2): list nat * list nat |
       sorted _l1 /\ Permutation (lst1 ++ lst2) (_l1 ++ _l2)}.
+    Definition spsingle := {_l: list nat |
+      sorted _l /\ Permutation (lst1 ++ lst2) _l}.
     Lemma sorted_fst_sppair : forall {n} {sp:splpair n}, sorted (fst (proj1_sig sp)).
     Proof. move=> n sp. destruct sp. destruct x. destruct y. apply s. Qed.
     Lemma perm_sppair_app : forall {n} {sp:splpair n}, 
@@ -223,10 +225,10 @@ Module Sort.
         by rewrite -L0.
     Qed.
 
-    Program Fixpoint sort_kernel {n} (l1l2:splpair n) {measure n} : sppair := 
+    Program Fixpoint sort_kernel {n} (l1l2:splpair n) {measure n} : spsingle := 
       match l1l2 with (l1, l2) => 
         match l2 with
-        | [] => slidefb_coat l1l2
+        | [] => fst (slidefb_coat l1l2)
         | h :: t => sort_kernel (slidefb_coat l1l2)
         end
       end.
@@ -238,7 +240,8 @@ Module Sort.
     Obligation 1.
       destruct l1l2. destruct x. destruct l0.
       - rewrite /=. destruct y. destruct a. apply conj.
-        apply s. apply p.
+        apply s. apply (perm_trans(l' := l ++ [])). apply p. 
+        rewrite app_nil_r. apply Permutation_refl.
       - rewrite /= in Heq_l1l2. inversion Heq_l1l2.
     Qed.
   End Kernel.
@@ -252,9 +255,9 @@ Module Sort.
 
     Definition nill : splpair n := (exist (fun ll => match ll with (l1, l2) =>
       SPL_nill n l1 l2 end) (nil, l) l_splpair).
-    Definition sort := Eval compute in
-      match proj1_sig (sort_kernel nill) with
-      (l1, l2) => l1 ++ l2 end.
+    Definition sort := proj1_sig (sort_kernel nill).
+    Lemma is_sortalgo : sorted sort /\ Permutation l sort.
+    Proof. move: (proj2_sig (sort_kernel nill)); apply. Qed.
   End Wrap.
 
   Goal sort [3; 1; 4; 1; 5; 9; 2; 6; 5; 3; 5]
