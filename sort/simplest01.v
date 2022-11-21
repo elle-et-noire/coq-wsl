@@ -216,7 +216,7 @@ Module NaiveSort.
       - rewrite -slide_hold_length.
         assert (length (h :: t) = n) as Elen. { rewrite Eht. apply length_l2_n. }
         rewrite /= in Elen. rewrite -Elen. by rewrite subn1 /=. 
-    Qed.
+    Defined.
     Obligation 2.
       assert (l1 = fst (proj1_sig l1ht)) as El1. { by rewrite -Heq_l1ht. } 
       assert ([] = snd (proj1_sig l1ht)) as Enil. { by rewrite -Heq_l1ht. } 
@@ -225,7 +225,7 @@ Module NaiveSort.
       - rewrite El1 Enil. apply perm_sppair_app.
       - move:(length_l2_n(sp:=l1ht)). rewrite -Enil /= => L0.
         by rewrite -L0.
-    Qed.
+    Defined.
 
     Program Fixpoint sort_kernel {n} (l1l2:splpair n) {measure n} : spsingle := 
       match l1l2 with (l1, l2) => 
@@ -238,14 +238,14 @@ Module NaiveSort.
       assert (h :: t = snd (proj1_sig l1l2)) as Eht. { by rewrite -Heq_l1l2. } 
       move:(length_l2_n(sp:=l1l2)). rewrite -Eht /= => L1.
       by rewrite -L1 subn1 /=.
-    Qed.
+    Defined.
     Obligation 1.
       destruct l1l2. destruct x. destruct l0.
       - rewrite /=. destruct y. destruct a. apply conj.
         apply s. apply (perm_trans(l' := l ++ [])). apply p. 
         rewrite app_nil_r. apply Permutation_refl.
       - rewrite /= in Heq_l1l2. inversion Heq_l1l2.
-    Qed.
+    Defined.
   End Kernel.
 
   Section Wrap.

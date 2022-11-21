@@ -42,5 +42,18 @@ Check eq_refl 1.
 
 Goal 1 = 1.
 apply eq_refl.
+Qed.
 
 Print Empty_set.
+
+Print False_ind.
+Lemma F : forall (f:False) (P: False -> Prop), P f.
+Proof. tauto. Qed.
+
+Definition optionPeel {A:Type}(x:option A)(H:exists t, x = Some t): A.
+  refine (match x as v return (x = v) -> A with
+            | None => fun H1 => _
+            | Some t => fun _ => t
+          end eq_refl).
+  exfalso. destruct H as [t H2]. rewrite H2 in H1; discriminate H1.
+Defined.
