@@ -46,13 +46,13 @@ Module Setoid.
   Qed.
 
   Class IsMap {X Y:Setoid} (f: X -> Y) :=
-    { map_proper :> Proper ((==) ==> (==)) f }.
+  { map_proper:> Proper ((==) ==> (==)) f }.
   (* Print "==>".
   Locate respectful. *)
 
   Structure Map (X Y:Setoid): Type := {
-    map_fun :> X -> Y;
-    map_prf :> IsMap map_fun
+    map_fun:> X -> Y;
+    map_prf:> IsMap map_fun
   }.
   #[global]
   Existing Instance map_prf.
@@ -85,6 +85,13 @@ Module Setoid.
 
   (* Program Definition Map_setoid' (X Y:Setoid) : Setoid :=
     [Setoid by ((==)==>(==))%signature on Map X Y]. *)
+
+  Definition injective `(f: Map X Y) :=
+    forall x y, f x == f y -> x == y.
+  Definition surjective `(f: Map X Y) :=
+    forall y, exists x, y == f x.
+  Definition bijective `(f: Map X Y) :=
+    injective f /\ surjective f.
 End Setoid.
 Import Setoid.
 
@@ -101,15 +108,15 @@ Module Group.
       Proper ((==) ==> (==) ==> (==)) op;
     
     grp_op_assoc:
-      forall x y z, op x (op y z) == op (op x y) z;
+      forall {x y z}, op x (op y z) == op (op x y) z;
     
-    grp_inv_r:
-      forall x, op (inv x) x == id;
     grp_inv_l:
-      forall x, op x (inv x) == id;
+      forall {x}, op (inv x) x == id;
+    grp_inv_r:
+      forall {x}, op x (inv x) == id;
     
-    gpr_id_r:
-      forall x, op x id == x
+    grp_id_r:
+      forall {x}, op x id == x
   }.
 
   Structure Group :=
@@ -124,22 +131,353 @@ Module Group.
   #[global]
   Existing Instance grp_prf.
 
+  Notation "[ 'Group' 'by' op , inv , id 'on' A ]" :=
+    (@Build_Group A op inv id _).
   Notation "[ 'Group' 'by' op , inv , id ]" :=
-    (@Build_Group _ op inv id).
+    [Group by op, inv, id on _].
   
   Notation "g *_{ G } h" := (@grp_op G g h) (at level 60, right associativity) : group_scope.
   Notation "g * h" := (g *_{_} h) : group_scope.
   Notation "id_{ G }" := (@grp_id G) : group_scope.
   Notation "'id'" := id_{_} : group_scope.
-  Notation "!_{ G } g " := (@grp_inv G g) (at level 30, no associativity) : group_scope.
-  Notation "! g" := (!_{_} g) (at level 30, no associativity): group_scope.
-  Section Test.
-    Variables (G:Group) (g h:G).
-    Check (!(g*h)).
-    Check (!g*h).
-  End Test.
+  Notation "!_{ G } g " := (@grp_inv G g) (at level 30, right associativity) : group_scope.
+  Notation "! g" := (!_{_} g) (at level 30, right associativity): group_scope.
 End Group.
 Import Group.
 
+Section GroupTheory.
+  Context {G:Group}.
+  Lemma grp_id_l : forall {x:G}, id * x == x.
+  Proof.
+    intros x. 
+    now rewrite <-(grp_inv_r(x:=x)),
+      <-grp_op_assoc, (grp_inv_l), grp_id_r.
+  Qed.
+
+  Lemma grp_op_inj_l : forall {g x y:G},
+    g * x == g * y -> x == y.
+  Proof.
+    intros g x y Heq.
+    assert (!g * g * x == !g * g * y) as H.
+    { now rewrite <-2!grp_op_assoc, Heq. }
+    now rewrite grp_inv_l, 2!grp_id_l in H.
+  Qed.
+
+  Lemma grp_op_inj_r : forall {g x y:G},
+    x * g == y * g -> x == y.
+  Proof.
+    intros g x y Heq.
+    assert (x * (g * !g) == y * (g * !g)) as H.
+    { now rewrite 2!grp_op_assoc, Heq. }
+    now rewrite grp_inv_r, 2!grp_id_r in H.
+  Qed.
+
+  Lemma grp_op_feq_l : forall {g x y:G},
+    x == y -> g * x == g * y.
+  Proof.
+    intros g x y Heq. now rewrite Heq.
+  Qed.
+
+  Lemma grp_op_feq_r : forall {g x y:G},
+    x == y -> x * g == y * g.
+  Proof.
+    intros g x y Heq. now rewrite Heq.
+  Qed.
+
+  Lemma grp_send_l : forall {g x y:G},
+    g * x == y -> x == !g * y.
+  Proof.
+    intros g x y Heq.
+    apply (grp_op_inj_l(g:=g)).
+    now rewrite grp_op_assoc, grp_inv_r, grp_id_l.
+  Qed.
+
+  Lemma grp_send_r : forall {g x y:G},
+    x * g == y -> x == y * !g.
+  Proof.
+    intros g x y Heq.
+    apply (grp_op_inj_r(g:=g)).
+    now rewrite <-grp_op_assoc, grp_inv_l, grp_id_r.
+  Qed.
+  
+  Lemma grp_invinv : forall {x:G}, !!x == x.
+  Proof.
+    intros x.
+    assert (!!x * !x == x * !x) as H.
+    { now rewrite grp_inv_l, grp_inv_r. }
+    now apply grp_op_inj_r in H.
+  Qed.
+
+  Lemma grp_opinv : forall {x y:G},
+    !(x * y) == !y * !x.
+  Proof.
+    intros x y. 
+    rewrite <-(grp_id_r(x:=!y*!x)), <-grp_op_assoc.
+    apply grp_send_l, grp_send_l.
+    now rewrite grp_op_assoc, grp_inv_r.
+  Qed.
+
+  Lemma grp_invid_id : !id_{G} == id.
+  Proof.
+    rewrite <-(grp_id_r(x:=!id)).
+    symmetry; apply grp_send_l, grp_id_l.
+  Qed.
+End GroupTheory.
+
+Module Hom.
+  Class IsHom {G H:Group} (f: Map G H) := {
+    hom_proper:
+      forall {x y:G}, f (x * y) == (f x) * (f y)
+  }.
+
+  Structure Hom (G H:Group) := {
+    hom_map:> Map G H;
+    
+    hom_prf:> IsHom hom_map
+  }.
+  #[global]
+  Existing Instance hom_prf.
+
+  Notation "[ 'Hom' 'by' f ]" := (@Build_Hom _ _ [Map by f] _) : group_scope.
+  Notation "[ x 'in' G :-> m ]" := [Hom by fun (x:G) => m] : group_scope.
+  Notation "[ x :-> m ]" := ([x in _ :-> m]) : group_scope.
+
+  Class IsIsomorph `(f: Hom G H) := {
+    iso_proper: bijective f
+  }.
+
+  Structure Isomorph (G H:Group):= {
+    iso_map:> Hom G H;
+
+    iso_prf:> IsIsomorph iso_map
+  }.
+  #[global]
+  Existing Instance iso_prf.
+  Notation "[ 'Iso' 'by' f ]" := (@Build_Isomorph _ _ [Hom by f] _) : group_scope.
+  Notation "[ x 'in' G :=> m ]" := [Iso by fun (x:G) => m] : group_scope.
+  Notation "[ x :=> m ]" := ([x in _ :=> m]) : group_scope.
+End Hom.
+Import Hom.
+
+Section HomTheory.
+  Context {G H:Group} {f: Hom G H}.
+  Lemma hom_id : f id == id.
+  Proof.
+    rewrite <-(grp_inv_r(x:=f id)).
+    apply grp_send_r. now rewrite <-hom_proper, grp_id_r.
+  Qed.
+
+  Lemma hom_inv : forall x, f (!x) == ! f x.
+  Proof.
+    intros x.
+    rewrite <-(grp_id_r(x:=!f x)).
+    apply grp_send_l.
+    now rewrite <-hom_proper, grp_inv_r, hom_id.
+  Qed.
+End HomTheory.
+
+Module SubGroup.
+  Class IsSubGroup (G:Group) (H: G -> Prop) :=
+  {
+    sg_conf_proper:
+      forall {x y}, x == y -> H x -> H y;
+
+    sg_ferm_op:
+      forall {x y}, H x -> H y -> H (x * y);
+    
+    sg_ferm_inv:
+      forall {x}, H x -> H (!x);
+    
+    sg_ferm_id: H id
+  }.
+
+  Structure SubGroup := {
+    sg_G: Group;
+    sg_H:> sg_G -> Prop;
+
+    sg_prf:> IsSubGroup sg_G sg_H
+  }.
+  #[global]
+  Existing Instance sg_prf.
+  
+  Notation "[ 'SubGroup' H 'on' G ]" :=
+    (@Build_SubGroup G H _).
+  Notation "[ 'SubGroup' 'of' x : G | P ]" :=
+    [SubGroup (fun x => P) on G].
+  Notation "[ 'SubGroup' 'of' x | P ]" :=
+    [SubGroup (fun x => P) on _].
+
+  Program Definition sg_as_setoid (H:SubGroup) :=
+    [Setoid by (fun x y => proj1_sig x == proj1_sig y) on {x|H x}].
+  Next Obligation.
+    split.
+    - now intros x.
+    - intros x y Heq. now symmetry.
+    - intros x y z Heq1 Heq2. now rewrite Heq1, Heq2.
+  Defined.
+  Coercion sg_as_setoid : SubGroup >-> Setoid.
+
+  Program Definition sg_as_group (H:SubGroup) :=
+    [Group by (fun x y => x * y),
+              [Map by fun x => !x], 
+              (exist _ id_{sg_G H} sg_ferm_id) on H].
+  Next Obligation.
+    apply sg_ferm_op; (apply H1 || apply H0).
+  Defined.
+  Next Obligation.
+    apply sg_ferm_inv, H0.
+  Defined.
+  Next Obligation.
+    split. intros x y. simpl. now intros Heq; rewrite Heq.
+  Defined.
+  Next Obligation.
+    split.
+    - intros x1 x2 Heq_x y1 y2 Heq_y. simpl.
+      apply grp_op_proper; (apply Heq_x || apply Heq_y).
+    - intros x y z. simpl. apply grp_op_assoc.
+    - intros x. simpl. apply grp_inv_l.
+    - intros x. simpl. apply grp_inv_r.
+    - intros x. simpl. apply grp_id_r.
+  Defined.
+  Coercion sg_as_group : SubGroup >-> Group.
+
+  Class IsNormalSG (H:SubGroup) := {
+    nsg_proper:
+      forall {g h}, H h -> H (g * h * !g)
+  }.
+
+  Structure NormalSG := {
+    nsg_H:> SubGroup;
+
+    nsg_prf:> IsNormalSG nsg_H
+  }.
+  #[global]
+  Existing Instance nsg_prf.
+
+  Notation "[ 'NSG' H 'on' G ]" :=
+    (@Build_NormalSG [SubGroup H on G] _).
+  Notation "[ 'NSG' 'of' x : G | P ]" :=
+    [NSG (fun x => P) on G].
+  Notation "[ 'NSG' 'of' x | P ]" :=
+    [NSG (fun x => P) on _].
+End SubGroup.
+Import SubGroup.
+
+Section HomTheory.
+  Context {G H:Group} {f: Hom G H}.
+  Program Definition ImageSG := 
+    [SubGroup of x | exists y, y == f x].
+  Next Obligation.
+    split.
+    - intros x y Heq1 [z Heq2].
+      exists z. now rewrite <-Heq1.
+    - intros x y [z_x Heq1] [z_y Heq2].
+      exists (z_x * z_y).
+      now rewrite Heq1, Heq2, hom_proper.
+    - intros x [y Heq].
+      exists (!y).
+      now rewrite hom_inv, Heq.
+    - exists id. symmetry; apply hom_id.
+  Defined.
+
+  Program Definition KernelNSG :=
+    [NSG of x | f x == id].
+  Next Obligation.
+    split.
+    - intros x y Heq1 Heq2. now rewrite <-Heq1. 
+    - intros x y Heq1 Heq2.
+      now rewrite hom_proper, Heq1, Heq2, grp_id_r.
+    - intros x Heq.
+      now rewrite hom_inv, Heq, grp_invid_id.
+    - apply hom_id.
+  Defined.
+  Next Obligation.
+    split. intros g h. simpl. intros Heq.
+    now rewrite 2!hom_proper, Heq, grp_id_r,
+      <-hom_proper, grp_inv_r, hom_id.
+  Defined.
+End HomTheory.
+
+Ltac Hrewrite Heq := apply (sg_conf_proper Heq).
+Ltac Hrewriteto x := apply (sg_conf_proper(x:=x)).
+
+Module Coset.
+  Program Definition Coset (H:SubGroup) :=
+    [Setoid by (fun x y => H (x * !y)) on (sg_G H)].
+  Next Obligation.
+    split.
+    - intros x. 
+      apply (sg_conf_proper (symmetry grp_inv_r)), sg_ferm_id.
+    - intros x y Heq.
+      apply (sg_conf_proper grp_invinv), sg_ferm_inv.
+      apply (sg_conf_proper (symmetry grp_opinv)).
+      now apply (sg_conf_proper(x:=x*!y)); (rewrite grp_invinv || idtac).
+    - intros x y z Hxy Hyz. 
+      apply (sg_conf_proper(x:=(x*!y)*(y*!z))).
+     -- now rewrite grp_op_assoc, <-(grp_op_assoc(x:=x)), 
+          grp_inv_l, grp_id_r.
+     -- apply sg_ferm_op; (apply Hxy || apply Hyz).
+  Defined.
+
+  (* Definition proj {H:SubGroup} (x: sg_G H) : Coset H := x. *)
+
+  Program Definition CosetGroup (H:NormalSG) :=
+    [Group by (fun x y => x * y), [Map by fun x => !x], id
+    on Coset H].
+  Next Obligation.
+    split. intros x y. simpl. intros Heq. Hrewriteto (!(!y*x)).
+    - now rewrite <-grp_opinv.
+    - apply sg_ferm_inv. Hrewriteto (!y * (x * !y) * !!y).
+     -- now rewrite grp_invinv, grp_op_assoc,
+          <-(grp_op_assoc(y:=!y)), grp_inv_l, grp_id_r.
+     -- now apply nsg_proper.
+  Defined.
+  Next Obligation.
+    split.
+    - intros x1 y1. simpl. intros Heq1 x2 y2 Heq2.
+      Hrewriteto (x1 * (x2 * !y2) * !x1 * (x1 * !y1)).
+     -- rewrite grp_opinv, 3!grp_op_assoc.
+        apply grp_op_feq_r. 
+        now rewrite <-grp_op_assoc, grp_inv_l, grp_id_r.
+     -- apply (nsg_proper(g:=x1)) in Heq2. 
+        apply (sg_ferm_op Heq2 Heq1).
+    - intros x y z. simpl. Hrewriteto id_{sg_G H}.
+     -- now rewrite grp_op_assoc, grp_inv_r.
+     -- apply sg_ferm_id.
+    - intros x. simpl. Hrewriteto id_{sg_G H}.
+     -- now rewrite grp_inv_l, grp_id_l, grp_invid_id.
+     -- apply sg_ferm_id.
+    - intros x. simpl. Hrewriteto id_{sg_G H}.
+     -- now rewrite grp_inv_r, grp_id_l, grp_invid_id.
+     -- apply sg_ferm_id.
+    - intros x. simpl. apply nsg_proper, sg_ferm_id.
+  Defined.
+End Coset.
+Import Coset.
+
+Section FundHom.
+  Context {G H:Group} (f: Hom G H) (N := KernelNSG(f:=f))
+    (G_N := CosetGroup N).
+  
+  Program Definition phi : Isomorph G_N (ImageSG(f:=f)):=
+    [x :=> (exist _ (f x) _)].
+  Next Obligation.
+    split. intros x y. simpl. intros Heq.
+    rewrite hom_proper, hom_inv in Heq.
+    apply grp_send_r in Heq.
+    now rewrite grp_invinv, grp_id_l in Heq.
+  Defined.
+  Next Obligation.
+    split. intros x y. simpl. apply hom_proper.
+  Defined.
+  Next Obligation.
+    split. apply conj.
+    - intros x y. simpl. intros Heq.
+      rewrite hom_proper, hom_inv.
+      symmetry; apply grp_send_r.
+      now rewrite grp_id_l.
+    - intros y. simpl. exists .
+
+  
 Close Scope group_scope.
 
