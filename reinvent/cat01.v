@@ -61,7 +61,7 @@ Module Setoid.
   Notation "[ x 'in' X :-> m ]" := [Map by fun (x:X) => m].
   Notation "[ x :-> m ]" := ([x in _ :-> m]).
 
-  Program Definition Map_compose (X Y Z:Setoid) (f: Map X Y) (g: Map Y Z): Map X Z :=
+  Program Definition Map_compose {X Y Z:Setoid} (f: Map X Y) (g: Map Y Z): Map X Z :=
     [x :-> g (f x)].
   Next Obligation.
     split. intros x y Heq. now rewrite Heq.
@@ -394,7 +394,26 @@ Section HomTheory.
   Next Obligation.
     split. intros x y. simpl. apply hom_proper.
   Defined.
-  Canonical confimg.
+  (* Canonical confimg. *)
+
+  Lemma confimg_surj : surjective confimg.
+  Proof.
+    intros [h [g Heq]]. simpl. now exists g.
+  Qed.
+
+  Program Definition inc : Hom ImageSG H :=
+    [h :-> h].
+  Next Obligation.
+    split. intros x y. now simpl.
+  Defined.
+  Next Obligation.
+    split. intros x y. now simpl.
+  Defined.
+
+  Lemma inc_inj : injective inc.
+  Proof.
+    intros x y. now simpl.
+  Qed.
 
   Program Definition KernelNSG :=
     [NSG of x | f x == id].
@@ -435,7 +454,13 @@ Module Coset.
      -- apply sg_ferm_op; (apply Hxy || apply Hyz).
   Defined.
 
-  (* Definition proj {H:SubGroup} (x: sg_G H) : Coset H := x. *)
+  Program Definition proj {H:SubGroup} : Map (sg_G H) (Coset H) :=
+    [Map by fun x => x].
+  Next Obligation.
+    split. intros x y Heq. simpl. Hrewriteto id_{sg_G H}.
+    - now rewrite Heq, grp_inv_r.
+    - apply sg_ferm_id.
+  Defined.
 
   Program Definition CosetGroup (H:NormalSG) :=
     [Group by (fun x y => x * y), [Map by fun x => !x], id
@@ -468,6 +493,7 @@ Module Coset.
      -- apply sg_ferm_id.
     - intros x. simpl. apply nsg_proper, sg_ferm_id.
   Defined.
+  
 End Coset.
 Import Coset.
 
@@ -475,7 +501,7 @@ Section FundHom.
   Context {G H:Group} (f: Hom G H) (N := KernelNSG f)
     (G_N := CosetGroup N).
   
-  Program Definition phi : Isomorph G_N (ImageSG f):=
+  Program Definition psi : Isomorph G_N (ImageSG f):=
     [x :=> f x].
   Next Obligation.
     now exists x.
@@ -497,6 +523,19 @@ Section FundHom.
       now rewrite grp_id_l.
     - intros [y [x Heq]]. simpl. now exists x.
   Defined.
+
+  Lemma psicomp_proper :
+    f == Map_compose proj (Map_compose psi (inc _)) in (Map_setoid G H).
+  Proof.
+    intros g. now simpl.
+  Qed.
+
+  Lemma psi_identified : forall (psi0: Hom G_N H), 
+    f == Map_compose proj psi0 in (Map_setoid G H) ->
+    psi0 == Map_compose psi (inc _) in (Map_setoid G_N H).
+  Proof.
+    simpl. now intros psi0 Hiso g.
+  Qed.
 End FundHom.
 
 Close Scope group_scope.
