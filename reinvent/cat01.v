@@ -320,7 +320,7 @@ Module SubGroup.
   Program Definition sg_as_group (H:SubGroup) :=
     [Group by (fun x y => x * y),
               [Map by fun x => !x], 
-              (exist _ id_{sg_G H} sg_ferm_id) on H].
+              (id_{sg_G H}) on H].
   Next Obligation.
     apply sg_ferm_op; (apply H1 || apply H0).
   Defined.
@@ -329,6 +329,9 @@ Module SubGroup.
   Defined.
   Next Obligation.
     split. intros x y. simpl. now intros Heq; rewrite Heq.
+  Defined.
+  Next Obligation.
+    apply sg_ferm_id.
   Defined.
   Next Obligation.
     split.
@@ -364,9 +367,9 @@ End SubGroup.
 Import SubGroup.
 
 Section HomTheory.
-  Context {G H:Group} {f: Hom G H}.
+  Context {G H:Group} (f: Hom G H).
   Program Definition ImageSG := 
-    [SubGroup of x | exists y, y == f x].
+    [SubGroup of y | exists x, y == f x].
   Next Obligation.
     split.
     - intros x y Heq1 [z Heq2].
@@ -379,6 +382,19 @@ Section HomTheory.
       now rewrite hom_inv, Heq.
     - exists id. symmetry; apply hom_id.
   Defined.
+  
+  Program Definition confimg : Hom G ImageSG :=
+    [g :-> f g].
+  Next Obligation.
+    now exists g.
+  Defined.
+  Next Obligation.
+    split. intros x y Heq. simpl. now rewrite Heq.
+  Defined.
+  Next Obligation.
+    split. intros x y. simpl. apply hom_proper.
+  Defined.
+  Canonical confimg.
 
   Program Definition KernelNSG :=
     [NSG of x | f x == id].
@@ -456,11 +472,14 @@ End Coset.
 Import Coset.
 
 Section FundHom.
-  Context {G H:Group} (f: Hom G H) (N := KernelNSG(f:=f))
+  Context {G H:Group} (f: Hom G H) (N := KernelNSG f)
     (G_N := CosetGroup N).
   
-  Program Definition phi : Isomorph G_N (ImageSG(f:=f)):=
-    [x :=> (exist _ (f x) _)].
+  Program Definition phi : Isomorph G_N (ImageSG f):=
+    [x :=> f x].
+  Next Obligation.
+    now exists x.
+  Defined.
   Next Obligation.
     split. intros x y. simpl. intros Heq.
     rewrite hom_proper, hom_inv in Heq.
@@ -476,8 +495,9 @@ Section FundHom.
       rewrite hom_proper, hom_inv.
       symmetry; apply grp_send_r.
       now rewrite grp_id_l.
-    - intros y. simpl. exists .
+    - intros [y [x Heq]]. simpl. now exists x.
+  Defined.
+End FundHom.
 
-  
 Close Scope group_scope.
 
