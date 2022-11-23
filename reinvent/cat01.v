@@ -1,5 +1,6 @@
 Generalizable All Variables.
-Require Export Coq.Program.Basics Coq.Program.Tactics Coq.Setoids.Setoid Coq.Classes.Morphisms.
+Require Export Coq.Program.Basics Coq.Program.Tactics
+  Coq.Setoids.Setoid Coq.Classes.Morphisms.
 
 Declare Scope setoid_scope.
 Open Scope setoid_scope.
@@ -12,33 +13,34 @@ Structure Setoid : Type := {
 #[global]
 Existing Instance setoid_prf.
 
-Notation "[ 'Setoid' 'by' P 'on' A ]" := (@Build_Setoid A P _).
-Notation "[ 'Setoid' 'by' P ]" := [Setoid by P on _].
+Notation "[ 'setoid' 'by' P 'on' A ]" := (@Build_Setoid A P _).
+Notation "[ 'setoid' 'by' P ]" := [setoid by P on _].
 
 Notation "(== 'in' A )" := (setoid_equal A).
-Notation "x == y 'in' A" := (setoid_equal A x y) (at level 70, y at next level, no associativity).
+Notation "x == y 'in' A" := (setoid_equal A x y)
+  (at level 70, y at next level, no associativity).
 Notation "(==)" := (== in _).
 Notation "x == y" := (x == y in _) (at level 70, no associativity).
 
 
 Program Definition eq_setoid (X:Type) :=
-  [Setoid by @eq X].
+  [setoid by @eq X].
 
 Program Definition function (X Y:Type) : Setoid :=
-  [Setoid by `(forall x, f x = g x) on X -> Y].
+  [setoid by `(forall x, f x = g x) on X -> Y].
 Next Obligation.
   split; intros x; congruence.
 Defined.
 Canonical Structure function.
 
 Program Definition prop_setoid :=
-  [Setoid by iff].
+  [setoid by iff].
 Canonical Structure prop_setoid.
 
 Inductive empty := .
 
 Program Definition empty_setoid: Setoid :=
-  [Setoid by (fun e e' => match e, e' with end) on empty].
+  [setoid by (fun e e' => match e, e' with end) on empty].
 Next Obligation.
   split; compute; intros x; case x.
 Qed.
@@ -46,7 +48,7 @@ Qed.
 Inductive unit := tt.
 
 Program Definition unit_setoid: Setoid :=
-  [Setoid by (fun _ _ => True) on unit].
+  [setoid by (fun _ _ => True) on unit].
 Next Obligation.
   split; intros H; tauto.
 Qed.
@@ -62,16 +64,17 @@ Structure SubSetoid (X:Setoid) := {
 #[global]
 Existing Instance sub_prf.
 
-Notation "[ 'SubSetoid' 'by' conf 'on' A ]" :=
+Notation "[ 'subsetoid' 'by' conf 'on' A ]" :=
   (@Build_SubSetoid A conf _).
-Notation "[ 'SubSetoid' 'by' conf ]" :=
-  [SubSetoid by conf on _].
-Notation "[ 'SubSetoid' 'of' x 'in' A | P ]" :=
-  [SubSetoid by (fun x => P) on A].
-Notation "[ 'SubSetoid' 'of' x | P ]" :=
-  [SubSetoid of x in _ | P].
-Program Definition subsetoid_as_setoid {A:Setoid} (B: SubSetoid A) :=
-  [Setoid by (== in A) on {x|B x}].
+Notation "[ 'subsetoid' 'by' conf ]" :=
+  [subsetoid by conf on _].
+Notation "[ 'subsetoid' 'of' x 'in' A | P ]" :=
+  [subsetoid by (fun x => P) on A].
+Notation "[ 'subsetoid' 'of' x | P ]" :=
+  [subsetoid of x in _ | P].
+
+Program Definition subsetoid_as_setoid `(B: SubSetoid A) :=
+  [setoid by (== in A) on {x|B x}].
 Next Obligation.
   split.
   - now intros x.
@@ -79,6 +82,11 @@ Next Obligation.
   - intros x y z Heq1 Heq2. now rewrite Heq1.
 Defined.
 Coercion subsetoid_as_setoid : SubSetoid >-> Setoid.
+
+Program Definition subsetoid_trivial (A:Setoid) :=
+  [subsetoid of x | True].
+Next Obligation. split. now intros x y Heq. Defined.
+(* Coercion subsetoid_trivial : Setoid >-> SubSetoid. *)
 
 Class IsMap {X Y:Setoid} (f: X -> Y) :=
 { map_proper:> Proper ((==) ==> (==)) f }.
@@ -90,11 +98,13 @@ Structure Map (X Y:Setoid): Type := {
 #[global]
 Existing Instance map_prf.
 
-Notation "[ 'Map' 'by' f ]" := (@Build_Map _ _ f _) : setoid_scope.
-Notation " 'map' x 'in' X => m " := [Map by fun (x:X) => m] (at level 70, right associativity) : setoid_scope.
-Notation " 'map' x => m " := (map x in _ => m) (at level 70, right associativity) : setoid_scope.
+Notation "[ 'map' 'by' f ]" := (@Build_Map _ _ f _) : setoid_scope.
+Notation " 'map' x 'in' X => m " := [map by fun (x:X) => m]
+  (at level 70, right associativity) : setoid_scope.
+Notation " 'map' x => m " := (map x in _ => m)
+  (at level 70, right associativity) : setoid_scope.
 
-Program Definition Map_compose {X Y Z:Setoid} (f: Map X Y) (g: Map Y Z)
+Program Definition Map_compose {X Y Z} (f: Map X Y) (g: Map Y Z)
   : Map X Z := map x => g (f x).
 Next Obligation.
   split. intros x y Heq. now rewrite Heq.
@@ -106,7 +116,7 @@ Next Obligation.
 Defined.
 
 Program Definition Map_setoid (X Y: Setoid) : Setoid :=
-  [Setoid by ((==) ==> (==))%signature on Map X Y].
+  [setoid by ((==) ==> (==))%signature on Map X Y].
 Next Obligation.
   split.
   - intros f x y Heq. now rewrite Heq. 
@@ -116,7 +126,8 @@ Next Obligation.
 Defined.
 Canonical Structure Map_setoid.
 
-Notation "g \o f" := (Map_compose f g) (at level 60, right associativity) : setoid_scope.
+Notation "g \o f" := (Map_compose f g)
+  (at level 60, right associativity) : setoid_scope.
 
 Class Injective `(f: Map X Y) : Prop :=
 { injective: forall x y, f x == f y -> x == y }.
@@ -137,11 +148,43 @@ Proof.
   rewrite Heq2. now apply Heq.
 Qed.
 
-Lemma mapcomp_assoc : forall {X Y Z W} {f: Map Z W} {g: Map Y Z} {h: Map X Y},
+Lemma mapcomp_assoc {X Y Z W} {f: Map Z W} {g: Map Y Z} {h: Map X Y} :
   (f \o g) \o h == f \o g \o h.
 Proof.
   intros. simpl. intros x y Heq. now rewrite Heq.
 Qed.
+
+
+Program Definition Preimage `(f: Map X Y) (B: SubSetoid Y)
+  : SubSetoid X := [subsetoid of x | exists y, (B y) /\ y == f x].
+Next Obligation.
+  split. intros a b Heq. split; intros [y [By Heq1]]; exists y;
+  split; try apply By; (now rewrite <-Heq || now rewrite Heq).
+Defined.
+
+Class Included {X} (A B: SubSetoid X) := 
+{ included: forall (x:X), A x -> B x }.
+
+Notation "A '<=' B" := (@Included _ A B) : setoid_scope.
+
+Program Definition SubSetoid_setoid {X:Setoid} :=
+  [setoid by (fun A B => (A <= B) /\ (B <= A)) on SubSetoid X].
+Next Obligation.
+  split.
+  - intros A. split; split; intros x Ax; apply Ax.
+  - intros A B [AB BA]. split; (apply BA || apply AB).
+  - intros A B C [AB BA] [BC CB]. split; split; intros x.
+    + intros Ax. apply BC. now apply AB.
+    + intros Cx. apply BA. now apply CB.
+Defined.
+Canonical Structure SubSetoid_setoid.
+
+Program Definition inclusion `{B: SubSetoid A} : Map B A
+  := map h => h.
+Next Obligation. split. intros x y. now simpl. Defined.
+
+Lemma inc_inj `{B: SubSetoid A} : Injective (@inclusion A B).
+Proof. split. intros x y. now simpl. Qed.
 
 
 Declare Scope alg_scope.
@@ -159,8 +202,10 @@ Structure Binop (X:Setoid) := {
 Existing Instance binop_prf.
 
 Notation "[ 'Binop' 'by' f ]" := (@Build_Binop _ f _) : alg_scope.
-Notation " 'binop' x , y 'in' A => m " := [Binop by fun (x y:A) => m] (at level 70, right associativity) : alg_scope.
-Notation " 'binop' x , y => m " := [Binop by fun (x y:_) => m] (at level 70, right associativity) : alg_scope.
+Notation " 'binop' x , y 'in' A => m " := [Binop by fun (x y:A) => m]
+  (at level 70, right associativity) : alg_scope.
+Notation " 'binop' x , y => m " := [Binop by fun (x y:_) => m]
+  (at level 70, right associativity) : alg_scope.
 
 Class Associative `(op: Binop X) := {
   associative: 
@@ -180,13 +225,37 @@ Class Identical `(op: Binop X) (e:X) := {
 #[global]
 Existing Instances identical_l identical_r.
 
+
+Class IsMonoid (M:Setoid) (op: Binop M) (e: M) := {
+  monoid_assoc:> Associative op;
+  monoid_ident:> Identical op e
+}.
+
+Structure Monoid := {
+  monoid_supp:> Setoid;
+  monoid_op: Binop monoid_supp;
+  monoid_id: monoid_supp;
+
+  monoid_prf:> IsMonoid monoid_supp monoid_op monoid_id
+}.
+#[global]
+Existing Instance monoid_prf.
+
+Notation "[ 'monoid' 'by' op , id 'on' A ]" :=
+  (@Build_Monoid A op id _) : alg_scope.
+Notation "[ 'monoid 'by' op , id ]" :=
+  [monoid by op, id on _] : alg_scope.
+
+(* Program Definition Map_monoid := [monoid by ] *)
+
+
 Class LInvertible `(op: Binop X) (e:X) (inv: Map X X) :=
 { linvertible: forall x, op (inv x) x == e }.
 
 Class RInvertible `(op: Binop X) (e:X) (inv: Map X X) :=
 { rinvertible: forall x, op x (inv x) == e }.
 
-Class Invertible `{Identical X op e} (inv: Map X X) := {
+Class Invertible `(op: Binop X) (e:X) (inv: Map X X) := {
   invertible_l:> LInvertible op e inv;
   invertible_r:> RInvertible op e inv
 }.
@@ -224,19 +293,23 @@ Notation "[ 'group' 'by' op , inv , id ]" :=
 
 Notation "( * 'in' G )" := (@grp_op G) : alg_scope.
 Notation "( * )" := ( * in _) : alg_scope.
-Notation "g *_{ G } h" := (@grp_op G g h) (at level 60, right associativity) : alg_scope.
+Notation "g *_{ G } h" := (@grp_op G g h)
+  (at level 60, right associativity) : alg_scope.
 Notation "g * h" := (g *_{_} h) : alg_scope.
 Notation "1_{ G }" := (@grp_id G) : alg_scope.
 Notation "'1'" := 1_{_} : alg_scope.
 Notation "(\! 'in' G ) " := (@grp_inv G) : alg_scope.
 Notation "(\!)" := (\! in _) : alg_scope.
-Notation "!_{ G } g " := (@grp_inv G g) (at level 30, right associativity) : alg_scope.
-Notation "! g" := ( !_{_} g) (at level 30, right associativity): alg_scope.
+Notation "!_{ G } g " := (@grp_inv G g)
+  (at level 30, right associativity) : alg_scope.
+Notation "! g" := ( !_{_} g)
+  (at level 30, right associativity) : alg_scope.
 
 Lemma grp_id_ident_l : forall {G:Group}, LIdentical ( * in G) 1.
 Proof.
   split. intros x.
-  assert (1 * x == 1 * (x * 1)) as Heq0. { now rewrite ridentical. }
+  assert (1 * x == 1 * (x * 1)) as Heq0.
+  { now rewrite ridentical. }
   assert (x * 1 == x * !x * !!x) as Heq1.
   { now rewrite <-(rinvertible (!x)), associative. }
   rewrite Heq0, Heq1, rinvertible, associative, ridentical.
@@ -246,7 +319,7 @@ Qed.
 #[global]
 Existing Instance grp_id_ident_l.
 
-Lemma grp_inv_invert_l : forall {G:Group}, LInvertible ( * in G) 1 (\!).
+Lemma grp_inv_invert_l {G} : LInvertible ( * in G) 1 (\!).
 Proof.
   split. intros x.
   assert (!x * x == !x * (x * !x) * !!x) as Heq0.
@@ -342,9 +415,12 @@ Structure Homomorph (G H:Group) := {
 #[global]
 Existing Instance hom_prf.
 
-Notation "[ 'Hom' 'by' f ]" := (@Build_Homomorph _ _ [Map by f] _) : alg_scope.
-Notation " 'hom' x 'in' G => m " := [Hom by fun (x:G) => m] (at level 70, right associativity) : alg_scope.
-Notation " 'hom' x => m " := (hom x in _ => m) (at level 70, right associativity) : alg_scope.
+Notation "[ 'hom' 'by' f ]" :=
+  (@Build_Homomorph _ _ [map by f] _) : alg_scope.
+Notation " 'hom' x 'in' G => m " := [hom by fun (x:G) => m]
+  (at level 70, right associativity) : alg_scope.
+Notation " 'hom' x => m " := (hom x in _ => m)
+  (at level 70, right associativity) : alg_scope.
 
 Class IsIsomorph `(f: Homomorph G H) := {
   isomorph:> Bijective f
@@ -357,9 +433,12 @@ Structure Isomorph (G H:Group):= {
 }.
 #[global]
 Existing Instance iso_prf.
-Notation "[ 'Iso' 'by' f ]" := (@Build_Isomorph _ _ [Hom by f] _) : alg_scope.
-Notation "'iso' x 'in' G => m " := [Iso by fun (x:G) => m] (at level 70, right associativity) : alg_scope.
-Notation "'iso' x => m " := (iso x in _ => m) (at level 70, right associativity) : alg_scope.
+Notation "[ 'iso' 'by' f ]" :=
+  (@Build_Isomorph _ _ [hom by f] _) : alg_scope.
+Notation "'iso' x 'in' G => m " := [iso by fun (x:G) => m]
+  (at level 70, right associativity) : alg_scope.
+Notation "'iso' x => m " := (iso x in _ => m)
+  (at level 70, right associativity) : alg_scope.
 
 
 Section HomTheory.
@@ -399,10 +478,10 @@ Structure SubGroup (G:Group) := {
 #[global]
 Existing Instance sg_prf.
 
-Notation "H '<-' G" :=
-  (@Build_SubGroup G H _) (at level 60, right associativity) : alg_scope.
+Notation "H '<-' G" := (@Build_SubGroup G H _)
+  (at level 60, right associativity) : alg_scope.
 Notation "[ 'subgroup' 'of' x 'in' G | P ] " :=
-  ([SubSetoid of x | P] <- G) : alg_scope.
+  ([subsetoid of x | P] <- G) : alg_scope.
 Notation "[ 'subgroup' 'of' x | P ]" :=
   ([subgroup of x in _ | P]) : alg_scope.
 
@@ -446,8 +525,8 @@ Structure NormalSubGroup (G:Group):= {
 #[global]
 Existing Instance nsg_prf.
 
-Notation "H <| G" :=
-  (@Build_NormalSubGroup G H _) (at level 60, right associativity) : alg_scope.
+Notation "H <| G" := (@Build_NormalSubGroup G H _)
+  (at level 60, right associativity) : alg_scope.
 
 
 Program Definition HomImage `(f: Homomorph G H):= 
@@ -486,14 +565,6 @@ Qed.
 #[global]
 Existing Instance confimg_surj.
 
-Program Definition inclusion `{f: Homomorph G H}
-  : Homomorph (HomImage f) H := hom h => h.
-Next Obligation. split. intros x y. now simpl. Defined.
-Next Obligation. split. intros x y. now simpl. Defined.
-
-Lemma inc_inj `{f: Homomorph G H} : Injective (@inclusion _ _ f).
-Proof. split. intros x y. now simpl. Qed.
-
 Program Definition HomKernel `(f: Homomorph G H) :=
   [subgroup of x | f x == 1] <| G.
 Next Obligation.
@@ -516,7 +587,7 @@ Defined.
 
 
 Program Definition Coset `(H: SubGroup G) :=
-  [Setoid by (fun x y => H (x * !y)) on G].
+  [setoid by (fun x y => H (x * !y)) on G].
 Next Obligation.
   split.
   - intros x. rewrite rinvertible. apply sg_ferm_id.
@@ -538,7 +609,8 @@ Defined.
 
 Lemma quotmap_surj `{H: SubGroup G} : Surjective (@quotmap G H).
 Proof.
-  split. intros g. simpl. exists g. rewrite rinvertible. apply sg_ferm_id.
+  split. intros g. simpl. exists g. 
+  rewrite rinvertible. apply sg_ferm_id.
 Defined.
 #[global]
 Existing Instance quotmap_surj.
@@ -568,6 +640,12 @@ Next Obligation.
   - intros x. simpl. rewrite grp_invid_id, ridentical, rinvertible.
     apply sg_ferm_id.
 Defined.
+
+Lemma quotmap_hom `{H: NormalSubGroup G} : 
+  (@IsHomomorph G (CosetGroup H)) quotmap.
+Proof. 
+  split. intros x y. simpl. rewrite rinvertible. apply sg_ferm_id.
+Qed.
 
 Section FundHom.
   Context {G H:Group} (f: Homomorph G H)
@@ -600,7 +678,7 @@ Section FundHom.
     f == inclusion \o Iso1 \o quotmap in (Map_setoid G H).
   Proof. intros x y Heq. simpl. now rewrite Heq. Qed.
 
-  Lemma Iso1_identified : forall (psi: Homomorph G_N H), 
+  Lemma Iso1_identical : forall (psi: Homomorph G_N H), 
     f == psi \o quotmap in (Map_setoid G H) ->
     psi == inclusion \o Iso1 in (Map_setoid G_N H).
   Proof.
@@ -611,6 +689,70 @@ Section FundHom.
     symmetry. now apply Heq2.
   Qed.
 End FundHom.
+
+Section CorrespSubGroup.
+  Context {G:Group} {N: NormalSubGroup G} (G_N := CosetGroup N).
+
+  Program Definition corresp_quotsg_to_sg (H: SubGroup G_N)
+    : { K: SubGroup G | N <= K } := (Preimage quotmap H) <- G.
+  Next Obligation.
+    split.
+    - intros g h. simpl. intros [y0 [Hy0 Heq0]] [y1 [Hy1 Heq1]].
+      exists (y0 * y1). split.
+      + apply (sg_ferm_op(H := H) Hy0 Hy1).
+      + apply (normal(g := g)) in Heq1.
+        pose (sg_ferm_op Heq0 Heq1) as Heq2.
+        rewrite 3!associative, <-(associative _ (!g)),
+          linvertible, ridentical in Heq2.
+        now rewrite grp_opinv, associative.
+    - intros x. simpl. intros [y [Hy Heq]].
+      exists (!y). split.
+      + apply (sg_ferm_inv(H := H) Hy).
+      + rewrite <-grp_opinv. apply sg_ferm_inv.
+        apply (normal(g := !x)) in Heq.
+        now rewrite associative, <-associative,
+          rinvertible, ridentical in Heq.
+    - simpl. exists 1. split.
+      + apply (sg_ferm_id(H := H)).
+      + rewrite grp_invid_id, ridentical. 
+        apply sg_ferm_id.
+  Defined.
+  Next Obligation.
+    split. simpl. intros x Nx. exists x. split.
+    - assert (x == 1 in G_N) as H0. 
+      { simpl. now rewrite grp_invid_id, ridentical. }
+      rewrite H0. apply (sg_ferm_id(H := H)).
+    - rewrite rinvertible. apply sg_ferm_id.
+  Defined.
+
+  Program Definition corresp_sg_to_quotsg (K : { K : SubGroup G | N <= K})
+    : SubGroup G_N := [subgroup of y | exists x, y == quotmap x].
+  Next Obligation.
+    split. intros g h. simpl. intros Heq. split; intros [x Heq1].
+    - exists g. apply sg_ferm_inv in Heq. 
+      now rewrite grp_opinv, grp_invinv in Heq.
+    - now exists h.
+  Defined.
+  Next Obligation.
+    split; simpl.
+    - intros x y [g Heq0] [h Heq1]. exists (g * h).
+      rewrite grp_opinv, <-lidentical, <-(rinvertible g).
+      rewrite 3!associative, <-4!(associative),
+        4!(associative _ _ (!g)). apply normal.
+      apply (normal(g := !g)) in Heq0.
+      rewrite grp_invinv, associative, <-associative,
+        linvertible, ridentical in Heq0.
+      rewrite associative. apply (sg_ferm_op Heq0 Heq1).
+    - intros g [h Nh]. exists (!h).
+      rewrite <-grp_opinv. apply sg_ferm_inv.
+      apply (normal(g := !h)) in Nh.
+      now rewrite grp_invinv, associative, <-associative,
+        linvertible, ridentical in Nh.
+    - exists 1. rewrite grp_invid_id, ridentical.
+      apply sg_ferm_id.
+  Defined.
+
+  Lemma corresp_comp_id_sg : 
 
 Close Scope alg_scope.
 Close Scope setoid_scope.
