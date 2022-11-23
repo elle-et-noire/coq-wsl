@@ -109,7 +109,7 @@ Next Obligation.
   split. intros x y Heq. now rewrite Heq.
 Defined.
 
-Program Definition Map_id (X:Setoid) : Map X X := map x => x.
+Program Definition Map_id {X:Setoid} : Map X X := map x => x.
 Next Obligation.
   split. intros x y Heq. apply Heq.
 Defined.
@@ -719,7 +719,7 @@ End FundHom.
 Section CorrespSubGroup.
   Context {G:Group} {N: NormalSubGroup G} (G_N := CosetGroup N).
 
-  Program Definition corresp_quotsg_to_sg 
+  Program Definition ExtendQuotGroups 
     : Map (@SubGroup_setoid G_N)
       [subsetoid of K in (@SubGroup_setoid G) | N <= K]
     := map H => (Preimage quotmap H).
@@ -759,7 +759,7 @@ Section CorrespSubGroup.
     - rewrite rinvertible. apply sg_ferm_id.
   Defined.
 
-  Program Definition corresp_sg_to_quotsg
+  Program Definition FoldGroups
     : Map [subsetoid of K in (@SubGroup_setoid G) | N <= K]
       (@SubGroup_setoid G_N)
     := map K => Image quotmap K.
@@ -803,7 +803,14 @@ Section CorrespSubGroup.
     - apply BA, Sy.
   Defined.
 
-  Lemma corresp_comp_id_sg : 
+  Lemma corresp_comp_id_sg :
+    ExtendQuotGroups \o FoldGroups == Map_id.
+  Proof.
+    intros K1 K2. simpl. intros [[K12] [K21]]. split; split.
+    intros g; simpl. intros [y [[h [Kh E1]] E2]].
+    (* TODO: K is Group. *)
+    apply AB.
+    split.
 
 Close Scope alg_scope.
 Close Scope setoid_scope.
