@@ -33,8 +33,7 @@ Next Obligation.
 Defined.
 Canonical Structure function.
 
-Program Definition prop_setoid :=
-  [setoid by iff].
+Program Definition prop_setoid := [setoid by iff].
 Canonical Structure prop_setoid.
 
 Inductive empty := .
@@ -154,6 +153,12 @@ Proof.
   intros. simpl. intros x y Heq. now rewrite Heq.
 Qed.
 
+Program Definition Image `(f: Map X Y) (A: SubSetoid X)
+  : SubSetoid Y := [subsetoid of y | exists x, (A x) /\ y == f x].
+Next Obligation.
+  split. intros a b Heq. split; intros [x [Ax Heq1]]; exists x;
+  split; try apply Ax; (now rewrite <-Heq || now rewrite Heq).
+Defined.
 
 Program Definition Preimage `(f: Map X Y) (B: SubSetoid Y)
   : SubSetoid X := [subsetoid of x | exists y, (B y) /\ y == f x].
@@ -166,6 +171,11 @@ Class Included {X} (A B: SubSetoid X) :=
 { included: forall (x:X), A x -> B x }.
 
 Notation "A '<=' B" := (@Included _ A B) : setoid_scope.
+
+Lemma included_transitive {X} : Transitive (@Included X).
+Proof. split. intros a xa. apply H0, H, xa. Qed.
+#[global]
+Existing Instance included_transitive.
 
 Program Definition SubSetoid_setoid {X:Setoid} :=
   [setoid by (fun A B => (A <= B) /\ (B <= A)) on SubSetoid X].
@@ -512,6 +522,10 @@ Next Obligation.
 Defined.
 Coercion sg_as_group : SubGroup >-> Group.
 
+
+
+
+
 Class IsNormalSubGroup `(H: SubGroup G) := {
   normal:
     forall {g h}, H h -> H (g * h * !g)
@@ -647,6 +661,18 @@ Proof.
   split. intros x y. simpl. rewrite rinvertible. apply sg_ferm_id.
 Qed.
 
+Program Definition SubGroup_setoid {G:Group} :=
+  [subsetoid of H in (@SubSetoid_setoid G) | IsSubGroup G H].
+Next Obligation.
+  split. intros H1 H2. simpl. intros [H1H2 H2H1]. split;
+  intros [Hfop Hfinv Hfid]; split; try intros x y Hx Hy;
+  try intros x Hx; try apply H1H2;
+  try apply Hfid; try apply Hfop; try apply Hfinv;
+  try apply H2H1; try apply Hx; try apply Hy;
+  try apply Hfid; try apply Hfop; try apply Hfinv;
+  try apply H1H2; try apply Hx; try apply Hy.
+Defined.
+
 Section FundHom.
   Context {G H:Group} (f: Homomorph G H)
     (N := HomKernel f) (G_N := CosetGroup N).
@@ -693,13 +719,20 @@ End FundHom.
 Section CorrespSubGroup.
   Context {G:Group} {N: NormalSubGroup G} (G_N := CosetGroup N).
 
-  Program Definition corresp_quotsg_to_sg (H: SubGroup G_N)
-    : { K: SubGroup G | N <= K } := (Preimage quotmap H) <- G.
+  Program Definition corresp_quotsg_to_sg 
+    : Map (@SubGroup_setoid G_N)
+      [subsetoid of K in (@SubGroup_setoid G) | N <= K]
+    := map H => (Preimage quotmap H).
   Next Obligation.
-    split.
+    split. intros H1 H2. simpl. intros [H1H2 H2H1]. split; intros NH.
+    - apply (transitivity NH H1H2).
+    - apply (transitivity NH H2H1).
+  Defined.
+  Next Obligation.
+    pose (Build_SubGroup G_N H H0) as grpH. split. 
     - intros g h. simpl. intros [y0 [Hy0 Heq0]] [y1 [Hy1 Heq1]].
-      exists (y0 * y1). split.
-      + apply (sg_ferm_op(H := H) Hy0 Hy1).
+      exists (y0 * y1). split. 
+      + apply (sg_ferm_op(H := grpH) Hy0 Hy1).
       + apply (normal(g := g)) in Heq1.
         pose (sg_ferm_op Heq0 Heq1) as Heq2.
         rewrite 3!associative, <-(associative _ (!g)),
@@ -707,49 +740,67 @@ Section CorrespSubGroup.
         now rewrite grp_opinv, associative.
     - intros x. simpl. intros [y [Hy Heq]].
       exists (!y). split.
-      + apply (sg_ferm_inv(H := H) Hy).
+      + apply (sg_ferm_inv(H := grpH) Hy).
       + rewrite <-grp_opinv. apply sg_ferm_inv.
         apply (normal(g := !x)) in Heq.
         now rewrite associative, <-associative,
           rinvertible, ridentical in Heq.
     - simpl. exists 1. split.
-      + apply (sg_ferm_id(H := H)).
+      + apply (sg_ferm_id(H := grpH)).
       + rewrite grp_invid_id, ridentical. 
         apply sg_ferm_id.
   Defined.
   Next Obligation.
+    pose (Build_SubGroup G_N H H0) as grpH.
     split. simpl. intros x Nx. exists x. split.
-    - assert (x == 1 in G_N) as H0. 
+    - assert (x == 1 in G_N) as Hid. 
       { simpl. now rewrite grp_invid_id, ridentical. }
-      rewrite H0. apply (sg_ferm_id(H := H)).
+      rewrite Hid. apply (sg_ferm_id(H := grpH)).
     - rewrite rinvertible. apply sg_ferm_id.
   Defined.
 
-  Program Definition corresp_sg_to_quotsg (K : { K : SubGroup G | N <= K})
-    : SubGroup G_N := [subgroup of y | exists x, y == quotmap x].
+  Program Definition corresp_sg_to_quotsg
+    : Map [subsetoid of K in (@SubGroup_setoid G) | N <= K]
+      (@SubGroup_setoid G_N)
+    := map K => Image quotmap K.
   Next Obligation.
-    split. intros g h. simpl. intros Heq. split; intros [x Heq1].
-    - exists g. apply sg_ferm_inv in Heq. 
-      now rewrite grp_opinv, grp_invinv in Heq.
-    - now exists h.
+    split. intros SA SB. simpl. intros [[AB] [BA]]. split; split;
+    intros g [gN [SgN Heq_g]]; simpl; simpl in Heq_g;
+    exists gN; split; try apply Heq_g.
+    - apply AB, SgN.
+    - apply BA, SgN.
+  Defined.
+  Next Obligation.
+    split. intros SA SB. simpl. intros [AB BA]. split; intros NS.
+    - apply (transitivity NS AB).
+    - apply (transitivity NS BA).
   Defined.
   Next Obligation.
     split; simpl.
-    - intros x y [g Heq0] [h Heq1]. exists (g * h).
-      rewrite grp_opinv, <-lidentical, <-(rinvertible g).
-      rewrite 3!associative, <-4!(associative),
-        4!(associative _ _ (!g)). apply normal.
-      apply (normal(g := !g)) in Heq0.
-      rewrite grp_invinv, associative, <-associative,
-        linvertible, ridentical in Heq0.
-      rewrite associative. apply (sg_ferm_op Heq0 Heq1).
-    - intros g [h Nh]. exists (!h).
-      rewrite <-grp_opinv. apply sg_ferm_inv.
-      apply (normal(g := !h)) in Nh.
-      now rewrite grp_invinv, associative, <-associative,
-        linvertible, ridentical in Nh.
-    - exists 1. rewrite grp_invid_id, ridentical.
+    - intros x y [g [Kg Heq0]] [h [Kh Heq1]]. exists (g * h). split.
+      + apply (sg_ferm_op Kg Kh).
+      + rewrite grp_opinv, <-lidentical, <-(rinvertible g).
+        rewrite 3!associative, <-4!(associative),
+          4!(associative _ _ (!g)). apply normal.
+        apply (normal(g := !g)) in Heq0.
+        rewrite grp_invinv, associative, <-associative,
+          linvertible, ridentical in Heq0.
+        rewrite associative. apply (sg_ferm_op Heq0 Heq1).
+    - intros g [h [Kh Nh]]. exists (!h). split.
+      + apply sg_ferm_inv, Kh.
+      + rewrite <-grp_opinv. apply sg_ferm_inv.
+        apply (normal(g := !h)) in Nh.
+        now rewrite grp_invinv, associative, <-associative,
+          linvertible, ridentical in Nh.
+    - exists 1. rewrite grp_invid_id, ridentical. split;
       apply sg_ferm_id.
+  Defined.
+  Next Obligation.
+    split. intros A B. simpl. intros [[AB] [BA]]. split; split; 
+    intros x; simpl; intros [y [Sy Heq]]; exists y; split;
+    try apply Heq.
+    - apply AB, Sy.
+    - apply BA, Sy.
   Defined.
 
   Lemma corresp_comp_id_sg : 
