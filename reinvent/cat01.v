@@ -153,19 +153,6 @@ Proof.
   intros. simpl. intros x y Heq. now rewrite Heq.
 Qed.
 
-Program Definition Image `(f: Map X Y) (A: SubSetoid X)
-  : SubSetoid Y := [subsetoid of y | exists x, (A x) /\ y == f x].
-Next Obligation.
-  split. intros a b Heq. split; intros [x [Ax Heq1]]; exists x;
-  split; try apply Ax; (now rewrite <-Heq || now rewrite Heq).
-Defined.
-
-Program Definition Preimage `(f: Map X Y) (B: SubSetoid Y)
-  : SubSetoid X := [subsetoid of x | exists y, (B y) /\ y == f x].
-Next Obligation.
-  split. intros a b Heq. split; intros [y [By Heq1]]; exists y;
-  split; try apply By; (now rewrite <-Heq || now rewrite Heq).
-Defined.
 
 Class Included {X} (A B: SubSetoid X) := 
 { included: forall (x:X), A x -> B x }.
@@ -188,6 +175,43 @@ Next Obligation.
     + intros Cx. apply BA. now apply CB.
 Defined.
 Canonical Structure SubSetoid_setoid.
+
+
+Program Definition Image `(f: Map X Y) 
+  : Map (SubSetoid X) (SubSetoid Y) := 
+  map A => [subsetoid of y | exists x, (A x) /\ y == f x].
+Next Obligation.
+  split. intros a b Heq. split; intros [x [Ax Heq1]]; exists x;
+  split; try apply Ax; (now rewrite <-Heq || now rewrite Heq).
+Defined.
+Next Obligation.
+  split. intros A B. simpl. intros [[AB] [BA]]. split; split;
+  intros y [x [Ax E0]]; simpl; exists x; split; try apply E0.
+  - apply AB, Ax.
+  - apply BA, Ax.
+Defined.
+
+Program Definition Preimage `(f: Map X Y)
+  : Map (SubSetoid Y) (SubSetoid X)
+  := map B => [subsetoid of x | exists y, (B y) /\ y == f x].
+Next Obligation.
+  split. intros a b Heq. split; intros [y [By Heq1]]; exists y;
+  split; try apply By; (now rewrite <-Heq || now rewrite Heq).
+Defined.
+Next Obligation.
+  split. intros A B. simpl. intros [[AB] [BA]]. split; split;
+  intros y [x [Ax E0]]; simpl; exists x; split; try apply E0.
+  - apply AB, Ax.
+  - apply BA, Ax.
+Defined.
+
+(* Lemma ImagePreimage_id `{f: Map X Y}
+  : (Image f) \o (Preimage f) == Map_id.
+Proof.
+  intros A B. simpl. intros [[AB] [BA]]. split; split; intros y.
+  - intros [x [[y0 [Ay0 E0]] E]]. apply AB.
+    now rewrite E, <-E0.
+  - intros By. simpl. exists y. *)
 
 Program Definition inclusion `{B: SubSetoid A} : Map B A
   := map h => h.
@@ -543,41 +567,50 @@ Notation "H <| G" := (@Build_NormalSubGroup G H _)
   (at level 60, right associativity) : alg_scope.
 
 
-Program Definition HomImage `(f: Homomorph G H):= 
-  [subgroup of y | exists x, y == f x].
+Program Definition SubGroup_setoid {G:Group} :=
+  [subsetoid of H in (@SubSetoid_setoid G) | IsSubGroup G H].
 Next Obligation.
-  split.
-  - intros x y Heq. apply conj; 
-    intros [z Heq1]; exists z; now rewrite <-Heq1, Heq.
-Defined.
-Next Obligation.
-  split.
-  - intros x y. simpl. intros [z1 Heq1] [z2 Heq2].
-    exists (z1 * z2). now rewrite homomorph, Heq1, Heq2.
-  - intros x [y Heq].
-    exists (!y).
-    now rewrite hom_inv, Heq.
-  - exists 1. symmetry; apply hom_id.
+  split. intros H1 H2. simpl. intros [H1H2 H2H1]. split;
+  intros [Hfop Hfinv Hfid]; split; try intros x y Hx Hy;
+  try intros x Hx; try apply H1H2;
+  try apply Hfid; try apply Hfop; try apply Hfinv;
+  try apply H2H1; try apply Hx; try apply Hy;
+  try apply Hfid; try apply Hfop; try apply Hfinv;
+  try apply H1H2; try apply Hx; try apply Hy.
 Defined.
 
-Program Definition confimg `(f: Homomorph G H) 
-  : Homomorph G (HomImage f) := hom g => f g.
-Next Obligation.
-  now exists g.
-Defined.
-Next Obligation.
-  split. intros x y Heq. simpl. now rewrite Heq.
-Defined.
-Next Obligation.
-  split. intros x y. simpl. apply homomorph.
-Defined.
+Program Definition SubGroup_setoid_SubGroup `(H: @SubGroup_setoid G)
+  : SubGroup G := (proj1_sig H) <- G.
 
-Lemma confimg_surj `{f: Homomorph G H} : Surjective (confimg f).
-Proof.
-  split. intros [h [g Heq]]. simpl. now exists g.
-Qed.
-#[global]
-Existing Instance confimg_surj.
+Program Definition SubGroup_setoid_trivial {G:Group}
+  : (@SubGroup_setoid G) := subsetoid_trivial G.
+Next Obligation. split; simpl; intros; trivial. Defined.
+
+
+Program Definition HomImage `(f: Homomorph G H) 
+  : Map (@SubGroup_setoid G) (@SubGroup_setoid H) 
+  := map A => (Image f) A.
+Next Obligation.
+  split.
+  - intros x y. simpl. intros [z1 [Az1 Heq1]] [z2 [Az2 Heq2]].
+    exists (z1 * z2). split.
+    + apply (sg_ferm_op Az1 Az2).
+    + now rewrite homomorph, Heq1, Heq2.
+  - intros x [y [Ay Heq]].
+    exists (!y). split.
+    + apply sg_ferm_inv, Ay.
+    + now rewrite hom_inv, Heq.
+  - exists 1. split.
+    + apply sg_ferm_id.
+    + symmetry; apply hom_id.
+Defined.
+Next Obligation.
+  split. intros A B. simpl. intros [[AB] [BA]]. split; split;
+  intros x; simpl; intros [g [Ag E]]; exists g; split;
+  try apply E.
+  - apply AB, Ag.
+  - apply BA, Ag.
+Defined.
 
 Program Definition HomKernel `(f: Homomorph G H) :=
   [subgroup of x | f x == 1] <| G.
@@ -621,6 +654,10 @@ Next Obligation.
 Defined.
 (* Coercion _quotmap `{H: SubGroup G} : G -> Coset H := quotmap. *)
 
+Corollary coset_eq `{H: SubGroup G} : forall {g h:G},
+  H (g * !h) -> (g == h in Coset H).
+Proof. intros g h Heq. apply Heq. Qed.
+
 Lemma quotmap_surj `{H: SubGroup G} : Surjective (@quotmap G H).
 Proof.
   split. intros g. simpl. exists g. 
@@ -661,23 +698,11 @@ Proof.
   split. intros x y. simpl. rewrite rinvertible. apply sg_ferm_id.
 Qed.
 
-Program Definition SubGroup_setoid {G:Group} :=
-  [subsetoid of H in (@SubSetoid_setoid G) | IsSubGroup G H].
-Next Obligation.
-  split. intros H1 H2. simpl. intros [H1H2 H2H1]. split;
-  intros [Hfop Hfinv Hfid]; split; try intros x y Hx Hy;
-  try intros x Hx; try apply H1H2;
-  try apply Hfid; try apply Hfop; try apply Hfinv;
-  try apply H2H1; try apply Hx; try apply Hy;
-  try apply Hfid; try apply Hfop; try apply Hfinv;
-  try apply H1H2; try apply Hx; try apply Hy.
-Defined.
-
 Section FundHom.
   Context {G H:Group} (f: Homomorph G H)
     (N := HomKernel f) (G_N := CosetGroup N).
 
-  Program Definition Iso1 : Isomorph G_N (HomImage f):=
+  Program Definition Iso1 : Isomorph G_N (HomImage f (@SubGroup_setoid_trivial G_N)):=
     iso x => f x.
   Next Obligation.
     now exists x.
@@ -719,7 +744,7 @@ End FundHom.
 Section CorrespSubGroup.
   Context {G:Group} {N: NormalSubGroup G} (G_N := CosetGroup N).
 
-  Program Definition ExtendQuotGroups 
+  Program Definition ExtendQuotGroups
     : Map (@SubGroup_setoid G_N)
       [subsetoid of K in (@SubGroup_setoid G) | N <= K]
     := map H => (Preimage quotmap H).
@@ -806,11 +831,43 @@ Section CorrespSubGroup.
   Lemma corresp_comp_id_sg :
     ExtendQuotGroups \o FoldGroups == Map_id.
   Proof.
-    intros K1 K2. simpl. intros [[K12] [K21]]. split; split.
-    intros g; simpl. intros [y [[h [Kh E1]] E2]].
-    (* TODO: K is Group. *)
-    apply AB.
-    split.
+    intros [K1 N_K1] [K2 N_K2]. simpl. intros [[K12] [K21]]. split; split;
+    intros g; simpl. 
+    - intros [y [[h [Kh E1]] E2]].
+      apply N_K1 in E1. apply N_K1 in E2.
+      pose (SubGroup_setoid_SubGroup K1) as grpK1.
+      assert (forall {w}, proj1_sig K1 w -> grpK1 w) as ingK1.
+      { intros w Kw. apply Kw. }
+      pose (SubGroup_setoid_SubGroup K2) as grpK2.
+      assert (forall {w}, proj1_sig K2 w -> grpK2 w) as ingK2.
+      { intros w Kw. apply Kw. }
+      pose (sg_ferm_op (ingK1 _ E1) (ingK1 _ Kh)) as K1y.
+      rewrite <-associative, linvertible, ridentical in K1y.
+      apply sg_ferm_inv in K1y.
+      pose (sg_ferm_op K1y E2) as K1g.
+      rewrite associative, linvertible, lidentical in K1g.
+      apply sg_ferm_inv in K1g. rewrite grp_invinv in K1g.
+      apply K12, K1g.
+    - intros K2g. exists g. split.
+      + exists g. split.
+        * apply K21, K2g.
+        * rewrite rinvertible. apply sg_ferm_id.
+      + rewrite rinvertible. apply sg_ferm_id.
+  Qed.
+
+  Lemma corresp_comp_id_qsg :
+    FoldGroups \o ExtendQuotGroups == Map_id.
+  Proof.
+    intros H1 H2. simpl. intros [[H12] [H21]]. split; split;
+    intros g. simpl.
+    - intros [x [[y [H1y Nyx]] Ngx]]. apply H12.
+      now rewrite (coset_eq Ngx), <-(coset_eq Nyx).
+    - intros H2g. simpl. exists g. split.
+      + exists g. split.
+        * apply H21, H2g.
+        * rewrite rinvertible. apply sg_ferm_id.
+      + rewrite rinvertible. apply sg_ferm_id.
+  Qed.
 
 Close Scope alg_scope.
 Close Scope setoid_scope.
