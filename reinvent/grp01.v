@@ -8,6 +8,7 @@ Open Scope setoid_scope.
 Structure Setoid : Type := {
   setoid_carrier:> Type;
   setoid_equal: relation setoid_carrier;
+
   setoid_prf:> Equivalence setoid_equal
 }.
 #[global]
@@ -21,7 +22,6 @@ Notation "x == y 'in' A" := (setoid_equal A x y)
   (at level 70, y at next level, no associativity).
 Notation "(==)" := (== in _).
 Notation "x == y" := (x == y in _) (at level 70, no associativity).
-
 
 Program Definition eq_setoid (X:Type) :=
   [setoid by @eq X].
@@ -40,31 +40,28 @@ Inductive empty := .
 
 Program Definition empty_setoid: Setoid :=
   [setoid by (fun e e' => match e, e' with end) on empty].
-Next Obligation.
-  split; compute; intros x; case x.
-Qed.
+Next Obligation. split; compute; intros x; case x. Qed.
 
 Inductive unit := tt.
 
 Program Definition unit_setoid: Setoid :=
   [setoid by (fun _ _ => True) on unit].
-Next Obligation.
-  split; intros H; tauto.
-Qed.
+Next Obligation. split; intros H; tauto. Qed.
 
 
-Class IsSubSetoid (X:Setoid) (conf: X -> Prop) := 
+Class IsSubsetoid (X:Setoid) (conf: X -> Prop) := 
 { subconf_proper:> Proper ((==) ==> (==)) conf }.
 
-Structure SubSetoid (X:Setoid) := {
+Structure Subsetoid (X:Setoid) : Type := {
   sub_conf:> X -> Prop;
-  sub_prf:> IsSubSetoid X sub_conf
+
+  sub_prf:> IsSubsetoid X sub_conf
 }.
 #[global]
 Existing Instance sub_prf.
 
 Notation "[ 'subsetoid' 'by' conf 'on' A ]" :=
-  (@Build_SubSetoid A conf _).
+  (@Build_Subsetoid A conf _).
 Notation "[ 'subsetoid' 'by' conf ]" :=
   [subsetoid by conf on _].
 Notation "[ 'subsetoid' 'of' x 'in' A | P ]" :=
@@ -72,7 +69,7 @@ Notation "[ 'subsetoid' 'of' x 'in' A | P ]" :=
 Notation "[ 'subsetoid' 'of' x | P ]" :=
   [subsetoid of x in _ | P].
 
-Program Definition subsetoid_as_setoid `(B: SubSetoid A) :=
+Program Definition subsetoid_as_setoid `(B: Subsetoid A) :=
   [setoid by (== in A) on {x|B x}].
 Next Obligation.
   split.
@@ -80,17 +77,24 @@ Next Obligation.
   - intros x y Heq. now symmetry.
   - intros x y z Heq1 Heq2. now rewrite Heq1.
 Defined.
-Coercion subsetoid_as_setoid : SubSetoid >-> Setoid.
+Coercion subsetoid_as_setoid : Subsetoid >-> Setoid.
 
-Program Definition subsetoid_trivial (A:Setoid) :=
+Program Definition setoid_as_subsetoid (A:Setoid) :=
   [subsetoid of x | True].
 Next Obligation. split. now intros x y Heq. Defined.
-(* Coercion subsetoid_trivial : Setoid >-> SubSetoid. *)
+(* Coercion setoid_as_subsetoid : Setoid >-> Subsetoid. *)
+
+Notation "[{ A }]" := (setoid_as_subsetoid A) : setoid_scope.
+
+Program Definition empty_subsetoid (A:Setoid) :=
+  [subsetoid of x | False].
+Next Obligation. split. now intros x y Heq. Defined.
+
 
 Class IsMap {X Y:Setoid} (f: X -> Y) :=
 { map_proper:> Proper ((==) ==> (==)) f }.
 
-Structure Map (X Y:Setoid): Type := {
+Structure Map (X Y:Setoid) : Type := {
   map_fun:> X -> Y;
   map_prf:> IsMap map_fun
 }.
@@ -105,14 +109,10 @@ Notation " 'map' x => m " := (map x in _ => m)
 
 Program Definition Map_compose {X Y Z} (f: Map X Y) (g: Map Y Z)
   : Map X Z := map x => g (f x).
-Next Obligation.
-  split. intros x y Heq. now rewrite Heq.
-Defined.
+Next Obligation. split. intros x y Heq. now rewrite Heq. Defined.
 
 Program Definition Map_id {X:Setoid} : Map X X := map x => x.
-Next Obligation.
-  split. intros x y Heq. apply Heq.
-Defined.
+Next Obligation. split. intros x y Heq. apply Heq. Defined.
 
 Program Definition Map_setoid (X Y: Setoid) : Setoid :=
   [setoid by ((==) ==> (==))%signature on Map X Y].
@@ -149,12 +149,10 @@ Qed.
 
 Lemma mapcomp_assoc {X Y Z W} {f: Map Z W} {g: Map Y Z} {h: Map X Y} :
   (f \o g) \o h == f \o g \o h.
-Proof.
-  intros. simpl. intros x y Heq. now rewrite Heq.
-Qed.
+Proof. intros. simpl. intros x y Heq. now rewrite Heq. Qed.
 
 
-Class Included {X} (A B: SubSetoid X) := 
+Class Included {X} (A B: Subsetoid X) := 
 { included: forall (x:X), A x -> B x }.
 
 Notation "A '<=' B" := (@Included _ A B) : setoid_scope.
@@ -164,8 +162,8 @@ Proof. split. intros a xa. apply H0, H, xa. Qed.
 #[global]
 Existing Instance included_transitive.
 
-Program Definition SubSetoid_setoid {X:Setoid} :=
-  [setoid by (fun A B => (A <= B) /\ (B <= A)) on SubSetoid X].
+Program Definition Subsetoid_setoid (X:Setoid) :=
+  [setoid by (fun A B => (A <= B) /\ (B <= A)) on Subsetoid X].
 Next Obligation.
   split.
   - intros A. split; split; intros x Ax; apply Ax.
@@ -174,12 +172,11 @@ Next Obligation.
     + intros Ax. apply BC. now apply AB.
     + intros Cx. apply BA. now apply CB.
 Defined.
-Canonical Structure SubSetoid_setoid.
-
+Canonical Structure Subsetoid_setoid.
 
 Program Definition Image `(f: Map X Y) 
-  : Map (SubSetoid X) (SubSetoid Y) := 
-  map A => [subsetoid of y | exists x, (A x) /\ y == f x].
+  : Map (Subsetoid X) (Subsetoid Y)
+  := map A => [subsetoid of y | exists x, A x /\ y == f x].
 Next Obligation.
   split. intros a b Heq. split; intros [x [Ax Heq1]]; exists x;
   split; try apply Ax; (now rewrite <-Heq || now rewrite Heq).
@@ -192,7 +189,7 @@ Next Obligation.
 Defined.
 
 Program Definition Preimage `(f: Map X Y)
-  : Map (SubSetoid Y) (SubSetoid X)
+  : Map (Subsetoid Y) (Subsetoid X)
   := map B => [subsetoid of x | exists y, (B y) /\ y == f x].
 Next Obligation.
   split. intros a b Heq. split; intros [y [By Heq1]]; exists y;
@@ -205,19 +202,12 @@ Next Obligation.
   - apply BA, Ax.
 Defined.
 
-(* Lemma ImagePreimage_id `{f: Map X Y}
-  : (Image f) \o (Preimage f) == Map_id.
-Proof.
-  intros A B. simpl. intros [[AB] [BA]]. split; split; intros y.
-  - intros [x [[y0 [Ay0 E0]] E]]. apply AB.
-    now rewrite E, <-E0.
-  - intros By. simpl. exists y. *)
 
-Program Definition inclusion `{B: SubSetoid A} : Map B A
+Program Definition inclusion `{B: Subsetoid A} : Map B A
   := map h => h.
 Next Obligation. split. intros x y. now simpl. Defined.
 
-Lemma inc_inj `{B: SubSetoid A} : Injective (@inclusion A B).
+Lemma inc_inj `{B: Subsetoid A} : Injective (@inclusion A B).
 Proof. split. intros x y. now simpl. Qed.
 
 
@@ -235,10 +225,10 @@ Structure Binop (X:Setoid) := {
 #[global]
 Existing Instance binop_prf.
 
-Notation "[ 'Binop' 'by' f ]" := (@Build_Binop _ f _) : alg_scope.
-Notation " 'binop' x , y 'in' A => m " := [Binop by fun (x y:A) => m]
+Notation "[ 'binop' 'by' f ]" := (@Build_Binop _ f _) : alg_scope.
+Notation " 'binop' x , y 'in' A => m " := [binop by fun (x y:A) => m]
   (at level 70, right associativity) : alg_scope.
-Notation " 'binop' x , y => m " := [Binop by fun (x y:_) => m]
+Notation " 'binop' x , y => m " := [binop by fun (x y:_) => m]
   (at level 70, right associativity) : alg_scope.
 
 Class Associative `(op: Binop X) := {
@@ -493,7 +483,7 @@ Section HomTheory.
 End HomTheory.
 
 
-Class IsSubGroup (G:Group) (H: SubSetoid G) :=
+Class IsSubgroup (G:Group) (H: Subsetoid G) :=
 {
   sg_ferm_op:
     forall {x y}, H x -> H y -> H (x * y);
@@ -504,71 +494,69 @@ Class IsSubGroup (G:Group) (H: SubSetoid G) :=
   sg_ferm_id: H 1
 }.
 
-Structure SubGroup (G:Group) := {
-  sg_supp:> SubSetoid G;
+Structure Subgroup (G:Group) := {
+  sg_supp:> Subsetoid G;
 
-  sg_prf:> IsSubGroup G sg_supp
+  sg_prf:> IsSubgroup G sg_supp
 }.
 #[global]
 Existing Instance sg_prf.
 
-Notation "H '<-' G" := (@Build_SubGroup G H _)
+Notation "H '<-' G" := (IsSubgroup G H)
   (at level 60, right associativity) : alg_scope.
-Notation "[ 'subgroup' 'of' x 'in' G | P ] " :=
+Notation "H <<- G" := (@Build_Subgroup G H _)
+  (at level 60, right associativity) : alg_scope.
+(* Notation "[ 'subgroup' 'of' x 'in' G | P ] " :=
   ([subsetoid of x | P] <- G) : alg_scope.
 Notation "[ 'subgroup' 'of' x | P ]" :=
-  ([subgroup of x in _ | P]) : alg_scope.
+  ([subgroup of x in _ | P]) : alg_scope. *)
 
-Program Definition sg_as_group `(H:SubGroup G) :=
+Program Definition sg_as_group `(H:Subgroup G) :=
   [group by (binop x, y => x * y), (map x => !x), 1 on H].
-Next Obligation.
-  apply sg_ferm_op; (apply H1 || apply H0).
-Defined.
+Next Obligation. apply sg_ferm_op; (apply H1 || apply H0). Defined.
 Next Obligation.
   split. intros x1 y1 Heq x0 y0 Heq1. simpl. 
   simpl in Heq. simpl in Heq1. now rewrite Heq, Heq1.
 Defined.
-Next Obligation.
-  apply sg_ferm_inv, H0.
-Defined.
+Next Obligation. apply sg_ferm_inv, H0. Defined.
 Next Obligation.
   split. intros x y. simpl. intros Heq.
   now rewrite Heq.
 Defined.
-Next Obligation.
-  apply sg_ferm_id.
-Defined.
+Next Obligation. apply sg_ferm_id. Defined.
 Next Obligation.
   split.
   - split. intros x y z. simpl. apply associative.
   - split. intros x. simpl. apply ridentical.
   - split. intros x. simpl. apply rinvertible.
 Defined.
-Coercion sg_as_group : SubGroup >-> Group.
+Coercion sg_as_group : Subgroup >-> Group.
 
-
-
-
-
-Class IsNormalSubGroup `(H: SubGroup G) := {
+Class IsNormalSubgroup `(H: Subgroup G) := {
   normal:
     forall {g h}, H h -> H (g * h * !g)
 }.
 
-Structure NormalSubGroup (G:Group):= {
-  nsg_supp:> SubGroup G;
+Structure NormalSubgroup (G:Group):= {
+  nsg_supp:> Subgroup G;
 
-  nsg_prf:> IsNormalSubGroup nsg_supp
+  nsg_prf:> IsNormalSubgroup nsg_supp
 }.
 #[global]
 Existing Instance nsg_prf.
 
-Notation "H <| G" := (@Build_NormalSubGroup G H _)
+Notation "H <| G" := (@IsNormalSubgroup G H)
+  (at level 60, right associativity) : alg_scope.
+Notation "H <<| G" :=
+  (@Build_NormalSubgroup G H _)
+  (at level 60, right associativity) : alg_scope.
+Notation "H <<-| G" :=
+  (@Build_NormalSubgroup G (H <<- G) _)
   (at level 60, right associativity) : alg_scope.
 
 
-Program Definition SubGroup_setoid {G:Group} :=
-  [subsetoid of H in (@SubSetoid_setoid G) | IsSubGroup G H].
+Program Definition Subgroup_setoid (G:Group) :=
+  [subsetoid of H in Subsetoid_setoid G | H <- G].
 Next Obligation.
   split. intros H1 H2. simpl. intros [H1H2 H2H1]. split;
   intros [Hfop Hfinv Hfid]; split; try intros x y Hx Hy;
@@ -579,16 +567,17 @@ Next Obligation.
   try apply H1H2; try apply Hx; try apply Hy.
 Defined.
 
-Program Definition SubGroup_setoid_SubGroup `(H: @SubGroup_setoid G)
-  : SubGroup G := (proj1_sig H) <- G.
+Program Definition sgs_sg `(H: Subgroup_setoid G)
+  : Subgroup G := H <<- G.
+(* Coercion sgs_sg : Subgroup_setoid >-> Subgroup. *)
 
-Program Definition SubGroup_setoid_trivial {G:Group}
-  : (@SubGroup_setoid G) := subsetoid_trivial G.
+Program Definition SubGroup_setoid_trivial (G:Group)
+  : (Subgroup_setoid G) := [{G}].
 Next Obligation. split; simpl; intros; trivial. Defined.
 
 
 Program Definition HomImage `(f: Homomorph G H) 
-  : Map (@SubGroup_setoid G) (@SubGroup_setoid H) 
+  : Map (Subgroup_setoid G) (Subgroup_setoid H) 
   := map A => (Image f) A.
 Next Obligation.
   split.
@@ -613,7 +602,7 @@ Next Obligation.
 Defined.
 
 Program Definition HomKernel `(f: Homomorph G H) :=
-  [subgroup of x | f x == 1] <| G.
+  [subsetoid of x | f x == 1] <<-| G.
 Next Obligation.
   split. intros g h. simpl. intros Heq. apply conj;
   intros Heq1; now rewrite <-Heq1, Heq.
@@ -633,8 +622,8 @@ Next Obligation.
 Defined.
 
 
-Program Definition Coset `(H: SubGroup G) :=
-  [setoid by (fun x y => H (x * !y)) on G].
+Program Definition Coset `(H: Subgroup G) :=
+  [setoid by fun x y => H (x * !y) on G].
 Next Obligation.
   split.
   - intros x. rewrite rinvertible. apply sg_ferm_id.
@@ -646,19 +635,19 @@ Next Obligation.
       linvertible, ridentical in Hxz.
 Defined.
 
-Program Definition quotmap `{H: SubGroup G} : Map G (Coset H) :=
+Program Definition quotmap `{H: Subgroup G} : Map G (Coset H) :=
   map x => x.
 Next Obligation.
   split. intros x y Heq. simpl. rewrite Heq, rinvertible.
   apply sg_ferm_id.
 Defined.
-(* Coercion _quotmap `{H: SubGroup G} : G -> Coset H := quotmap. *)
+(* Coercion _quotmap `{H: Subgroup G} : G -> Coset H := quotmap. *)
 
-Corollary coset_eq `{H: SubGroup G} : forall {g h:G},
+Corollary coset_eq `{H: Subgroup G} : forall {g h:G},
   H (g * !h) -> (g == h in Coset H).
 Proof. intros g h Heq. apply Heq. Qed.
 
-Lemma quotmap_surj `{H: SubGroup G} : Surjective (@quotmap G H).
+Lemma quotmap_surj `{H: Subgroup G} : Surjective (@quotmap G H).
 Proof.
   split. intros g. simpl. exists g. 
   rewrite rinvertible. apply sg_ferm_id.
@@ -666,7 +655,7 @@ Defined.
 #[global]
 Existing Instance quotmap_surj.
 
-Program Definition CosetGroup `(H: NormalSubGroup G) :=
+Program Definition CosetGroup `(H: NormalSubgroup G) :=
   [group by (binop x, y => x * y), (map x => !x), 1 on Coset H].
 Next Obligation.
   split. intros x0 y0. simpl. intros Heq0 x1 y1 Heq1.
@@ -692,21 +681,23 @@ Next Obligation.
     apply sg_ferm_id.
 Defined.
 
-Lemma quotmap_hom `{H: NormalSubGroup G} : 
+Lemma quotmap_hom `{H: NormalSubgroup G} : 
   (@IsHomomorph G (CosetGroup H)) quotmap.
-Proof. 
+Proof.
   split. intros x y. simpl. rewrite rinvertible. apply sg_ferm_id.
 Qed.
+#[global]
+Existing Instance quotmap_hom.
 
 Section FundHom.
   Context {G H:Group} (f: Homomorph G H)
     (N := HomKernel f) (G_N := CosetGroup N).
 
-  Program Definition Iso1 : Isomorph G_N (HomImage f (@SubGroup_setoid_trivial G_N)):=
+  Program Definition Iso1 
+    : Isomorph G_N (sgs_sg (HomImage f [{G}])) :=
     iso x => f x.
-  Next Obligation.
-    now exists x.
-  Defined.
+  Next Obligation. split; simpl; tauto. Defined.
+  Next Obligation. now exists x. Defined.
   Next Obligation.
     split. intros x y. simpl. intros Heq.
     rewrite homomorph, hom_inv in Heq.
@@ -742,11 +733,11 @@ Section FundHom.
 End FundHom.
 
 Section CorrespSubGroup.
-  Context {G:Group} {N: NormalSubGroup G} (G_N := CosetGroup N).
+  Context {G:Group} {N: NormalSubgroup G} (G_N := CosetGroup N).
 
   Program Definition ExtendQuotGroups
-    : Map (@SubGroup_setoid G_N)
-      [subsetoid of K in (@SubGroup_setoid G) | N <= K]
+    : Map (@Subgroup_setoid G_N)
+      [subsetoid of K in (Subgroup_setoid G) | N <= K]
     := map H => (Preimage quotmap H).
   Next Obligation.
     split. intros H1 H2. simpl. intros [H1H2 H2H1]. split; intros NH.
@@ -754,7 +745,7 @@ Section CorrespSubGroup.
     - apply (transitivity NH H2H1).
   Defined.
   Next Obligation.
-    pose (Build_SubGroup G_N H H0) as grpH. split. 
+    pose (Build_Subgroup G_N H H0) as grpH. split. 
     - intros g h. simpl. intros [y0 [Hy0 Heq0]] [y1 [Hy1 Heq1]].
       exists (y0 * y1). split. 
       + apply (sg_ferm_op(H := grpH) Hy0 Hy1).
@@ -776,7 +767,7 @@ Section CorrespSubGroup.
         apply sg_ferm_id.
   Defined.
   Next Obligation.
-    pose (Build_SubGroup G_N H H0) as grpH.
+    pose (Build_Subgroup G_N H H0) as grpH.
     split. simpl. intros x Nx. exists x. split.
     - assert (x == 1 in G_N) as Hid. 
       { simpl. now rewrite grp_invid_id, ridentical. }
@@ -785,8 +776,8 @@ Section CorrespSubGroup.
   Defined.
 
   Program Definition FoldGroups
-    : Map [subsetoid of K in (@SubGroup_setoid G) | N <= K]
-      (@SubGroup_setoid G_N)
+    : Map [subsetoid of K in (@Subgroup_setoid G) | N <= K]
+      (@Subgroup_setoid G_N)
     := map K => Image quotmap K.
   Next Obligation.
     split. intros SA SB. simpl. intros [[AB] [BA]]. split; split;
@@ -835,10 +826,10 @@ Section CorrespSubGroup.
     intros g; simpl. 
     - intros [y [[h [Kh E1]] E2]].
       apply N_K1 in E1. apply N_K1 in E2.
-      pose (SubGroup_setoid_SubGroup K1) as grpK1.
+      pose (sgs_sg K1) as grpK1.
       assert (forall {w}, proj1_sig K1 w -> grpK1 w) as ingK1.
       { intros w Kw. apply Kw. }
-      pose (SubGroup_setoid_SubGroup K2) as grpK2.
+      pose (sgs_sg K2) as grpK2.
       assert (forall {w}, proj1_sig K2 w -> grpK2 w) as ingK2.
       { intros w Kw. apply Kw. }
       pose (sg_ferm_op (ingK1 _ E1) (ingK1 _ Kh)) as K1y.
