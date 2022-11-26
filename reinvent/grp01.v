@@ -743,19 +743,15 @@ Defined.
 #[global]
 Existing Instance quotmap_hom.
 
-
-Definition sg_as_sgstd__ `(H: Subgroup G) : Subgroupable_setoid G H :=
-  sg_prf G H.
-
-Program Definition sg_as_sgstd' `(H: Subgroup G) :=
-  exist (fun x : Subsetoid_setoid G => Subgroupable_setoid G x) H (sg_as_sgstd__ H).
-
+Program Definition sg_as_sgstd `(H: Subgroup G) 
+  : [/Subgroupable_setoid G\] := sg_supp _ H.
+Next Obligation. apply sg_prf. Defined.
 
 Section FundHom.
   Context {G H:Group} (f: Homomorph G H)
     (N := HomKernel f) (G_N := CosetGroup N).
 
-  Program Definition Iso1 : Isomorph G_N (HomImage f (sg_as_sgstd' (sg_self G))) :=
+  Program Definition Iso1 : Isomorph G_N (HomImage f (sg_as_sgstd (sg_self G))) :=
     iso x => f x.
   (* Next Obligation. split; simpl; tauto. Defined. *)
   Next Obligation. now exists x. Defined.
@@ -911,49 +907,6 @@ Section CorrespSubgroup.
   Qed.
 End CorrespSubgroup.
 
-Print Iso1_obligation_1.
-
-Lemma sg_as_sgstd : forall {G:Group} (H: Subgroup G),
-  Subgroupable_setoid G H.
-Proof. 
-  intros G H. split; intros. 
-  - apply (sg_ferm_op H0 H1).
-  - apply (sg_ferm_inv H0).
-  - apply sg_ferm_id.
-Defined.
-
-Set Printing Coercions.
-Set Printing Notations.
-
-Print Iso1.
-Print HomImage.
-Print sg_as_sgstd.
-Definition sg_as_sgstd_ `(H: Subgroup G) : Subgroupable_setoid G H :=
-{|
-  sg_ferm_op := fun (x y : G) (H0 : H x) (H1 : H y) => sg_ferm_op H0 H1;
-  sg_ferm_inv := fun (x : G) (H0 : H x) => sg_ferm_inv H0;
-  sg_ferm_id := sg_ferm_id
-|}.
-Print sg_as_sgstd_.
-
-Lemma sg_as_sgstd2 : forall {G:Group} (H: Subgroup G),
-  Subgroupable_setoid G H.
-intros G H. apply sg_as_sgstd_. Qed.
-
-
-Definition sg_as_sgstd__ `(H: Subgroup G) : Subgroupable_setoid G H :=
-  sg_prf G H.
-
-Program Definition sg_as_sgstd' `(H: Subgroup G) :=
-  exist (fun x : Subsetoid_setoid G => Subgroupable_setoid G x) H (sg_as_sgstd__ H).
-
-{|
-    sg_ferm_op := fun (x y : G) (H0 : H x) (H1 : H y) => sg_ferm_op H0 H1;
-    sg_ferm_inv := fun (x : G) (H0 : H x) => sg_ferm_inv H0;
-    sg_ferm_id := sg_ferm_id
-  |}.
-
- 
 
 Program Definition dprod_group (G H:Group):=
   [group by binop g, h => (fst g *_{G} fst h, snd g *_{H} snd h),
