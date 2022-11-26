@@ -270,8 +270,6 @@ Notation "[ 'monoid' 'by' op , id 'on' A ]" :=
 Notation "[ 'monoid 'by' op , id ]" :=
   [monoid by op, id on _] : alg_scope.
 
-(* Program Definition Map_monoid := [monoid by ] *)
-
 
 Class LInvertible `(op: Binop X) (e:X) (inv: Map X X) :=
 { linvertible: forall x, op (inv x) x == e }.
@@ -566,15 +564,26 @@ Next Obligation.
   try apply Hfid; try apply Hfop; try apply Hfinv;
   try apply H1H2; try apply Hx; try apply Hy.
 Defined.
+Canonical Structure Subgroup_setoid.
 
-Program Definition sgs_sg `(H: Subgroup_setoid G)
+#[nonuniform]
+Program Coercion sgsetoid_as_sg `(H: Subgroup_setoid G)
   : Subgroup G := H <<- G.
-(* Coercion sgs_sg : Subgroup_setoid >-> Subgroup. *)
+(* Print Graph.
+Print Coercions. *)
 
-Program Definition SubGroup_setoid_trivial (G:Group)
+Program Definition Subgroup_setoid_trivial (G:Group)
   : (Subgroup_setoid G) := [{G}].
 Next Obligation. split; simpl; intros; trivial. Defined.
 
+Program Definition sgs_trivial_proper {G:Group}
+  : Subgroup_setoid G := [subsetoid of x in G | x == 1].
+Next Obligation. split. intros x y Heq. now rewrite Heq. Defined.
+Next Obligation. 
+  split; simpl; intuition.
+  - rewrite H, H0. apply lidentical.
+  - rewrite H. apply grp_invid_id.
+Defined. 
 
 Program Definition HomImage `(f: Homomorph G H) 
   : Map (Subgroup_setoid G) (Subgroup_setoid H) 
@@ -685,7 +694,7 @@ Lemma quotmap_hom `{H: NormalSubgroup G} :
   (@IsHomomorph G (CosetGroup H)) quotmap.
 Proof.
   split. intros x y. simpl. rewrite rinvertible. apply sg_ferm_id.
-Qed.
+Defined.
 #[global]
 Existing Instance quotmap_hom.
 
@@ -694,7 +703,7 @@ Section FundHom.
     (N := HomKernel f) (G_N := CosetGroup N).
 
   Program Definition Iso1 
-    : Isomorph G_N (sgs_sg (HomImage f [{G}])) :=
+    : Isomorph G_N ( (HomImage f [{G}])) :=
     iso x => f x.
   Next Obligation. split; simpl; tauto. Defined.
   Next Obligation. now exists x. Defined.
@@ -716,6 +725,9 @@ Section FundHom.
     - intros [y [x Heq]]. simpl. now exists x.
   Defined.
 
+  Set Printing Coercions.
+  Print Iso1.
+
   Lemma Iso1comp_proper :
     f == inclusion \o Iso1 \o quotmap in (Map_setoid G H).
   Proof. intros x y Heq. simpl. now rewrite Heq. Qed.
@@ -732,7 +744,7 @@ Section FundHom.
   Qed.
 End FundHom.
 
-Section CorrespSubGroup.
+Section CorrespSubgroup.
   Context {G:Group} {N: NormalSubgroup G} (G_N := CosetGroup N).
 
   Program Definition ExtendQuotGroups
@@ -826,13 +838,7 @@ Section CorrespSubGroup.
     intros g; simpl. 
     - intros [y [[h [Kh E1]] E2]].
       apply N_K1 in E1. apply N_K1 in E2.
-      pose (sgs_sg K1) as grpK1.
-      assert (forall {w}, proj1_sig K1 w -> grpK1 w) as ingK1.
-      { intros w Kw. apply Kw. }
-      pose (sgs_sg K2) as grpK2.
-      assert (forall {w}, proj1_sig K2 w -> grpK2 w) as ingK2.
-      { intros w Kw. apply Kw. }
-      pose (sg_ferm_op (ingK1 _ E1) (ingK1 _ Kh)) as K1y.
+      pose (sg_ferm_op E1 Kh) as K1y.
       rewrite <-associative, linvertible, ridentical in K1y.
       apply sg_ferm_inv in K1y.
       pose (sg_ferm_op K1y E2) as K1g.
@@ -859,6 +865,10 @@ Section CorrespSubGroup.
         * rewrite rinvertible. apply sg_ferm_id.
       + rewrite rinvertible. apply sg_ferm_id.
   Qed.
+End CorrespSubgroup.
+
+
+
 
 Close Scope alg_scope.
 Close Scope setoid_scope.
