@@ -473,6 +473,8 @@ Notation "'iso' x 'in' G => m " := [iso by fun (x:G) => m]
   (at level 70, right associativity) : alg_scope.
 Notation "'iso' x => m " := (iso x in _ => m)
   (at level 70, right associativity) : alg_scope.
+Notation "G ~= H" := (Isomorph G H)
+  (at level 60, right associativity) : alg_scope.
 
 Program Definition Hom_compose {X Y Z:Group}
   (f: Homomorph X Y) (g: Homomorph Y Z)
@@ -750,6 +752,7 @@ Next Obligation.
   - intros x. simpl. rewrite grp_invid_id, ridentical, rinvertible.
     apply sg_ferm_id.
 Defined.
+Notation "[ 'grp' G / N ]" := (@CosetGroup G N).
 
 Program Definition quothom `{H: NormalSubgroup G}
   : Homomorph G (CosetGroup H) := hom g => quotmap g.
@@ -1026,26 +1029,28 @@ Next Obligation.
   split. intros g h. simpl. rewrite rinvertible. apply sg_ferm_id.
 Defined.
 
-Program Definition Iso3' {G:Group} {N1 N2: NormalSubgroup G} (Hle: N1 <= N2)
-  := (@Iso1_kernel _ _ (Hom3 Hle) 
-       ([substd by N2 on CosetGroup N1] <<-| (CosetGroup N1))
-       [subgrp {CosetGroup N2}] _ _).
+Program Definition coset_nsg {G} {N1 N2: NormalSubgroup G} (Hle: N1 <= N2)
+  := [substd by N2 on CosetGroup N1] <<-| (CosetGroup N1).
 Next Obligation.
-  split. intros g h. simpl. intros Egh. split; intros Ng.
-  - apply Hle in Egh. apply sg_ferm_inv in Egh.
-    rewrite grp_opinv, grp_invinv in Egh.
-    pose (sg_ferm_op Egh Ng) as N2h.
-    now rewrite <-associative, linvertible, ridentical in N2h.
-  - apply Hle in Egh. pose (sg_ferm_op Egh Ng) as N2g.
-    now rewrite <-associative, linvertible, ridentical in N2g.
+split. intros g h. simpl. intros Egh. split; intros Ng.
+- apply Hle in Egh. apply sg_ferm_inv in Egh.
+  rewrite grp_opinv, grp_invinv in Egh.
+  pose (sg_ferm_op Egh Ng) as N2h.
+  now rewrite <-associative, linvertible, ridentical in N2h.
+- apply Hle in Egh. pose (sg_ferm_op Egh Ng) as N2g.
+  now rewrite <-associative, linvertible, ridentical in N2g.
 Defined.
 Next Obligation.
-  split.
-  - intros g h. simpl. apply sg_ferm_op.
-  - intros g. simpl. apply sg_ferm_inv.
-  - simpl. apply sg_ferm_id.
+split.
+- intros g h. simpl. apply sg_ferm_op.
+- intros g. simpl. apply sg_ferm_inv.
+- simpl. apply sg_ferm_id.
 Defined.
 Next Obligation. split. intros g h. simpl. apply normal. Defined.
+Notation "[ 'subgrp' H / N ]" := (@coset_nsg _ N H _).
+
+Program Definition Iso3' {G:Group} {N1 N2: NormalSubgroup G} (Hle: N1 <= N2)
+  := (@Iso1_kernel _ _ (Hom3 Hle) (coset_nsg Hle) [subgrp {CosetGroup N2}] _ _).
 Next Obligation.
   split; split; intros g; simpl; intros N2g.
   - now rewrite grp_invid_id, ridentical.
@@ -1057,6 +1062,7 @@ Next Obligation.
 Defined.
 
 Definition Iso3 {G:Group} {N1 N2: NormalSubgroup G} (Hle: N1 <= N2)
+  : Isomorph (CosetGroup (coset_nsg _)) (CosetGroup N2)
   := grpsg_id_iso \o_i (Iso3' Hle).
 
 Close Scope alg_scope.
