@@ -409,7 +409,7 @@ Section GroupTheory.
     apply (grp_op_inj_r(g:=g)).
     now rewrite <-associative, linvertible, ridentical.
   Qed.
-  
+
   Lemma grp_invinv : forall {x:G}, !!x == x.
   Proof.
     intros x.
@@ -442,7 +442,7 @@ Class IsHomomorph {G H:Group} (f: Map G H) := {
 
 Structure Homomorph (G H:Group) := {
   hom_map:> Map G H;
-  
+
   hom_prf:> IsHomomorph hom_map
 }.
 #[global]
@@ -516,11 +516,11 @@ Notation "H '<-' G" := (IsSubgroup G H)
 Notation "H <<- G" := (@Build_Subgroup G H _)
   (at level 60, right associativity) : alg_scope.
 
-Program Definition sg_as_group `(H:Subgroup G) :=
+Program Coercion sg_as_group `(H:Subgroup G) :=
   [group by (binop x, y => x * y), (map x => !x), 1 on [|H|]].
 Next Obligation. apply sg_ferm_op; (apply H1 || apply H0). Defined.
 Next Obligation.
-  split. intros x1 y1 Heq x0 y0 Heq1. simpl. 
+  split. intros x1 y1 Heq x0 y0 Heq1. simpl.
   simpl in Heq. simpl in Heq1. now rewrite Heq, Heq1.
 Defined.
 Next Obligation. apply sg_ferm_inv, H0. Defined.
@@ -570,12 +570,10 @@ Next Obligation.
   try apply Hfid; try apply Hfop; try apply Hfinv;
   try apply H1H2; try apply Hx; try apply Hy.
 Defined.
-(* Notation "[ 'subgrps' 'of' G ]" := [|Subgroupable_subsetoid G|]. *)
+Notation "[ 'grpables' 'of' G ]" := [|Subgroupable_subsetoid G|].
 
-Program Definition _sgstd_as_sg `(H: [|Subgroupable_subsetoid G|])
+Program Definition _sgstd_as_sg `(H: [grpables of G])
   : Subgroup G :=  H <<- G.
-
-
 
 
 Program Definition Subgroup_setoid (G:Group) :=
@@ -588,13 +586,13 @@ Next Obligation.
 Defined.
 Canonical Structure Subgroup_setoid.
 
-Program Definition sgstd_as_sg {G:Group}
-  : Map [|Subgroupable_subsetoid G|] (Subgroup_setoid G)
+Program Definition grpable_as_sg {G:Group}
+  : Map [grpables of G] (Subgroup G)
   := map H => H <<- G.
 Next Obligation. split. intros A B. simpl. intuition. Defined.
 
-Program Definition sg_as_sgstd {G:Group}
-  : Map (Subgroup_setoid G) [|Subgroupable_subsetoid G|]
+Program Definition sg_as_grpable {G:Group}
+  : Map (Subgroup G) [grpables of G]
   := map H => sg_supp H.
 Next Obligation. intuition. Defined.
 Next Obligation. split. intros A B. simpl. intuition. Defined.
@@ -617,7 +615,7 @@ Next Obligation.
 Defined.
 
 Program Definition sg_in_sg {G:Group} (N H: Subgroup G)
-  : Subgroup [grp |H|] := [substd of n | N n] <<- [grp |H|].
+  : Subgroup H := [substd of n | N n] <<- H.
 Next Obligation. split. intros g h. simpl. intros Heq. now rewrite Heq. Defined.
 Next Obligation.
   split; simpl.
@@ -628,13 +626,13 @@ Defined.
 Notation "[ 'subgrp' N 'in' H ]" := (@sg_in_sg _ N H).
 
 Program Definition nsg_in_sg {G:Group} (N: NormalSubgroup G) (H: Subgroup G)
-  : NormalSubgroup [grp |H|] := [subgrp N in H] <<| [grp |H|].
+  : NormalSubgroup H := [subgrp N in H] <<| H.
 Next Obligation. split. intros g h. simpl. apply normal. Defined.
-
+Notation "[ 'nsgrp' N 'in' H ]" := (@nsg_in_sg _ N H).
 
 Program Definition HomImage `(f: Homomorph G H)
   : Map (Subgroup G) (Subgroup H)
-  := map A => sgstd_as_sg ((Image f) (sg_as_sgstd A)).
+  := map A => grpable_as_sg ((Image f) (sg_as_grpable A)).
 Next Obligation.
   split.
   - intros x y. simpl. intros [z1 [Az1 Heq1]] [z2 [Az2 Heq2]].
@@ -688,7 +686,7 @@ Next Obligation.
 Defined.
 
 Corollary coset_eq `{H: Subgroup G} : forall {g h:G},
-  H (g * !h) -> (g == h in Coset H).
+  H (g * !h) -> g == h in Coset H.
 Proof. intros g h Heq. apply Heq. Qed.
 
 Program Definition quotmap `{H: Subgroup G} : Map G (Coset H) :=
@@ -743,12 +741,14 @@ Section FundHom.
   Context {G H:Group} (f: Homomorph G H)
     (N := HomKernel f) (G_N := CosetGroup N).
 
-  Program Definition Iso1
-    : Isomorph G_N [grp |HomImage f [subgrp {G}]|] :=
+  Program Definition Iso1_kernel {A: NormalSubgroup G} {B: Subgroup H}
+    (EAN: (A == N in Subgroup_setoid G))
+    (EBI: (B == HomImage f [subgrp {G}] in Subgroup_setoid H))
+    : Isomorph (CosetGroup A) B :=
     iso x => f x.
-  Next Obligation. now exists x. Defined.
+  Next Obligation. apply H1. simpl. now exists x. Defined.
   Next Obligation.
-    split. intros x y. simpl. intros Heq.
+    split. intros x y. simpl. intros Heq. apply i1 in Heq. simpl in Heq.
     rewrite homomorph, hom_inv in Heq.
     apply grp_send_r in Heq.
     now rewrite grp_invinv, lidentical in Heq.
@@ -756,12 +756,20 @@ Section FundHom.
   Next Obligation. split. intros x y. simpl. apply homomorph. Defined.
   Next Obligation.
     split; split; split.
-    - intros x y. simpl. intros Heq.
+    - intros x y. simpl. intros Heq. apply i2. simpl.
       rewrite homomorph, hom_inv.
       symmetry; apply grp_send_r.
       now rewrite lidentical.
-    - intros [y [x Heq]]. simpl. now exists x.
+    - simpl. intros [y By]. simpl. destruct i as [i].
+      simpl in i. destruct (i _ By) as [x [_ E]].
+      now exists x.
   Defined.
+
+  Program Definition Iso1
+    : Isomorph G_N (HomImage f [subgrp {G}]) 
+    := Iso1_kernel _ _.
+  Next Obligation. split; split; intuition. Defined.
+  Next Obligation. split; split; intuition. Defined.
 
   Lemma Iso1comp_proper :
     f == inclusion \o Iso1 \o quotmap in (Map_setoid G H).
@@ -784,7 +792,7 @@ Section CorrespSubgroup.
 
   Program Definition ExtendQuotGroups
   : Map (Subgroup G_N) [substd of K in Subgroup G | N <= K]
-  := map H => sgstd_as_sg (Preimage quotmap (sg_as_sgstd H)).
+  := map H => grpable_as_sg (Preimage quotmap (sg_as_grpable H)).
   Next Obligation.
     split. intros H1 H2. simpl. intros [H1H2 H2H1]. split; intros NH;
     now apply (transitivity NH).
@@ -852,7 +860,7 @@ End CorrespSubgroup.
 
 
 Program Definition dprod_group (G H:Group):=
-  [group by binop g, h => (fst g *_{G} fst h, snd g *_{H} snd h),
+  [group by binop g, h => (fst g * fst h, snd g * snd h),
             map g => (!(fst g), !(snd g)),
             (1, 1) on [dprodstd G \* H]].
 Next Obligation.
@@ -880,57 +888,94 @@ Next Obligation.
   try split; try apply Hh; try apply Nn;
   now rewrite <-Heq1, Heq.
 Defined.
-
 Notation "[ 'substd' N \* H ]" := (@sg_prod _ N H).
 
-Section FundHom.
-  Context {G:Group} (H: Subgroup G) (N: NormalSubgroup G).
+Program Definition sgnsg_prod `(H: Subgroup G) (N: NormalSubgroup G)
+  := [substd H \* N] <<- G.
+Next Obligation.
+  split; simpl.
+  - intros x y [hx [nx [Hhx [Nnx Heqx]]]]
+    [hy [ny [Hhy [Nny Heqy]]]]. 
+    pose (normal(g := !hy) Nnx) as Heq0.
+    rewrite grp_invinv in Heq0. 
+    exists (hx * hy), (!hy * nx * hy * ny). split; try split.
+    + apply (sg_ferm_op Hhx Hhy).
+    + apply (sg_ferm_op Heq0 Nny).
+    + now rewrite 3!associative, <-(associative hx),
+        rinvertible, ridentical, Heqx, Heqy, associative.
+  - intros x [h [n [Hh [Nn Heq]]]].
+    exists !h, (h * !n * !h). split; try split.
+    + apply sg_ferm_inv, Hh.
+    + apply normal, sg_ferm_inv, Nn.
+    + now rewrite 2!associative, linvertible, lidentical, 
+        Heq, grp_opinv.
+  - exists 1, 1. split; try split; try apply sg_ferm_id.
+    now rewrite ridentical.
+Defined.
+Notation "[ 'subgrp' H *|> N ]" := (@sgnsg_prod _ H N).
 
-  Program Definition sg_prod_sg := [substd H \* N]  <<- G.
-  Next Obligation.
-    split; simpl.
-    - intros x y [hx [nx [Hhx [Nnx Heqx]]]]
-      [hy [ny [Hhy [Nny Heqy]]]]. 
-      pose (normal(g := !hy) Nnx) as Heq0.
-      rewrite grp_invinv in Heq0. 
-      exists (hx * hy), (!hy * nx * hy * ny). split; try split.
-      + apply (sg_ferm_op Hhx Hhy).
-      + apply (sg_ferm_op Heq0 Nny).
-      + now rewrite 3!associative, <-(associative hx),
-          rinvertible, ridentical, Heqx, Heqy, associative.
-    - intros x [h [n [Hh [Nn Heq]]]].
-      exists !h, (h * !n * !h). split; try split.
-      + apply sg_ferm_inv, Hh.
-      + apply normal, sg_ferm_inv, Nn.
-      + now rewrite 2!associative, linvertible, lidentical, 
-          Heq, grp_opinv.
-    - exists 1, 1. split; try split; try apply sg_ferm_id.
-      now rewrite ridentical.
-  Defined.
+Lemma sg_prod_comm `{H: Subgroup G} {N: NormalSubgroup G} : 
+  [substd H \* N] == [substd N \* H] in Subsetoid_setoid G.
+Proof.
+  split; split; intros g [h1 [h2 [Hh1 [Hh2 Heq]]]]; simpl.
+  - exists (h1 * h2 * !h1), h1; split; try split.
+    + now apply normal.
+    + trivial.
+    + now rewrite <-(associative), linvertible, ridentical.
+  - exists h2, (!h2 * h1 * !!h2); split; try split.
+    + trivial.
+    + now apply normal.
+    + now rewrite 2!associative, rinvertible, 
+        lidentical, grp_invinv.
+Qed.
 
-  Lemma sg_prod_comm : 
-    [substd H \* N] == [substd N \* H] in Subsetoid_setoid G.
-  Proof.
-    split; split; intros g [h1 [h2 [Hh1 [Hh2 Heq]]]]; simpl.
-    - exists (h1 * h2 * !h1), h1; split; try split.
-      + now apply normal.
-      + trivial.
-      + now rewrite <-(associative), linvertible, ridentical.
-    - exists h2, (!h2 * h1 * !!h2); split; try split.
-      + trivial.
-      + now apply normal.
-      + now rewrite 2!associative, rinvertible, 
-          lidentical, grp_invinv.
-  Qed.
+Lemma stdeq_grpable {G:Group} {A B: Subsetoid G}
+  : A == B -> A <- G -> B <- G.
+Proof.
+  intros AB AG. assert ((Subgroupable_subsetoid G) A).
+  { apply AG. } rewrite AB in H. apply H.
+Qed.
 
-  Definition nsg_in_sgprod := nsg_in_sg N sg_prod_sg.
-  Definition nsg_in_H := nsg_in_sg N H.
+Program Definition nsgsg_prod `(N: NormalSubgroup G) (H: Subgroup G)
+  := [substd N \* H] <<- G.
+Next Obligation.
+  apply (stdeq_grpable sg_prod_comm), sgnsg_prod_obligation_1.
+Defined.
+Notation "[ 'subgrp' N <|* H ]" := (@nsgsg_prod _ N H).
 
-  Program Definition Iso2
-    : Isomorph (CosetGroup nsg_in_H) (CosetGroup nsg_in_sgprod)
-    := 
+Program Definition Hom2 `{H: Subgroup G} {N: NormalSubgroup G}
+  : Homomorph H (CosetGroup [nsgrp N in [subgrp H *|> N]])
+  := hom g => g.
+Next Obligation.
+  exists g, 1. split; try split.
+  - apply H0.
+  - apply sg_ferm_id.
+  - now rewrite ridentical.
+Defined.
+Next Obligation.
+  split. intros g h. simpl. intros Heq. rewrite Heq, rinvertible.
+  apply sg_ferm_id.
+Defined.
+Next Obligation.
+  split. intros g h. simpl. rewrite rinvertible. apply sg_ferm_id.
+Defined.
 
-End FundHom.
+Program Definition Iso2 `{H: Subgroup G} {N: NormalSubgroup G}
+  : Isomorph (CosetGroup [nsgrp N in H])
+    (CosetGroup [nsgrp N in [subgrp H *|> N]])
+  := (@Iso1_kernel _ _ Hom2 [nsgrp N in H]
+      [subgrp {CosetGroup [nsgrp N in [subgrp H *|> N]]}] _ _).
+Next Obligation.
+  split; split; intros [h Hh]; simpl.
+  - intros Nh. now rewrite grp_invid_id, ridentical.
+  - intros E. now rewrite grp_invid_id, ridentical in E.
+Defined.
+Next Obligation.
+  split; split; intros [g [h [n [Hh [Nn Eg]]]]]; simpl.
+  - intros _. exists (exist _ h Hh). split. trivial.
+    simpl. rewrite Eg. apply normal, Nn.
+  - split.
+Defined.
 
 
 Close Scope alg_scope.
