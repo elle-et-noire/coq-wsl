@@ -474,6 +474,27 @@ Notation "'iso' x 'in' G => m " := [iso by fun (x:G) => m]
 Notation "'iso' x => m " := (iso x in _ => m)
   (at level 70, right associativity) : alg_scope.
 
+Program Definition Hom_compose {X Y Z:Group}
+  (f: Homomorph X Y) (g: Homomorph Y Z)
+  : Homomorph X Z := Build_Homomorph _ _ (g \o f) _.
+Next Obligation.
+  split. intros x y. simpl. now rewrite 2!homomorph.
+Defined.
+Notation "g \o_h f" := (Hom_compose f g)
+  (at level 60, right associativity) : alg_scope.
+
+Program Definition Iso_compose {X Y Z:Group}
+  (f: Isomorph X Y) (g: Isomorph Y Z)
+  : Isomorph X Z := Build_Isomorph _ _ (g \o_h f) _.
+Next Obligation.
+  split; split; split; simpl.
+  - intros x y Heq. now apply injective, injective in Heq.
+  - intros y. destruct (surjective y). destruct (surjective x).
+    exists x0. now rewrite <-H0, <-H.
+Defined.
+Notation "g \o_i f" := (Iso_compose f g)
+  (at level 60, right associativity) : alg_scope.
+
 
 Section HomTheory.
   Context {G H:Group} {f: Homomorph G H}.
@@ -960,9 +981,7 @@ Next Obligation.
   split. intros g h. simpl. rewrite rinvertible. apply sg_ferm_id.
 Defined.
 
-Program Definition Iso2 `{H: Subgroup G} {N: NormalSubgroup G}
-  : Isomorph (CosetGroup [nsgrp N in H])
-    (CosetGroup [nsgrp N in [subgrp H *|> N]])
+Program Definition Iso2' `{H: Subgroup G} {N: NormalSubgroup G}
   := (@Iso1_kernel _ _ Hom2 [nsgrp N in H]
       [subgrp {CosetGroup [nsgrp N in [subgrp H *|> N]]}] _ _).
 Next Obligation.
@@ -977,6 +996,68 @@ Next Obligation.
   - split.
 Defined.
 
+Program Definition id_grpsg_iso {G:Group} : Isomorph G [subgrp {G}]
+  := iso g => g.
+Next Obligation. split. intros g h. simpl. intuition. Defined.
+Next Obligation. split. intros g h. simpl. reflexivity. Defined.
+Next Obligation. 
+  split; split; split; simpl. intuition. intros [y Hy]. now exists y.
+Defined.
+
+Program Definition grpsg_id_iso {G:Group} : Isomorph [subgrp {G}] G
+  := iso g => g.
+Next Obligation. split. intros g h. simpl. intuition. Defined.
+Next Obligation. split. intros g h. simpl. reflexivity. Defined.
+Next Obligation. 
+  split; split; split; simpl; intuition. now exists (exist _ y I).
+Defined.
+
+Definition Iso2 `{H: Subgroup G} {N: NormalSubgroup G}
+  : Isomorph (CosetGroup [nsgrp N in H])
+    (CosetGroup [nsgrp N in [subgrp H *|> N]])
+  := grpsg_id_iso \o_i Iso2'.
+
+
+Program Definition Hom3 {G:Group} {N1 N2: NormalSubgroup G} (Hle: N1 <= N2)
+  : Homomorph (CosetGroup N1) (CosetGroup N2)
+  :=  hom g in CosetGroup N1 => g.
+Next Obligation. split. intros g h. simpl. apply Hle. Defined.
+Next Obligation.
+  split. intros g h. simpl. rewrite rinvertible. apply sg_ferm_id.
+Defined.
+
+Program Definition Iso3' {G:Group} {N1 N2: NormalSubgroup G} (Hle: N1 <= N2)
+  := (@Iso1_kernel _ _ (Hom3 Hle) 
+       ([substd by N2 on CosetGroup N1] <<-| (CosetGroup N1))
+       [subgrp {CosetGroup N2}] _ _).
+Next Obligation.
+  split. intros g h. simpl. intros Egh. split; intros Ng.
+  - apply Hle in Egh. apply sg_ferm_inv in Egh.
+    rewrite grp_opinv, grp_invinv in Egh.
+    pose (sg_ferm_op Egh Ng) as N2h.
+    now rewrite <-associative, linvertible, ridentical in N2h.
+  - apply Hle in Egh. pose (sg_ferm_op Egh Ng) as N2g.
+    now rewrite <-associative, linvertible, ridentical in N2g.
+Defined.
+Next Obligation.
+  split.
+  - intros g h. simpl. apply sg_ferm_op.
+  - intros g. simpl. apply sg_ferm_inv.
+  - simpl. apply sg_ferm_id.
+Defined.
+Next Obligation. split. intros g h. simpl. apply normal. Defined.
+Next Obligation.
+  split; split; intros g; simpl; intros N2g.
+  - now rewrite grp_invid_id, ridentical.
+  - now rewrite grp_invid_id, ridentical in N2g.
+Defined.
+Next Obligation.
+  split; split; intros g; simpl; intuition. exists g.
+  split; trivial. rewrite rinvertible. apply sg_ferm_id.
+Defined.
+
+Definition Iso3 {G:Group} {N1 N2: NormalSubgroup G} (Hle: N1 <= N2)
+  := grpsg_id_iso \o_i (Iso3' Hle).
 
 Close Scope alg_scope.
 Close Scope setoid_scope.
