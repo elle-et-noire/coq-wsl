@@ -159,7 +159,7 @@ Notation " 'map' x => m " := (map x in _ => m)
 Program Definition Map_id {X:Setoid} : Map X X := map x => x.
 Next Obligation. split. intros x y Heq. apply Heq. Defined.
 
-Program Definition MapSetoid (X Y: Setoid) : Setoid :=
+Program Definition MapSetoid {X Y: Setoid} : Setoid :=
   std by ((==) ==> (==))%signature on Map X Y.
 Next Obligation.
   split.
@@ -227,11 +227,11 @@ Next Obligation.
 Defined.
 
 
-Program Definition inclusion `{B: Subsetoid A} : Map B A
+Program Definition inclusionMap `{B: Subsetoid A} : Map B A
   := map h => h.
 Next Obligation. split. intros x y. now simpl. Defined.
 
-Lemma inclusion_inj `{B: Subsetoid A} : Injective (@inclusion A B).
+Lemma inclusion_inj `{B: Subsetoid A} : Injective (@inclusionMap A B).
 Proof. split. intros x y. now simpl. Qed.
 
 
@@ -675,6 +675,11 @@ Next Obligation. split. intros g h. simpl. apply normal. Defined.
 Notation "<| N 'inside' H |>" := (@NormalSubgroup_inSubgroup _ N H)
   (at level 0, N, H at next level) : alg_scope.
 
+Program Definition inclusionHom `{H: Subgroup G} : H ~~> G
+  := hom h => h.
+Next Obligation. split. intros g h. now simpl. Defined.
+Next Obligation. split. intros g h. now simpl. Defined.
+
 Program Definition HomImage `(f: G ~~> H)
   : Map [ <> | <- G ] [ <> | <- H ]
   := map A => ((Image f) (A [<-] _)) <<[]- _.
@@ -819,12 +824,12 @@ Section FundHom.
   Next Obligation. split; split; intuition. Defined.
 
   Lemma Iso1comp_proper :
-    f == inclusion o Iso1 o quotientMap in (MapSetoid G H).
+    f == inclusionMap o Iso1 o quotientMap in (@MapSetoid G H).
   Proof. intros x y Heq. simpl. now rewrite Heq. Qed.
 
   Lemma Iso1_identical : forall (psi: G_N ~~> H), 
-    f == psi o quotientMap in (MapSetoid G H) ->
-    psi == inclusion o Iso1 in (MapSetoid G_N H).
+    f == psi o quotientMap in (@MapSetoid G H) ->
+    psi == inclusionMap o Iso1 in (@MapSetoid G_N H).
   Proof.
     intros psi Hiso x y Heq. rewrite Heq.
     rewrite Iso1comp_proper in Hiso.
@@ -963,7 +968,7 @@ Defined.
 Notation "< H *> N >" := (@sgnsgSubgroup _ H N)
   (at level 0, H, N at next level) : alg_scope.
 
-Lemma sgprod_comm `{H: Subgroup G} {N: NormalSubgroup G} : 
+Lemma nsgprod_comm `{H: Subgroup G} {N: NormalSubgroup G} : 
   [ H * N ] == [ N * H ].
 Proof.
   split; split; intros g [h1 [h2 [Hh1 [Hh2 Heq]]]]; simpl.
@@ -988,7 +993,7 @@ Qed.
 Program Definition nsgsgSubgroup `(N: NormalSubgroup G) (H: Subgroup G)
   := [ N * H ] <<- G.
 Next Obligation.
-  apply (eqstd_grpable sgprod_comm), sgnsgSubgroup_obligation_1.
+  apply (eqstd_grpable nsgprod_comm), sgnsgSubgroup_obligation_1.
 Defined.
 Notation "< N <* H >" := (@nsgsgSubgroup _ N H)
   (at level 0, N, H at next level) : alg_scope.
@@ -1045,7 +1050,7 @@ Next Obligation.
   split. intros g h. simpl. rewrite rinvertible. apply ferm_id.
 Defined.
 
-Program Definition subnsgCosetNormalSubgroup 
+Program Definition nsg_inSubNSGCoset 
   {G} {N1 N2: NormalSubgroup G} (Hle: N1 <= N2)
   := (sstd by N2 on <G / N1>) <<-| <G / N1>.
 Next Obligation.
@@ -1064,7 +1069,7 @@ Next Obligation.
   - simpl. apply ferm_id.
 Defined.
 Next Obligation. split. intros g h. simpl. apply normal. Defined.
-Notation "<| H /> N |> 'with' L" := (@subnsgCosetNormalSubgroup _ N H L)
+Notation "<| H /> N |> 'with' L" := (@nsg_inSubNSGCoset _ N H L)
   (at level 100, H, N at next level) : alg_scope.
 Notation "<| H /> N |>" := (<| H /> N |> with _)
   (at level 0, H, N at next level) : alg_scope.
@@ -1081,6 +1086,26 @@ Next Obligation.
   split; split; intros g; simpl; intuition. exists g.
   split; trivial. rewrite rinvertible. apply ferm_id.
 Defined.
+
+
+Definition DecomposedHom `{phi: G ~~> H} {N: NormalSubgroup G}
+  (Hle: N <= HomKernel phi) : <G / N> ~~> H
+  := inclusionHom <o~ (Iso1 phi) <o~ (Hom3 Hle).
+
+Lemma decompose_hom `{phi: G ~~> H} {N: NormalSubgroup G} : 
+  N <= HomKernel phi <-> 
+  (exists (psi: <G / N> ~~> H), phi == psi o quotientMap in @MapSetoid G H).
+Proof.
+  split.
+  - intros Hle. exists (DecomposedHom Hle). intros g h Heq. simpl.
+    now rewrite Heq.
+  - intros [psi Hpsi]. split. simpl. intros g Ng.
+    assert (phi g == psi g) as Eg. { now apply Hpsi. }
+    rewrite Eg. assert (g == 1 in <G / N>) as H0.
+    { apply coset_eq. assert (g * !1 == g) as H0. 
+      now rewrite invid, ridentical. now rewrite H0. }
+    rewrite H0. apply hom_id.
+Qed.
 
 Close Scope alg_scope.
 Close Scope setoid_scope.
